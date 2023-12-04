@@ -2,6 +2,7 @@
   "name": "project_management_platform_backend",
   "version": "1.0.0",
   "description": "MERN stack app for real-time project planning and efficient team coordination.",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -12,14 +13,20 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@apollo/server": "^4.9.5",
+    "@graphql-tools/schema": "^10.0.2",
     "apollo-server-express": "^3.13.0",
     "bcryptjs": "^2.4.3",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "express-session": "^1.17.3",
+    "graphql": "^16.8.1",
+    "graphql-subscriptions": "^2.0.0",
+    "graphql-ws": "^5.14.2",
     "joi": "^17.11.0",
     "mongoose": "^8.0.2",
-    "nodemon": "^3.0.2"
+    "nodemon": "^3.0.2",
+    "ws": "^8.14.2"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
