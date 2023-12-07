@@ -8,6 +8,8 @@ const phaseSchema = new mongoose.Schema({
   order: Number,
   startDatetime: Date,
   endDatetime: Date,
+  phaseAdmins: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  phaseMembers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   status: String
 })
 

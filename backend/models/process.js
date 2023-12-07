@@ -5,6 +5,7 @@ const processSchema = new mongoose.Schema({
   title: String,
   description: String,
   priority: Number,
+  managers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   status: String
 })
 

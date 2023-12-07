@@ -7,6 +7,7 @@ const taskSchema = new mongoose.Schema({
   title: String,
   description: String,
   deadline: Date,
+  taskAssignees: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   status: String
 })
 
