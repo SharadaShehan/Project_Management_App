@@ -1,1 +1,6 @@
 export { default as User } from './user.js'
+export { default as Project } from './project.js'
+export { default as Process } from './process.js'
+export { default as Phase } from './phase.js'
+export { default as Task } from './task.js'
+export { default as Message } from './message.js'
