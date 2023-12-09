@@ -5,13 +5,16 @@ import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHt
 import { makeExecutableSchema } from '@graphql-tools/schema'
 import bodyParser from 'body-parser'
 import express from 'express'
+import session from 'express-session'
 import { WebSocketServer } from 'ws'
 import { useServer } from 'graphql-ws/lib/use/ws'
 // import { PubSub } from 'graphql-subscriptions'
 import typeDefs from './typeDefs/index.js'
 import resolvers from './resolvers/index.js'
+import { APP_PORT, IN_PROD, DB_HOST, DB_PORT, DB_NAME, SESS_NAME, SESS_SECRET, SESS_LIFETIME } from './config/index.js'
+import mongoose from 'mongoose'
 
-const port = 4000
+const port = APP_PORT
 // let counter = 0
 
 // const typeDefs = `
@@ -60,9 +63,26 @@ const port = 4000
 //   }
 // }
 
+await mongoose.connect(`mongodb://${DB_HOST}:${DB_PORT}/${DB_NAME}`)
+  .then(() => console.log('MongoDB connected successfully'))
+  .catch(err => console.log(err))
+
 const schema = makeExecutableSchema({ typeDefs, resolvers })
 
 const app = express()
+app.use(session({
+  name: SESS_NAME,
+  secret: SESS_SECRET,
+  resave: true,
+  rolling: true,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: parseInt(SESS_LIFETIME),
+    sameSite: true,
+    secure: IN_PROD
+  }
+}))
+
 const httpServer = createServer(app)
 
 const wsServer = new WebSocketServer({

@@ -4,6 +4,7 @@ import hash from 'bcryptjs'
 const userSchema = new mongoose.Schema({
   username: {
     type: String,
+    required: true,
     validate: {
       validator: async (username) => User.isUsernameValid(username),
       message: ({ value }) => `Username ${value} has already been taken.`
