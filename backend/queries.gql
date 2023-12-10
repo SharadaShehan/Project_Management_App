@@ -1,0 +1,21 @@
+mutation {
+    signUp(username:"SamC", password:"Banana@1234", firstName:"Sam", lastName:"Convoy", gender:"Male", country:"USA", primaryEmail:"SamConvoy@gmail.com"){
+        firstName
+    }
+}
+
+mutation {
+    signIn(username:"SamC", password:"Banana@1234"){
+        firstName
+    }
+}
+
+
+
+mutation {
+    createProject(title:"Project 2") {
+        members {
+            firstName
+        }
+    }
+}

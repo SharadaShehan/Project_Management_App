@@ -59,7 +59,7 @@ userSchema.statics.doesntExist = async function (options) {
 }
 
 userSchema.statics.isUsernameValid = async function (username) {
-  const USERNAME_REGEX = /^[a-zA-Z0-9_]{8,30}$/
+  const USERNAME_REGEX = /^[a-zA-Z0-9_]{4,30}$/
   if (!USERNAME_REGEX.test(username)) {
     return false
   }

@@ -1,6 +1,6 @@
 import Joi from 'joi'
 
-const username = Joi.string().alphanum().min(8).max(30).required().label('Username')
+const username = Joi.string().alphanum().min(4).max(30).required().label('Username')
 const password = Joi.string().regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.{8,30})/).required().label('Password').messages({
   'string.pattern.base': 'Password must contain at least one lowercase letter, one uppercase letter, one digit, and be 8-30 characters long.'
 })
