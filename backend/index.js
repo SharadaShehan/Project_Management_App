@@ -11,7 +11,7 @@ import { useServer } from 'graphql-ws/lib/use/ws'
 // import { PubSub } from 'graphql-subscriptions'
 import typeDefs from './typeDefs/index.js'
 import resolvers from './resolvers/index.js'
-import { APP_PORT, IN_PROD, DB_HOST, DB_PORT, DB_NAME, SESS_NAME, SESS_SECRET, SESS_LIFETIME } from './config/index.js'
+import { APP_PORT, IN_PROD, DB_HOST, DB_PORT, DB_NAME, SESS_NAME, SESS_SECRET, SESS_LIFETIME } from './config.js'
 import mongoose from 'mongoose'
 
 const port = APP_PORT
@@ -113,7 +113,9 @@ const apolloServer = new ApolloServer({
 
 await apolloServer.start()
 
-app.use('/graphql', bodyParser.json(), expressMiddleware(apolloServer))
+app.use('/graphql', bodyParser.json(), expressMiddleware(apolloServer, {
+  context: ({ req, res }) => ({ req, res })
+}))
 
 httpServer.listen(port, () => {
   console.log(`🚀 Query endpoint ready at http://localhost:${port}/graphql`)
