@@ -5,15 +5,38 @@ mutation {
 }
 
 mutation {
+    signUp(username:"JaneC", password:"Banana@1234", firstName:"Jane", lastName:"Convoy", gender:"Female", country:"USA", primaryEmail:"JaneConvoy@gmail.com"){
+        firstName
+    }
+}
+
+mutation {
     signIn(username:"SamC", password:"Banana@1234"){
         firstName
     }
 }
 
+mutation {
+    signIn(username:"JaneC", password:"Banana@1234"){
+        firstName
+    }
+}
+
+mutation {
+    signOut
+}
 
 
 mutation {
     createProject(title:"Project 2") {
+        members {
+            firstName
+        }
+    }
+}
+
+mutation {
+    createProject(title:"Project 11", members:["65754ade55df1cea083fdbb9"]) {
         members {
             firstName
         }

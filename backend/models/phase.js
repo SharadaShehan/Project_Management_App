@@ -17,7 +17,6 @@ const phaseSchema = new mongoose.Schema({
   order: {
     type: Number,
     required: true,
-    unique: true,
     min: 1,
     max: 200
   },

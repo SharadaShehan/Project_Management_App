@@ -7,7 +7,8 @@ export default {
     me: async (root, args, { req }, info) => {
       Auth.checkSignedIn(req)
       return await User.findById(req.session.userId)
-    }
+    },
+    hi: () => 'Hello World'
   },
   Mutation: {
     signUp: async (root, args, { req }, info) => {

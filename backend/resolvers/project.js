@@ -4,12 +4,14 @@ import { createProject } from '../schemas/index.js'
 
 export default {
   Query: {
-    projects: async (root, args, context, info) => {
-      const projects = await Project.find({})
+    projects: async (root, args, { req }, info) => {
+      Auth.checkSignedIn(req)
+      const projects = await Project.find({ members: req.session.userId })
       return projects
     },
-    project: async (root, { id }, context, info) => {
-      const project = await Project.findById(id)
+    project: async (root, { id }, { req }, info) => {
+      Auth.checkSignedIn(req)
+      const project = await Project.find({ _id: id, members: req.session.userId })
       return project
     }
   },
@@ -18,7 +20,13 @@ export default {
       Auth.checkSignedIn(req)
       args.owner = req.session.userId
       args.members = args.members || []
-      args.members.push(req.session.userId)
+      if (!args.members.includes(req.session.userId)) {
+        args.members.push(req.session.userId)
+      }
+      const idsFound = await User.where('_id').in(args.members).countDocuments()
+      if (idsFound !== args.members.length) {
+        throw new Error('One or more members do not exist')
+      }
       await createProject.validateAsync(args, { abortEarly: false })
       const project = await Project.create(args)
       await User.updateMany({ _id: { $in: args.members } }, { $push: { projects: project.id } })
