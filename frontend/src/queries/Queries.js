@@ -5,12 +5,8 @@ const PROJECTS_QUERY = gql`
         projects {
             id
             title
-            members {
-                username
-                firstName
-                lastName
-                primaryEmail
-            }
+            description
+            status
         }
     }
 `;

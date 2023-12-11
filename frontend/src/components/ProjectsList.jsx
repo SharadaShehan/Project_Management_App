@@ -10,13 +10,14 @@ const ProjectsList = ({ navigation }) => {
         return (
             <TouchableOpacity onPress={() => navigation.navigate('Project', { id: item.id })}>
                 <Text style={styles.projectTitle}>{item.title}</Text>
-                {item.members.map((member) => (
+                <Text>{item.status}</Text>
+                {/* {item.members.map((member) => (
                     <View style={styles.memberItem} key={member.username+'0'}>
                         <Text key={member.username+'1'}>{member.firstName}</Text>
                         <Text key={member.username+'2'}>{member.lastName}</Text>
                         <Text key={member.username+'3'}>{member.primaryEmail}</Text>
                     </View>
-                ))}
+                ))} */}
             </TouchableOpacity>
         );
     }
