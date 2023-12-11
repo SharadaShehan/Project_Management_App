@@ -39,6 +39,12 @@ export default {
     },
     members: async (project, args, context, info) => {
       return (await project.populate('members')).members
+    },
+    processes: async (project, args, context, info) => {
+      return (await project.populate('processes')).processes
+    },
+    defaultProcess: async (project, args, context, info) => {
+      return (await project.populate('defaultProcess')).defaultProcess
     }
   }
 }

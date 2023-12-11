@@ -23,7 +23,8 @@ const processSchema = new mongoose.Schema({
     type: String,
     enum: ['Active', 'Inactive', 'Completed', 'Aborted'],
     default: 'Active'
-  }
+  },
+  phases: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Phase' }]
 })
 
 const Process = mongoose.model('Process', processSchema)

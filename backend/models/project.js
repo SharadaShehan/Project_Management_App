@@ -18,7 +18,9 @@ const projectSchema = new mongoose.Schema({
     type: String,
     enum: ['Active', 'Inactive', 'Completed', 'Aborted'],
     default: 'Active'
-  }
+  },
+  processes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Process' }],
+  defaultProcess: { type: mongoose.Schema.Types.ObjectId, ref: 'Process' }
 })
 
 const Project = mongoose.model('Project', projectSchema)

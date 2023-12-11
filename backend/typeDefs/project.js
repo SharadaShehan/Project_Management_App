@@ -17,5 +17,7 @@ export default gql`
         owner: User!
         members: [User!]
         status: String!
+        processes: [Process!]
+        defaultProcess: Process
     }
 `

@@ -12,11 +12,21 @@ const members = Joi.array().min(1).unique().items(Joi.string().external(async (v
   if (!user) throw new Error('Invalid user')
 })).label('Members')
 const status = Joi.string().valid('Active', 'Inactive', 'Completed', 'Aborted').default('Active').label('Status')
+const processes = Joi.array().unique().items(Joi.string().external(async (value) => {
+  const process = await mongoose.model('Process').findById(value)
+  if (!process) throw new Error('Invalid process')
+})).label('Processes')
+const defaultProcess = Joi.string().external(async (value) => {
+  const process = await mongoose.model('Process').findById(value)
+  if (!process) throw new Error('Invalid process')
+}).label('Default process')
 
 export const createProject = Joi.object().keys({
   title,
   description,
   owner,
   members,
-  status
+  status,
+  processes,
+  defaultProcess
 })
