@@ -8,14 +8,22 @@ export default gql`
         title: String!
         description: String
         order: Int!
-        startDate:
-        startTime: 
-        endDate:
-        endTime: 
+        startDate: String!
+        endDate: String
+        endTime: String
         phaseAdmins: [UserShortened!]
         phaseMembers: [UserShortened!]
         status: String!
         tasks: [Task!]
     }
 
+    type PhaseShortened {
+        id: ID!
+        title: String!
+        description: String
+        order: Int!
+        endDate: String
+        endTime: String
+        status: String!
+    }
 `

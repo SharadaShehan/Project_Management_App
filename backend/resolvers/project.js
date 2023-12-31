@@ -1,4 +1,4 @@
-import { Project, User } from '../models/index.js'
+import { Project, User, Process } from '../models/index.js'
 import * as Auth from '../auth.js'
 import { createProject } from '../schemas/index.js'
 
@@ -20,6 +20,8 @@ export default {
       Auth.checkSignedIn(req)
       args.owner = req.session.userId
       args.members = args.members || []
+      args.processes = []
+      args.status = 'Active'
       if (!args.members.includes(req.session.userId)) {
         args.members.push(req.session.userId)
       }
@@ -29,6 +31,18 @@ export default {
       }
       await createProject.validateAsync(args, { abortEarly: false })
       const project = await Project.create(args)
+      const defaultProcess = await Process.create({
+        title: 'Main Process',
+        description: 'Default Process',
+        priority: 'Medium',
+        status: 'Active',
+        project: project.id,
+        managers: [],
+        phases: []
+      })
+      project.defaultProcess = defaultProcess.id
+      project.processes.push(defaultProcess.id)
+      await project.save()
       await User.updateMany({ _id: { $in: args.members } }, { $push: { projects: project.id } })
       return project
     }

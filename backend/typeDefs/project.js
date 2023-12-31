@@ -7,25 +7,25 @@ export default gql`
     }
 
     extend type Mutation {
-        createProject(title: String!, description: String, members: [ID!]): Project
+        createProject(title: String!, description: String!, members: [ID!]): Project
     }
 
     type Project {
         id: ID!
         title: String!
-        description: String
+        description: String!
         owner: UserShortened!
         members: [UserShortened!]
         status: String!
         processes: [ProcessShortened!]
-        defaultProcess: ProcessShortened!
+        defaultProcess: ProcessShortened
     }
 
     type ProjectShortened {
         id: ID!
         title: String!
-        description: String
+        description: String!
         status: String!
-        defaultProcess: ProcessShortened!
+        defaultProcess: ProcessShortened
     }
 `

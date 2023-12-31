@@ -4,10 +4,11 @@ export default gql`
 
     type Task {
         id: ID!
-        phase: Phase!
+        phase: PhaseShortened!
         title: String!
         description: String
-        deadline: String
+        endDate: String
+        endTime: String
         taskAssignees: [UserShortened!]
         status: String!
     }

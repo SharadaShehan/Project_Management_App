@@ -28,17 +28,13 @@ mutation {
 
 
 mutation {
-    createProject(title:"Project 2") {
-        members {
-            firstName
-        }
+    createProject(title:"Project Alpha", description:"AI based FullStack Project") {
+        id
     }
 }
 
 mutation {
-    createProject(title:"Project 11", members:["65754ade55df1cea083fdbb9"]) {
-        members {
-            firstName
-        }
+    createProject(title:"Project Beta", description:"IOT based FullStack Project", members:["65755ce1663be023e8a16df5"]) {
+        id
     }
 }

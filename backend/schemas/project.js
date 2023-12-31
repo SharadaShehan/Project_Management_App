@@ -2,7 +2,7 @@ import Joi from 'joi'
 import mongoose from 'mongoose'
 
 const title = Joi.string().min(2).max(30).required().label('Title')
-const description = Joi.string().min(5).max(100).label('Description')
+const description = Joi.string().min(5).max(100).required().label('Description')
 const owner = Joi.string().external(async (value) => {
   const user = await mongoose.model('User').findById(value)
   if (!user) throw new Error('Invalid user')
@@ -16,10 +16,10 @@ const processes = Joi.array().unique().items(Joi.string().external(async (value)
   const process = await mongoose.model('Process').findById(value)
   if (!process) throw new Error('Invalid process')
 })).label('Processes')
-const defaultProcess = Joi.string().external(async (value) => {
-  const process = await mongoose.model('Process').findById(value)
-  if (!process) throw new Error('Invalid process')
-}).label('Default process')
+// const defaultProcess = Joi.string().external(async (value) => {
+//   const process = await mongoose.model('Process').findById(value)
+//   if (!process) throw new Error('Invalid process')
+// }).label('Default process')
 
 export const createProject = Joi.object().keys({
   title,
@@ -27,6 +27,5 @@ export const createProject = Joi.object().keys({
   owner,
   members,
   status,
-  processes,
-  defaultProcess
+  processes
 })
