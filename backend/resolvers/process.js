@@ -6,10 +6,12 @@ export default {
     processes: async (root, { projectId }, { req }, info) => {
       Auth.checkSignedIn(req)
       const project = await Project.find({ _id: projectId, members: req.session.userId })
-      if (!project) {
+      console.log(project)
+      if (project.length === 0) {
         throw new Error('Unauthorized')
       }
       const processes = await Process.find({ project: projectId })
+      console.log(processes)
       return processes
     },
     process: async (root, { id }, { req }, info) => {
@@ -22,7 +24,7 @@ export default {
       if (!project) {
         throw new Error('Unauthorized')
       }
-      return process
+      return process[0]
     }
   },
   Process: {

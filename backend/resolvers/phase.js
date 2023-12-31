@@ -22,7 +22,7 @@ export default {
       if (!phase) {
         throw new Error('Phase not found')
       }
-      return phase
+      return phase[0]
     }
   },
   Phase: {

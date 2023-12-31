@@ -8,7 +8,7 @@ export default gql`
         title: String!
         description: String
         deadline: String
-        taskAssignees: [User!]
+        taskAssignees: [UserShortened!]
         status: String!
     }
 `

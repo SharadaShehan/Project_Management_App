@@ -4,15 +4,18 @@ export default gql`
 
     type Phase {
         id: ID!
-        process: Process!
+        process: ProcessShortened!
         title: String!
         description: String
         order: Int!
-        startDatetime: String
-        endDatetime: String
-        phaseAdmins: [User!]
-        phaseMembers: [User!]
+        startDate:
+        startTime: 
+        endDate:
+        endTime: 
+        phaseAdmins: [UserShortened!]
+        phaseMembers: [UserShortened!]
         status: String!
         tasks: [Task!]
     }
+
 `

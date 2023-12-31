@@ -12,7 +12,7 @@ export default {
     project: async (root, { id }, { req }, info) => {
       Auth.checkSignedIn(req)
       const project = await Project.find({ _id: id, members: req.session.userId })
-      return project
+      return project[0]
     }
   },
   Mutation: {

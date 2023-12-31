@@ -2,7 +2,7 @@ import { gql } from 'apollo-server-express'
 
 export default gql`
     extend type Query {
-        projects: [Project!]
+        projects: [ProjectShortened!]
         project(id: ID!): Project
     }
 
@@ -14,10 +14,18 @@ export default gql`
         id: ID!
         title: String!
         description: String
-        owner: User!
-        members: [User!]
+        owner: UserShortened!
+        members: [UserShortened!]
         status: String!
-        processes: [Process!]
-        defaultProcess: Process
+        processes: [ProcessShortened!]
+        defaultProcess: ProcessShortened!
+    }
+
+    type ProjectShortened {
+        id: ID!
+        title: String!
+        description: String
+        status: String!
+        defaultProcess: ProcessShortened!
     }
 `

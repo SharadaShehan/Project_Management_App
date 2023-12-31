@@ -22,4 +22,12 @@ export default gql`
         secondaryEmail: String
         projects: [Project!]
     }
+
+    type UserShortened {
+        id : ID!
+        username: String!
+        firstName: String!
+        lastName: String!
+        gender: String
+    }
 `

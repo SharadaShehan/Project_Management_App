@@ -17,7 +17,7 @@ const Tab = createBottomTabNavigator();
 
 const HomeScreen = ({ navigation }) => {
   return (
-      <Tab.Navigator>
+      <Tab.Navigator initialRouteName='Notifications'>
         <Tab.Screen name="Projects" component={ProjectsScreen} 
           options={{
             tabBarIcon: ({ color, size }) => (

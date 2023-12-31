@@ -4,11 +4,13 @@ import { PROJECTS_QUERY } from '../queries/Queries'; // Import your GraphQL quer
 import { useQuery } from '@apollo/client';
 
 const ProjectsList = ({ navigation }) => {
+
     const { data, loading, error } = useQuery(PROJECTS_QUERY);
 
     const RenderItem = ({ item }) => {
+        console.log(item.defaultProcess);
         return (
-            <TouchableOpacity onPress={() => navigation.navigate('Project', { id: item.id })}>
+            <TouchableOpacity onPress={() => navigation.navigate('Project', { id: item.id, defaultProcess:item.defaultProcess })}>
                 <Text style={styles.projectTitle}>{item.title}</Text>
                 <Text>{item.status}</Text>
                 {/* {item.members.map((member) => (
@@ -25,7 +27,7 @@ const ProjectsList = ({ navigation }) => {
     return (
         <View style={styles.container}>
         {loading && <Text>Loading projects...</Text>}
-        {error && navigation.navigate('Login')}
+        {error && ( error.status === 401 ? navigation.navigate('Login') : console.log(error.message))}
         {data && (
             <View>
             <Text style={styles.title}>Projects</Text>
@@ -39,6 +41,7 @@ const ProjectsList = ({ navigation }) => {
         </View>
     );
 };
+
 
 const styles = StyleSheet.create({
     container: {
