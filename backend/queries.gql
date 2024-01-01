@@ -240,7 +240,7 @@ query phases {
 }
 
 query phase {
-    phase(id:"6592b6fe74edcbc2bf6eee99") {
+    phase(id:"6592d9f0fc4b59f0f2b54b32") {
         id
         process {
             id
@@ -274,25 +274,25 @@ query phase {
 }
 
 mutation {
-    addPhaseAdmins(id:"6592d9f0fc4b59f0f2b54b32", admins:["65755ce1663be023e8a16df5"]) {
+    addPhaseAdmins(id:"6592d9f0fc4b59f0f2b54b32", admins:["65755ce1663be023e8a16df5","65754ade55df1cea083fdbb9"]) {
         id
     }
 }
 
 mutation {
-    removePhaseAdmins(id:"6592d9f0fc4b59f0f2b54b32", admins:["65755ce1663be023e8a16df5"]) {
+    removePhaseAdmins(id:"6592d9f0fc4b59f0f2b54b32", admins:["65754ade55df1cea083fdbb9"]) {
         id
     }
 }
 
 mutation {
-    addPhaseMembers(id:"6592d9f0fc4b59f0f2b54b32", members:["65755ce1663be023e8a16df5"]) {
+    addPhaseMembers(id:"6592d9f0fc4b59f0f2b54b32", members:["65754ade55df1cea083fdbb9"]) {
         id
     }
 }
 
 mutation {
-    removePhaseMembers(id:"6592d9f0fc4b59f0f2b54b32", members:["6591ae55bf6ef8e21660c912"]) {
+    removePhaseMembers(id:"6592d9f0fc4b59f0f2b54b32", members:["65754ade55df1cea083fdbb9"]) {
         id
     }
 }

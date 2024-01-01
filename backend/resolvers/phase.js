@@ -158,6 +158,7 @@ export default {
       delete args.id
       await membersUpdate.validateAsync(args, { abortEarly: false })
       await Phase.updateOne({ _id: phase.id }, { $pull: { phaseMembers: { $in: args.members } } })
+      await Phase.updateOne({ _id: phase.id }, { $pull: { phaseAdmins: { $in: args.members } } })
       return Phase.findOne({ _id: phase.id })
     },
     addPhaseAdmins: async (root, args, { req }, info) => {
@@ -180,6 +181,7 @@ export default {
       delete args.id
       await adminsUpdate.validateAsync(args, { abortEarly: false })
       const copiedAdmins = [...args.admins]
+      const copiedMembers = [...args.admins]
       for (const admin of copiedAdmins) {
         if (!project.members.includes(admin)) {
           throw new Error('One or more admins are not members of the project')
@@ -187,8 +189,30 @@ export default {
         if (phase.phaseAdmins.includes(admin)) {
           args.admins.splice(args.admins.indexOf(admin), 1)
         }
+        if (phase.phaseMembers.includes(admin)) {
+          copiedMembers.splice(copiedMembers.indexOf(admin), 1)
+        }
       }
       await Phase.updateOne({ _id: phase.id }, { $push: { phaseAdmins: { $each: args.admins } } })
+      await Phase.updateOne({ _id: phase.id }, { $push: { phaseMembers: { $each: copiedMembers } } })
+      return Phase.findOne({ _id: phase.id })
+    },
+    removePhaseAdmins: async (root, args, { req }, info) => {
+      Auth.checkSignedIn(req)
+      const phase = await Phase.findOne({ _id: args.id })
+      if (!phase) {
+        throw new Error('Phase not found')
+      }
+      const process = await Process.findOne({ _id: phase.process })
+      if (!process) {
+        throw new Error('Process not found')
+      }
+      if (!process.managers.includes(req.session.userId)) {
+        throw new Error('Unauthorized')
+      }
+      delete args.id
+      await adminsUpdate.validateAsync(args, { abortEarly: false })
+      await Phase.updateOne({ _id: phase.id }, { $pull: { phaseAdmins: { $in: args.admins } } })
       return Phase.findOne({ _id: phase.id })
     }
   },
