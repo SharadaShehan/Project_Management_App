@@ -149,3 +149,21 @@ query process {
         }
     }
 }
+
+mutation {
+    createProcess(projectId:"65916b45eb53ee8e45ff0bbc", title:"Complementary Process", description:"Additional Steps", priority:"Normal") {
+        id
+    }
+}
+
+mutation {
+    createProcess(projectId:"659251af749175ea95e8dfec", title:"Secondary Process", description:"Alternative Steps", priority:"Low", managers:["65755ce1663be023e8a16df5"]) {
+        id
+    }
+}
+
+mutation {
+    updateProcess(id:"65916b45eb53ee8e45ff0bbe", description:"Additional Steps") {
+        id
+    }
+}

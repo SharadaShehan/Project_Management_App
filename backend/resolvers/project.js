@@ -42,7 +42,7 @@ export default {
       const defaultProcess = await Process.create({
         title: 'Main Process',
         description: 'Default Process',
-        priority: 'Medium',
+        priority: 'Normal',
         status: 'Active',
         project: project.id,
         managers: [],
@@ -64,10 +64,9 @@ export default {
         throw new Error('Unauthorized')
       }
       delete args.id
-      console.log(args)
       await updateProject.validateAsync(args, { abortEarly: false })
       await project.updateOne(args)
-      return project
+      return await Project.findOne({ _id: project.id })
     },
     deleteProject: async (root, { id }, { req }, info) => {
       Auth.checkSignedIn(req)

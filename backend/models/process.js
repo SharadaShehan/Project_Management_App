@@ -15,8 +15,8 @@ const processSchema = new mongoose.Schema({
   },
   priority: {
     type: String,
-    enum: ['Low', 'Medium', 'High'],
-    default: 'Medium'
+    enum: ['Low', 'Normal', 'High'],
+    default: 'Normal'
   },
   managers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   status: {

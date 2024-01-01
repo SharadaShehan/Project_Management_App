@@ -7,9 +7,11 @@ export default gql`
     }
 
     extend type Mutation {
-        createProcess(projectId: ID!, title: String!, description: String, priority: String!, status: String!): Process
+        createProcess(projectId: ID!, title: String!, description: String, priority: String!, managers: [ID!]): Process
         updateProcess(id: ID!, title: String, description: String, priority: String, status: String): Process
-        deleteProcess(id: ID!): Process
+        deleteProcess(id: ID!): Boolean
+        addProcessManager(id: ID!, userId: ID!): Process
+        removeProcessManager(id: ID!, userId: ID!): Process
     }
 
     type Process {
