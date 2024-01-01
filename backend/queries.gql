@@ -11,6 +11,12 @@ mutation {
 }
 
 mutation {
+    signUp(username:"KaneC", password:"Banana@1234", firstName:"Kane", lastName:"Convoy", gender:"Male", country:"UK", primaryEmail:"KaneConvoy@gmail.com"){
+        firstName
+    }
+}
+
+mutation {
     signIn(username:"SamC", password:"Banana@1234"){
         firstName
     }
@@ -23,9 +29,18 @@ mutation {
 }
 
 mutation {
+    signIn(username:"KaneC", password:"Banana@1234"){
+        firstName
+    }
+}
+
+mutation {
     signOut
 }
 
+#--------------------------------------------------------------------------
+
+# Projects
 
 mutation {
     createProject(title:"Project Alpha", description:"AI based FullStack Project") {
@@ -36,5 +51,101 @@ mutation {
 mutation {
     createProject(title:"Project Beta", description:"IOT based FullStack Project", members:["65755ce1663be023e8a16df5"]) {
         id
+    }
+}
+
+mutation {
+    updateProject(id:"65916e30eb53ee8e45ff0bcf", description:"IOT development Project") {
+        id
+    }
+}
+
+mutation {
+    deleteProject(id:"65916e30eb53ee8e45ff0bcf")
+}
+
+query projects {
+        projects {
+            id
+            title
+            description
+            status
+            defaultProcess {
+                id
+            }
+        }
+}
+
+query project {
+        project(id:"65916b45eb53ee8e45ff0bbc") {
+            id
+            title
+            description
+            owner {
+                id
+            }
+            members {
+                id
+                username
+                firstName
+                lastName
+                gender
+            }
+            status
+            processes {
+                id
+                title
+                description
+                status
+                priority
+            }
+            defaultProcess {
+                id
+            }
+        }
+}
+
+query processes {
+    processes(id:"65916b45eb53ee8e45ff0bbc") {
+        id
+        project {
+            id
+        }
+        title
+        description
+        status
+        priority
+    }
+}
+
+query process {
+    process(id:"65916b45eb53ee8e45ff0bbe") {
+        id
+        project {
+            id
+        }
+        title
+        description
+        status
+        priority
+        managers {
+            id
+            username
+            firstName
+            lastName
+            gender
+        }
+        phases {
+            id
+            process {
+                id
+            }
+            title
+            description
+            order
+            endDate
+            endTime
+            status
+        }
     }
 }

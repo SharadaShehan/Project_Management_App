@@ -6,6 +6,12 @@ export default gql`
         process(id: ID!): Process
     }
 
+    extend type Mutation {
+        createProcess(projectId: ID!, title: String!, description: String, priority: String!, status: String!): Process
+        updateProcess(id: ID!, title: String, description: String, priority: String, status: String): Process
+        deleteProcess(id: ID!): Process
+    }
+
     type Process {
         id: ID!
         project: ProjectShortened!
@@ -19,6 +25,7 @@ export default gql`
 
     type ProcessShortened {
         id: ID!
+        project: ProjectShortened!
         title: String!
         description: String
         priority: String!

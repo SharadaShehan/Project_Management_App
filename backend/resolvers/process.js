@@ -5,28 +5,31 @@ export default {
   Query: {
     processes: async (root, { projectId }, { req }, info) => {
       Auth.checkSignedIn(req)
-      const project = await Project.find({ _id: projectId, members: req.session.userId })
-      console.log(project)
-      if (project.length === 0) {
+      console.log(projectId)
+      const project = await Project.findOne({ _id: projectId })
+      if (!project) {
+        throw new Error('Project not found')
+      }
+      if (!project.members.includes(req.session.userId)) {
         throw new Error('Unauthorized')
       }
       const processes = await Process.find({ project: projectId })
-      console.log(processes)
       return processes
     },
     process: async (root, { id }, { req }, info) => {
       Auth.checkSignedIn(req)
-      const process = await Process.find({ _id: id })
+      const process = await Process.findOne({ _id: id })
       if (!process) {
         throw new Error('Process not found')
       }
-      const project = await Project.find({ _id: process.project, members: req.session.userId })
-      if (!project) {
+      const project = await Project.findOne({ _id: process.project })
+      if (!project.members.includes(req.session.userId)) {
         throw new Error('Unauthorized')
       }
-      return process[0]
+      return process
     }
   },
+
   Process: {
     project: async (process, args, context, info) => {
       return (await process.populate('project')).project
@@ -36,6 +39,12 @@ export default {
     },
     phases: async (process, args, context, info) => {
       return (await process.populate('phases')).phases
+    }
+  },
+
+  ProcessShortened: {
+    project: async (process, args, context, info) => {
+      return (await process.populate('project')).project
     }
   }
 }

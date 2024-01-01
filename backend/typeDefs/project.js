@@ -8,6 +8,8 @@ export default gql`
 
     extend type Mutation {
         createProject(title: String!, description: String!, members: [ID!]): Project
+        updateProject(id: ID!, title: String, description: String, status: String, defaultProcess: ID): Project
+        deleteProject(id: ID!): Boolean
     }
 
     type Project {

@@ -20,6 +20,7 @@ export default gql`
     type PhaseShortened {
         id: ID!
         title: String!
+        process: ProcessShortened!
         description: String
         order: Int!
         endDate: String
