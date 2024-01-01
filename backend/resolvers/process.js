@@ -110,9 +110,13 @@ export default {
       }
       delete args.id
       await managersUpdate.validateAsync(args, { abortEarly: false })
-      for (const manager of args.managers) {
+      const copiedManagers = [...args.managers]
+      for (const manager of copiedManagers) {
         if (!project.members.includes(manager)) {
           throw new Error('One or more managers are not members of the project')
+        }
+        if (process.managers.includes(manager)) {
+          args.managers.splice(args.managers.indexOf(manager), 1)
         }
       }
       await Process.updateOne({ _id: process.id }, { $push: { managers: { $each: args.managers } } })

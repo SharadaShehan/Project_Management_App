@@ -59,11 +59,11 @@ export const updatePhase = Joi.object().keys({
 })
 
 export const adminsUpdate = Joi.object().keys({
-  phaseAdmins
+  admins: phaseAdmins
 })
 
 export const membersUpdate = Joi.object().keys({
-  phaseMembers
+  members: phaseMembers
 })
 
 export const orderUpdate = Joi.object().keys({

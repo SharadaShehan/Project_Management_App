@@ -1,6 +1,6 @@
 import { Project, Process, Phase, Task } from '../models/index.js'
 import * as Auth from '../auth.js'
-import { createPhase, updatePhase } from '../schemas/phase.js'
+import { createPhase, updatePhase, membersUpdate, adminsUpdate } from '../schemas/phase.js'
 
 export default {
   Query: {
@@ -110,6 +110,86 @@ export default {
         await Phase.updateOne({ _id: phase.id }, { order: phase.order - 1 })
       }
       return true
+    },
+    addPhaseMembers: async (root, args, { req }, info) => {
+      Auth.checkSignedIn(req)
+      const phase = await Phase.findOne({ _id: args.id })
+      if (!phase) {
+        throw new Error('Phase not found')
+      }
+      const process = await Process.findOne({ _id: phase.process })
+      if (!process) {
+        throw new Error('Process not found')
+      }
+      if ((!process.managers.includes(req.session.userId)) && (!phase.phaseAdmins.includes(req.session.userId))) {
+        throw new Error('Unauthorized')
+      }
+      const project = await Project.findOne({ _id: process.project })
+      if (!project) {
+        throw new Error('Project not found')
+      }
+      delete args.id
+      await membersUpdate.validateAsync(args, { abortEarly: false })
+      const copiedMembers = [...args.members]
+      for (const member of copiedMembers) {
+        if (!project.members.includes(member)) {
+          throw new Error('One or more members are not members of the project')
+        }
+        if (phase.phaseMembers.includes(member)) {
+          args.members.splice(args.members.indexOf(member), 1)
+        }
+      }
+      await Phase.updateOne({ _id: phase.id }, { $push: { phaseMembers: { $each: args.members } } })
+      return Phase.findOne({ _id: phase.id })
+    },
+    removePhaseMembers: async (root, args, { req }, info) => {
+      Auth.checkSignedIn(req)
+      const phase = await Phase.findOne({ _id: args.id })
+      if (!phase) {
+        throw new Error('Phase not found')
+      }
+      const process = await Process.findOne({ _id: phase.process })
+      if (!process) {
+        throw new Error('Process not found')
+      }
+      if ((!process.managers.includes(req.session.userId)) && (!phase.phaseAdmins.includes(req.session.userId))) {
+        throw new Error('Unauthorized')
+      }
+      delete args.id
+      await membersUpdate.validateAsync(args, { abortEarly: false })
+      await Phase.updateOne({ _id: phase.id }, { $pull: { phaseMembers: { $in: args.members } } })
+      return Phase.findOne({ _id: phase.id })
+    },
+    addPhaseAdmins: async (root, args, { req }, info) => {
+      Auth.checkSignedIn(req)
+      const phase = await Phase.findOne({ _id: args.id })
+      if (!phase) {
+        throw new Error('Phase not found')
+      }
+      const process = await Process.findOne({ _id: phase.process })
+      if (!process) {
+        throw new Error('Process not found')
+      }
+      if (!process.managers.includes(req.session.userId)) {
+        throw new Error('Unauthorized')
+      }
+      const project = await Project.findOne({ _id: process.project })
+      if (!project) {
+        throw new Error('Project not found')
+      }
+      delete args.id
+      await adminsUpdate.validateAsync(args, { abortEarly: false })
+      const copiedAdmins = [...args.admins]
+      for (const admin of copiedAdmins) {
+        if (!project.members.includes(admin)) {
+          throw new Error('One or more admins are not members of the project')
+        }
+        if (phase.phaseAdmins.includes(admin)) {
+          args.admins.splice(args.admins.indexOf(admin), 1)
+        }
+      }
+      await Phase.updateOne({ _id: phase.id }, { $push: { phaseAdmins: { $each: args.admins } } })
+      return Phase.findOne({ _id: phase.id })
     }
   },
 
@@ -125,6 +205,15 @@ export default {
     },
     tasks: async (phase, args, context, info) => {
       return (await phase.populate('tasks')).tasks
+    }
+  },
+
+  PhaseShortened: {
+    process: async (phase, args, context, info) => {
+      return (await phase.populate('process')).process
+    },
+    phaseMembers: async (phase, args, context, info) => {
+      return (await phase.populate('phaseMembers')).phaseMembers
     }
   }
 }

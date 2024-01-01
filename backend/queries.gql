@@ -110,7 +110,7 @@ query project {
 # Processes
 
 query processes {
-    processes(id:"65916b45eb53ee8e45ff0bbc") {
+    processes(projectId:"659251af749175ea95e8dfec") {
         id
         project {
             id
@@ -218,4 +218,81 @@ mutation {
 
 mutation {
     deletePhase(id:"6592d70cd6bddda006bf359b")
+}
+
+query phases {
+    phases(processId:"659271910603aab10cb73966") {
+        id
+        process {
+            id
+        }
+        title
+        description
+        order
+        endDate
+        endTime
+        timezoneOffset
+        status
+        phaseMembers {
+            id
+        }
+    }
+}
+
+query phase {
+    phase(id:"6592b6fe74edcbc2bf6eee99") {
+        id
+        process {
+            id
+        }
+        title
+        description
+        order
+        startDate
+        endDate
+        endTime
+        timezoneOffset
+        status
+        phaseMembers {
+            id
+            username
+            firstName
+            lastName
+            gender
+        }
+        phaseAdmins {
+            id
+            username
+            firstName
+            lastName
+            gender
+        }
+        tasks {
+            id
+        }
+    }
+}
+
+mutation {
+    addPhaseAdmins(id:"6592d9f0fc4b59f0f2b54b32", admins:["65755ce1663be023e8a16df5"]) {
+        id
+    }
+}
+
+mutation {
+    removePhaseAdmins(id:"6592d9f0fc4b59f0f2b54b32", admins:["65755ce1663be023e8a16df5"]) {
+        id
+    }
+}
+
+mutation {
+    addPhaseMembers(id:"6592d9f0fc4b59f0f2b54b32", members:["65755ce1663be023e8a16df5"]) {
+        id
+    }
+}
+
+mutation {
+    removePhaseMembers(id:"6592d9f0fc4b59f0f2b54b32", members:["6591ae55bf6ef8e21660c912"]) {
+        id
+    }
 }
