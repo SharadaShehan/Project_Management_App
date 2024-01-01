@@ -7,8 +7,9 @@ export default gql`
     }
 
     extend type Mutation {
-        createPhase(processId: ID!, title: String!, description: String, order: Int!, endDate: String, endTime: String): Phase
-        updatePhase(id: ID!, title: String, description: String, order: Int, endDate: String, endTime: String): Phase
+        createPhase(processId: ID!, title: String!, description: String, startDate: String, endDate: String, endTime: String, timezoneOffset: Int): Phase
+        updatePhase(id: ID!, title: String, description: String, startDate: String, endDate: String, endTime: String, status: String, timezoneOffset: Int): Phase
+        changeOrder(previousOrders: [ID!]!, newOrders: [ID!]!): [PhaseShortened!]
         deletePhase(id: ID!): Boolean
         addPhaseAdmins(id: ID!, admins: [ID!]!): Phase
         removePhaseAdmins(id: ID!, admins: [ID!]!): Phase
@@ -25,6 +26,7 @@ export default gql`
         startDate: String!
         endDate: String
         endTime: String
+        timezoneOffset: Int!
         phaseAdmins: [UserShortened!]
         phaseMembers: [UserShortened!]
         status: String!
@@ -39,6 +41,8 @@ export default gql`
         order: Int!
         endDate: String
         endTime: String
+        timezoneOffset: Int!
         status: String!
+        phaseMembers: [UserShortened!]
     }
 `

@@ -19,8 +19,10 @@ const phaseSchema = new mongoose.Schema({
     min: 1,
     max: 200
   },
-  startDatetime: Date,
-  endDatetime: Date,
+  startDate: String,
+  endDate: String,
+  endTime: String,
+  timezoneOffset: Number,
   phaseAdmins: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   phaseMembers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   status: {

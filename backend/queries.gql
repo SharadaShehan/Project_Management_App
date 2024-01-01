@@ -105,6 +105,10 @@ query project {
         }
 }
 
+#--------------------------------------------------------------------
+
+# Processes
+
 query processes {
     processes(id:"65916b45eb53ee8e45ff0bbc") {
         id
@@ -188,4 +192,30 @@ mutation {
     changeDefaultProcess(id:"659271910603aab10cb73966") {
         id
     }
+}
+
+#------------------------------------------------------------------------------------
+
+# phases
+
+mutation {
+    createPhase(processId:"659271910603aab10cb73966", title:"Dev Phase", description:"Web Development Phase", endDate:"2020-12-31", endTime:"23:59", timezoneOffset:330) {
+        id
+    }
+}
+
+mutation {
+    createPhase(processId:"659271910603aab10cb73966", title:"Testing Phase", description:"Testing Website in Test Environment", endDate:"2021-01-05", timezoneOffset:330) {
+        id
+    }
+}
+
+mutation {
+    updatePhase(id:"6592d70cd6bddda006bf359b", description:"Testing Website") {
+        id
+    }
+}
+
+mutation {
+    deletePhase(id:"6592d70cd6bddda006bf359b")
 }
