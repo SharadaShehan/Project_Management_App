@@ -10,8 +10,8 @@ export default gql`
         createProcess(projectId: ID!, title: String!, description: String, priority: String!, managers: [ID!]): Process
         updateProcess(id: ID!, title: String, description: String, priority: String, status: String): Process
         deleteProcess(id: ID!): Boolean
-        addProcessManager(id: ID!, userId: ID!): Process
-        removeProcessManager(id: ID!, userId: ID!): Process
+        addProcessManagers(id: ID!, managers: [ID!]!): Process
+        removeProcessManagers(id: ID!, managers: [ID!]!): Process
     }
 
     type Process {

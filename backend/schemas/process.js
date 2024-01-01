@@ -37,3 +37,7 @@ export const updateProcess = Joi.object().keys({
   priority: priorityOptional,
   status: statusOptional
 })
+
+export const managersUpdate = Joi.object().keys({
+  managers
+})
