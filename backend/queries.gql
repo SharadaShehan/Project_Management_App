@@ -169,7 +169,7 @@ mutation {
 }
 
 mutation {
-    deleteProcess(id:"65916b45eb53ee8e45ff0bbe")
+    deleteProcess(id:"65925227749175ea95e8dff8")
 }
 
 mutation {
@@ -180,6 +180,12 @@ mutation {
 
 mutation {
     removeProcessManagers(id:"659251af749175ea95e8dfee", managers:["65755ce1663be023e8a16df5"]) {
+        id
+    }
+}
+
+mutation {
+    changeDefaultProcess(id:"659271910603aab10cb73966") {
         id
     }
 }

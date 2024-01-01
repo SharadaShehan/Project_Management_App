@@ -83,6 +83,9 @@ export default {
       if (project.owner.toString() !== req.session.userId) {
         throw new Error('Unauthorized')
       }
+      if (project.defaultProcess.toString() === id) {
+        throw new Error('Cannot delete default process')
+      }
       const phases = process.phases
       const tasks = []
       for (const phase of phases) {
@@ -129,6 +132,19 @@ export default {
       await managersUpdate.validateAsync(args, { abortEarly: false })
       await Process.updateOne({ _id: process.id }, { $pull: { managers: { $in: args.managers } } })
       return Process.findOne({ _id: process.id })
+    },
+    changeDefaultProcess: async (root, { id }, { req }, info) => {
+      Auth.checkSignedIn(req)
+      const process = await Process.findOne({ _id: id })
+      if (!process) {
+        throw new Error('Process not found')
+      }
+      const project = await Project.findOne({ _id: process.project })
+      if (project.owner.toString() !== req.session.userId) {
+        throw new Error('Unauthorized')
+      }
+      await Project.updateOne({ _id: project.id }, { defaultProcess: id })
+      return Process.findOne({ _id: id })
     }
   },
 

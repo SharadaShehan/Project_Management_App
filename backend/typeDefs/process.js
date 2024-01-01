@@ -12,6 +12,7 @@ export default gql`
         deleteProcess(id: ID!): Boolean
         addProcessManagers(id: ID!, managers: [ID!]!): Process
         removeProcessManagers(id: ID!, managers: [ID!]!): Process
+        changeDefaultProcess(id: ID!): Process
     }
 
     type Process {
