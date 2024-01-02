@@ -374,3 +374,17 @@ query task {
         }
     }
 }
+
+mutation{
+    assignTask(id:"6593a6b9c2306a1ad936ae9b", assignees:["65754ade55df1cea083fdbb9","65755ce1663be023e8a16df5"]) {
+        id
+    }
+}
+
+mutation{
+    unassignTask(id:"6593a6b9c2306a1ad936ae9b", assignees:["65754ade55df1cea083fdbb9"]) {
+        id
+    }
+}
+
+#------------------------------------------------------------------------------------

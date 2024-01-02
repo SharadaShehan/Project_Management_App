@@ -73,6 +73,68 @@ export default {
       await updateTask.validateAsync(args, { abortEarly: false })
       await Task.updateOne({ _id: task.id }, args)
       return await Task.findOne({ _id: task.id })
+    },
+    deleteTask: async (root, { id }, { req }, info) => {
+      Auth.checkSignedIn(req)
+      const task = await Task.findOne({ _id: id })
+      if (!task) {
+        throw new Error('Task not found')
+      }
+      const phase = await Phase.findOne({ _id: task.phase })
+      if (!phase) {
+        throw new Error('Phase not found')
+      }
+      if (!phase.phaseAdmins.includes(req.session.userId)) {
+        throw new Error('Unauthorized')
+      }
+      await Task.deleteOne({ _id: id })
+      await Phase.updateOne({ _id: phase.id }, { $pull: { tasks: id } })
+      return true
+    },
+    assignTask: async (root, args, { req }, info) => {
+      Auth.checkSignedIn(req)
+      const task = await Task.findOne({ _id: args.id })
+      if (!task) {
+        throw new Error('Task not found')
+      }
+      const phase = await Phase.findOne({ _id: task.phase })
+      if (!phase) {
+        throw new Error('Phase not found')
+      }
+      if (!phase.phaseAdmins.includes(req.session.userId)) {
+        throw new Error('Unauthorized')
+      }
+      delete args.id
+      await taskAssignment.validateAsync(args, { abortEarly: false })
+      const copiedAssignees = [...args.assignees]
+      for (const assignee of copiedAssignees) {
+        if (!phase.phaseMembers.includes(assignee)) {
+          throw new Error('One or more users are not members of the phase')
+        }
+        if (task.taskAssignees.includes(assignee)) {
+          args.assignees.splice(args.assignees.indexOf(assignee), 1)
+        }
+      }
+      await Task.updateOne({ _id: task.id }, { $push: { taskAssignees: { $each: args.assignees } } })
+      return await Task.findOne({ _id: task.id })
+    },
+    unassignTask: async (root, args, { req }, info) => {
+      Auth.checkSignedIn(req)
+      const task = await Task.findOne({ _id: args.id })
+      if (!task) {
+        throw new Error('Task not found')
+      }
+      const phase = await Phase.findOne({ _id: task.phase })
+      if (!phase) {
+        throw new Error('Phase not found')
+      }
+      if (!phase.phaseAdmins.includes(req.session.userId)) {
+        throw new Error('Unauthorized')
+      }
+      delete args.id
+      await taskAssignment.validateAsync(args, { abortEarly: false })
+      await Task.updateOne({ _id: task.id }, { $pull: { taskAssignees: { $in: args.assignees } } })
+      return await Task.findOne({ _id: task.id })
     }
   },
 

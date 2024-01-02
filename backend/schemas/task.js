@@ -42,5 +42,5 @@ export const updateTask = Joi.object().keys({
 })
 
 export const taskAssignment = Joi.object().keys({
-  taskAssignees
+  assignees: taskAssignees
 })
