@@ -269,6 +269,12 @@ query phase {
         }
         tasks {
             id
+            title
+            description
+            endDate
+            endTime
+            timezoneOffset
+            status
         }
     }
 }
@@ -300,5 +306,71 @@ mutation {
 mutation {
     changePhaseOrder(processId:"659271910603aab10cb73966", previousOrders: [1,2], newOrders: [2,1]) {
         id
+    }
+}
+
+#------------------------------------------------------------------------------------
+
+# Tasks
+
+mutation {
+    createTask(phaseId:"6592b6fe74edcbc2bf6eee99", title:"Database Design", description:"Create ER diagram of the system", endDate:"2020-12-28", timezoneOffset:330) {
+        id
+    }
+}
+
+mutation {
+    createTask(phaseId:"6592b6fe74edcbc2bf6eee99", title:"UI Design", description:"Design the UI of frontend", endDate:"2020-12-29", timezoneOffset:330) {
+        id
+    }
+}
+
+mutation {
+    updateTask(id:"6593a6b9c2306a1ad936ae9b", description:"Draw ER diagram of the system") {
+        id
+    }
+}
+
+query tasks {
+    tasks(phaseId:"6592b6fe74edcbc2bf6eee99") {
+        id
+        phase {
+            id
+        }
+        title
+        description
+        endDate
+        endTime
+        timezoneOffset
+        status
+        taskAssignees {
+            id
+            username
+            firstName
+            lastName
+            gender
+        }
+    }
+}
+
+query task {
+    task(id:"6593a6b9c2306a1ad936ae9b") {
+        id
+        phase {
+            id
+        }
+        title
+        description
+        endDate
+        endTime
+        timezoneOffset
+        status
+        taskAssignees {
+            id
+            username
+            firstName
+            lastName
+            gender
+        }
     }
 }

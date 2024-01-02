@@ -13,7 +13,9 @@ const taskSchema = new mongoose.Schema({
     minlength: 5,
     maxlength: 100
   },
-  deadline: Date,
+  endDate: String,
+  endTime: String,
+  timezoneOffset: Number,
   taskAssignees: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   status: {
     type: String,
