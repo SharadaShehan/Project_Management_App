@@ -296,3 +296,9 @@ mutation {
         id
     }
 }
+
+mutation {
+    changePhaseOrder(processId:"659271910603aab10cb73966", previousOrders: [1,2], newOrders: [2,1]) {
+        id
+    }
+}

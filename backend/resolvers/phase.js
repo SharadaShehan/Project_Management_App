@@ -214,6 +214,46 @@ export default {
       await adminsUpdate.validateAsync(args, { abortEarly: false })
       await Phase.updateOne({ _id: phase.id }, { $pull: { phaseAdmins: { $in: args.admins } } })
       return Phase.findOne({ _id: phase.id })
+    },
+    changePhaseOrder: async (root, args, { req }, info) => {
+      Auth.checkSignedIn(req)
+      const process = await Process.findOne({ _id: args.processId })
+      if (!process) {
+        throw new Error('Process not found')
+      }
+      if (!process.managers.includes(req.session.userId)) {
+        throw new Error('Unauthorized')
+      }
+      const phases = await Phase.find({ process: args.processId, order: { $in: args.previousOrders } })
+      if (phases.length !== args.previousOrders.length) {
+        throw new Error('One or more phases not found')
+      }
+      const newPhases = await Phase.find({ process: args.processId, order: { $in: args.newOrders } })
+      if (newPhases.length !== args.newOrders.length) {
+        throw new Error('One or more phases not found')
+      }
+      const newOrders = [...args.newOrders]
+      const previousOrders = [...args.previousOrders]
+      if (!(previousOrders.every(element => Number.isInteger(element)) && newOrders.every(element => Number.isInteger(element)))) {
+        throw new Error('Invalid format')
+      }
+      if (previousOrders.length !== newOrders.length) {
+        throw new Error('Invalid format')
+      }
+      const sortedPreviousOrders = previousOrders.slice().sort()
+      const sortedNewOrders = newOrders.slice().sort()
+      if (!(sortedPreviousOrders.every((value, index) => value === sortedNewOrders[index]))) {
+        throw new Error('Unmatched orders')
+      }
+      const uniqueValues = new Set(newOrders)
+      if (uniqueValues.size !== newOrders.length) {
+        throw new Error('Duplicate orders')
+      }
+      const currentOrderedPhases = phases.sort((a, b) => previousOrders.indexOf(a.order) - previousOrders.indexOf(b.order))
+      currentOrderedPhases.forEach(async (phase, index) => {
+        await Phase.updateOne({ _id: phase.id }, { order: newOrders[index] })
+      })
+      return await Phase.find({ process: args.processId }).sort({ order: 1 })
     }
   },
 
