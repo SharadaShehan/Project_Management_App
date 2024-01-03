@@ -409,3 +409,39 @@ query lastPrivateMessages {
         content
     }
 }
+
+query privateMessages {
+    privateMessages(userId: "65754ade55df1cea083fdbb9", lastMessageIndex: 3, limit:2) {
+        id
+        sender {
+            id
+        }
+        receiver {
+            id
+        }
+        content
+        index
+    }
+}
+
+subscription{
+    newMessage(wsToken:"dadb718315b21269bf4d8bcf23c18eae") {
+        id
+        content
+        sender {
+            id
+            firstName
+        }
+        receiver {
+            id
+            firstName
+        }
+        project {
+            id
+        }
+        phase {
+            id
+            title
+        }
+    }
+}

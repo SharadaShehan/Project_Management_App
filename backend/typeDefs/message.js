@@ -16,8 +16,22 @@ export default gql`
         createPhaseMessage(phaseId: ID!, content: String!): PhaseMessage
     }
 
-    type PrivateMessage {
+    interface Message {
         id: ID!
+        project: ProjectShortened
+        phase: PhaseShortened
+        sender: UserShortened!
+        receiver: UserShortened
+        content: String!
+        index: Int!
+        createdAt: String!
+        read: Boolean
+    }
+
+    type PrivateMessage implements Message {
+        id: ID!
+        project: ProjectShortened
+        phase: PhaseShortened
         sender: UserShortened!
         receiver: UserShortened!
         content: String!
@@ -26,21 +40,27 @@ export default gql`
         read: Boolean!
     }
 
-    type ProjectMessage {
+    type ProjectMessage implements Message {
         id: ID!
         project: ProjectShortened!
+        phase: PhaseShortened
         sender: UserShortened!
+        receiver: UserShortened
         content: String!
         index: Int!
         createdAt: String!
+        read: Boolean
     }
 
-    type PhaseMessage {
+    type PhaseMessage implements Message {
         id: ID!
+        project: ProjectShortened!
         phase: PhaseShortened!
         sender: UserShortened!
+        receiver: UserShortened
         content: String!
         index: Int!
         createdAt: String!
+        read: Boolean
     }
 `

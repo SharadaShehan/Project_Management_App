@@ -8,6 +8,6 @@ export default gql`
     _: String
   }
   type Subscription {
-    _: String
+    newMessage(wsToken: String!): Message!
   }
 `

@@ -2,6 +2,7 @@ import { PrivateMessage } from '../models/index.js'
 import * as Auth from '../auth.js'
 import { createPrivateMessage } from '../schemas/message.js'
 import mongoose from 'mongoose'
+import { pubSub } from '../utils.js'
 
 export default {
   Query: {
@@ -96,10 +97,19 @@ export default {
       if (lastMessage) args.index = lastMessage.index + 1
       else args.index = 0
       await createPrivateMessage.validateAsync(args)
-      return await PrivateMessage.create(args)
+      const message = await PrivateMessage.create(args)
+      pubSub.publish(args.receiver, { newMessage: message })
+      return message
     }
   },
 
+  Message: {
+    __resolveType (message, context, info) {
+      if (message.project) return 'ProjectMessage'
+      if (message.phase) return 'PhaseMessage'
+      return 'PrivateMessage'
+    }
+  },
   PrivateMessage: {
     sender: async (privateMessage, args, context, info) => {
       return (await privateMessage.populate('sender')).sender

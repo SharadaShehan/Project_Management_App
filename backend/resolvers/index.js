@@ -4,6 +4,7 @@ import process from './process.js'
 import phase from './phase.js'
 import task from './task.js'
 import message from './message.js'
+import root from './root.js'
 
 export default [
   user,
@@ -11,5 +12,6 @@ export default [
   process,
   phase,
   task,
-  message
+  message,
+  root
 ]

@@ -21,6 +21,7 @@ export default gql`
         primaryEmail: String!
         secondaryEmail: String
         projects: [Project!]
+        wsToken: String!
     }
 
     type UserShortened {

@@ -45,7 +45,12 @@ const userSchema = new mongoose.Schema({
       message: ({ value }) => `Email ${value} has already been taken.`
     }
   },
-  projects: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Project' }]
+  projects: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Project' }],
+  wsToken: {
+    type: String,
+    minlength: 32,
+    maxlength: 32
+  }
 })
 
 userSchema.pre('save', async function (next) {

@@ -1,6 +1,7 @@
 import { User } from '../models/index.js'
 import { signIn, signUp } from '../schemas/index.js'
 import * as Auth from '../auth.js'
+import crypto from 'crypto'
 
 export default {
   Query: {
@@ -16,14 +17,18 @@ export default {
       await signUp.validateAsync(args, { abortEarly: false })
       const user = await User.create(args)
       req.session.userId = user.id
-      return user
+      const wsToken = crypto.randomBytes(16).toString('hex')
+      await User.updateOne({ _id: user.id }, { wsToken })
+      return User.findById(user.id)
     },
     signIn: async (root, args, { req }, info) => {
       Auth.checkSignedOut(req)
       await signIn.validateAsync(args, { abortEarly: false })
       const user = await Auth.attemptSignIn(args.username, args.password)
       req.session.userId = user.id
-      return user
+      const wsToken = crypto.randomBytes(16).toString('hex')
+      await User.updateOne({ _id: user.id }, { wsToken })
+      return User.findById(user.id)
     },
     signOut: async (root, args, { req, res }, info) => {
       Auth.checkSignedIn(req)
