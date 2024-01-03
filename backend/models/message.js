@@ -1,13 +1,68 @@
 import mongoose from 'mongoose'
 
-const messageSchema = new mongoose.Schema({
-  process: { type: mongoose.Schema.Types.ObjectId, ref: 'Process' },
-  phase: { type: mongoose.Schema.Types.ObjectId, ref: 'Phase' },
+const projectMessageSchema = new mongoose.Schema({
+  project: { type: mongoose.Schema.Types.ObjectId, ref: 'Project' },
   sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  receiver: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  datetime: Date
+  content: {
+    type: String,
+    required: true,
+    minlength: 1,
+    maxlength: 1000
+  },
+  index: {
+    type: Number,
+    required: true
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
 })
 
-const Message = mongoose.model('Message', messageSchema)
+const phaseMessageSchema = new mongoose.Schema({
+  phase: { type: mongoose.Schema.Types.ObjectId, ref: 'Phase' },
+  sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  content: {
+    type: String,
+    required: true,
+    minlength: 1,
+    maxlength: 1000
+  },
+  index: {
+    type: Number,
+    required: true
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+})
 
-export default Message
+const privateMessageSchema = new mongoose.Schema({
+  sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  receiver: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  content: {
+    type: String,
+    required: true,
+    minlength: 1,
+    maxlength: 1000
+  },
+  index: {
+    type: Number,
+    required: true
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  read: {
+    type: Boolean,
+    default: false
+  }
+})
+
+const ProjectMessage = mongoose.model('ProjectMessage', projectMessageSchema)
+const PhaseMessage = mongoose.model('PhaseMessage', phaseMessageSchema)
+const PrivateMessage = mongoose.model('PrivateMessage', privateMessageSchema)
+
+export { ProjectMessage, PhaseMessage, PrivateMessage }

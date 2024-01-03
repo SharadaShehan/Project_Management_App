@@ -3,11 +3,13 @@ import project from './project.js'
 import process from './process.js'
 import phase from './phase.js'
 import task from './task.js'
+import message from './message.js'
 
 export default [
   user,
   project,
   process,
   phase,
-  task
+  task,
+  message
 ]

@@ -388,3 +388,24 @@ mutation{
 }
 
 #------------------------------------------------------------------------------------
+
+# messages
+
+mutation {
+    createPrivateMessage(receiverId:"65754ade55df1cea083fdbb9", content:"Hello, How are you?") {
+        id
+    }
+}
+
+query lastPrivateMessages {
+    lastPrivateMessages {
+        id
+        sender {
+            id
+        }
+        receiver {
+            id
+        }
+        content
+    }
+}
