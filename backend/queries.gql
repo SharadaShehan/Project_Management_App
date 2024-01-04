@@ -38,6 +38,13 @@ mutation {
     signOut
 }
 
+query searchUser {
+    searchUser(searchText: "Sam") {
+        id
+        firstName
+    }
+}
+
 #--------------------------------------------------------------------------
 
 # Projects

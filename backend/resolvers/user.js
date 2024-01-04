@@ -9,7 +9,17 @@ export default {
       Auth.checkSignedIn(req)
       return await User.findById(req.session.userId)
     },
-    hi: () => 'Hello World'
+    hi: () => 'Hello World',
+    searchUser: async (root, args, { req }, info) => {
+      Auth.checkSignedIn(req)
+      return await User.find({
+        $or: [
+          { firstName: { $regex: args.searchText, $options: 'i' } },
+          { lastName: { $regex: args.searchText, $options: 'i' } },
+          { username: { $regex: args.searchText, $options: 'i' } }
+        ]
+      })
+    }
   },
   Mutation: {
     signUp: async (root, args, { req }, info) => {

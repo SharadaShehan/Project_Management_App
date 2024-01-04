@@ -4,6 +4,7 @@ export default gql`
     extend type Query {
         me: User
         hi: String
+        searchUser(searchText: String!): [UserShortened!]!
     }
 
     extend type Mutation {
