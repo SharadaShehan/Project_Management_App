@@ -1,4 +1,4 @@
-import { PrivateMessage, ProjectMessage, PhaseMessage, Project, Phase } from '../models/index.js'
+import { PrivateMessage, ProjectMessage, PhaseMessage, Project, Process, Phase } from '../models/index.js'
 import * as Auth from '../auth.js'
 import { createPrivateMessage, createProjectMessage, createPhaseMessage } from '../schemas/message.js'
 import mongoose from 'mongoose'
@@ -309,7 +309,8 @@ export default {
       args.phase = args.phaseId
       delete args.phaseId
       const phase = await Phase.findById(args.phase)
-      const project = await Project.findById(phase.project)
+      const process = await Process.findById(phase.process)
+      const project = await Project.findById(process.project)
       args.project = project.id
       if (!phase.phaseMembers.includes(args.sender)) {
         throw new Error('Unauthorized')
@@ -332,8 +333,8 @@ export default {
 
   Message: {
     __resolveType (message, context, info) {
-      if (message.project) return 'ProjectMessage'
       if (message.phase) return 'PhaseMessage'
+      if (message.project) return 'ProjectMessage'
       return 'PrivateMessage'
     }
   },

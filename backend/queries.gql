@@ -478,3 +478,36 @@ query projectMessages {
         index
     }
 }
+
+query lastPhaseMessages {
+    lastPhaseMessages {
+        id
+        sender {
+            id
+        }
+        phase {
+            id
+        }
+        content
+    }
+}
+
+query phaseMessages {
+    phaseMessages(phaseId: "6592d9f0fc4b59f0f2b54b32", lastMessageIndex: 3, limit:2) {
+        id
+        sender {
+            id
+        }
+        phase {
+            id
+        }
+        content
+        index
+    }
+}
+
+mutation {
+    createPhaseMessage(phaseId:"6592d9f0fc4b59f0f2b54b32", content:"Hello, How are you?") {
+        id
+    }
+}
