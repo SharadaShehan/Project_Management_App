@@ -98,6 +98,43 @@ export default {
       const reply = await Reply.create(args)
       await Post.updateOne({ _id: post.id }, { $push: { replies: reply.id } })
       return await Post.findById(post.id)
+    },
+    upvoteReply: async (root, args, { req }, info) => {
+      Auth.checkSignedIn(req)
+      const reply = await Reply.findById(args.id)
+      if (!reply) throw new Error('Reply not found')
+      const post = await Post.findById(reply.post)
+      if (!post) throw new Error('Post not found')
+      const project = await Project.findById(post.project)
+      if (!project) throw new Error('Project not found')
+      if (!project.members.includes(req.session.userId)) throw new Error('Not a member of this project')
+      if (reply.upvotedUsers.includes(req.session.userId)) throw new Error('Already upvoted')
+      await Reply.updateOne({ _id: reply.id }, { upvotes: reply.upvotes + 1, $push: { upvotedUsers: req.session.userId } })
+      return await Reply.findById(reply.id)
+    },
+    downvoteReply: async (root, args, { req }, info) => {
+      Auth.checkSignedIn(req)
+      const reply = await Reply.findById(args.id)
+      if (!reply) throw new Error('Reply not found')
+      const post = await Post.findById(reply.post)
+      if (!post) throw new Error('Post not found')
+      const project = await Project.findById(post.project)
+      if (!project) throw new Error('Project not found')
+      if (!project.members.includes(req.session.userId)) throw new Error('Not a member of this project')
+      if (!reply.upvotedUsers.includes(req.session.userId)) throw new Error('Not upvoted')
+      await Reply.updateOne({ _id: reply.id }, { upvotes: reply.upvotes - 1, $pull: { upvotedUsers: req.session.userId } })
+      return await Reply.findById(reply.id)
+    },
+    deleteReply: async (root, args, { req }, info) => {
+      Auth.checkSignedIn(req)
+      const reply = await Reply.findById(args.id)
+      if (!reply) throw new Error('Reply not found')
+      const post = await Post.findById(reply.post)
+      if (!post) throw new Error('Post not found')
+      if (reply.owner.toString() !== req.session.userId) throw new Error('Unauthorized')
+      await Reply.deleteOne({ _id: reply.id })
+      await Post.updateOne({ _id: post.id }, { $pull: { replies: reply.id } })
+      return true
     }
   },
 

@@ -15,7 +15,7 @@ export default gql`
       replyPost(postId: ID!, content: String!): Post!
       upvoteReply(id: ID!): Post!
       downvoteReply(id: ID!): Post!
-      deleteReply(id: ID!): Post!
+      deleteReply(id: ID!): Boolean!
     }
 
     type Post {

@@ -595,3 +595,19 @@ mutation {
         id
     }
 }
+
+mutation {
+    upvoteReply(id:"6596ad063b084d367fa79495") {
+        id
+    }
+}
+
+mutation {
+    downvoteReply(id:"6596ad063b084d367fa79495") {
+        id
+    }
+}
+
+mutation {
+    deleteReply(id:"6596ad063b084d367fa79495")
+}
