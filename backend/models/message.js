@@ -20,6 +20,7 @@ const projectMessageSchema = new mongoose.Schema({
 })
 
 const phaseMessageSchema = new mongoose.Schema({
+  project: { type: mongoose.Schema.Types.ObjectId, ref: 'Project' },
   phase: { type: mongoose.Schema.Types.ObjectId, ref: 'Phase' },
   sender: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   content: {

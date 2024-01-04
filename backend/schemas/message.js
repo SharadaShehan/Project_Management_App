@@ -9,6 +9,10 @@ const sender = Joi.string().external(async (value) => {
   const user = await mongoose.model('User').findById(value)
   if (!user) throw new Error('Invalid user')
 }).required().label('Sender')
+const phase = Joi.string().external(async (value) => {
+  const phase = await mongoose.model('Phase').findById(value)
+  if (!phase) throw new Error('Invalid phase')
+}).required().label('Phase')
 const receiver = Joi.string().external(async (value) => {
   const user = await mongoose.model('User').findById(value)
   if (!user) throw new Error('Invalid user')
@@ -27,6 +31,14 @@ export const createPrivateMessage = Joi.object().keys({
 
 export const createProjectMessage = Joi.object().keys({
   project,
+  sender,
+  content,
+  index
+})
+
+export const createPhaseMessage = Joi.object().keys({
+  project,
+  phase,
   sender,
   content,
   index

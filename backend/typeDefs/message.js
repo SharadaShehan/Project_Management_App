@@ -6,8 +6,8 @@ export default gql`
         lastProjectMessages: [ProjectMessage!]
         lastPhaseMessages: [PhaseMessage!]
         privateMessages(userId: ID!, lastMessageIndex: Int!, limit: Int!): [PrivateMessage!]
-        projectMessages(projectId: ID!): [ProjectMessage!]
-        phaseMessages(phaseId: ID!): [PhaseMessage!]
+        projectMessages(projectId: ID!, lastMessageIndex: Int!, limit: Int!): [ProjectMessage!]
+        phaseMessages(phaseId: ID!, lastMessageIndex: Int!, limit: Int!): [PhaseMessage!]
     }
 
     extend type Mutation {

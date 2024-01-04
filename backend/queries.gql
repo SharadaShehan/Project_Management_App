@@ -464,3 +464,17 @@ query lastProjectMessages {
         content
     }
 }
+
+query projectMessages {
+    projectMessages(projectId: "659251af749175ea95e8dfec", lastMessageIndex: 3, limit:2) {
+        id
+        sender {
+            id
+        }
+        project {
+            id
+        }
+        content
+        index
+    }
+}
