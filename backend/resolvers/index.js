@@ -5,6 +5,7 @@ import phase from './phase.js'
 import task from './task.js'
 import message from './message.js'
 import root from './root.js'
+import forum from './forum.js'
 
 export default [
   user,
@@ -13,5 +14,6 @@ export default [
   phase,
   task,
   message,
-  root
+  root,
+  forum
 ]

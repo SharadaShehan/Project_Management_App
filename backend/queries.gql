@@ -511,3 +511,59 @@ mutation {
         id
     }
 }
+
+#------------------------------------------------------------------------------------
+
+# Posts
+
+mutation {
+    createPost(projectId:"659251af749175ea95e8dfec", content:"Content describing the bug", title:"New Bug") {
+        id
+    }
+}
+
+query posts {
+    posts(projectId:"659251af749175ea95e8dfec") {
+        id
+        project {
+            id
+        }
+        title
+        content
+        upvotes
+        owner {
+            id
+        }
+    }
+}
+
+query post {
+    post(id:"659690f8c048595cc7b6a041") {
+        id
+        project {
+            id
+        }
+        title
+        content
+        upvotes
+        upvotedUsers {
+            id
+        }
+        owner {
+            id
+        }
+        createdAt
+        replies {
+            id
+            content
+            upvotes
+            upvotedUsers {
+                id
+            }
+            owner {
+                id
+            }
+            createdAt
+        }
+    }
+}

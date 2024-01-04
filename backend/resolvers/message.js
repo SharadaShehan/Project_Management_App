@@ -286,6 +286,7 @@ export default {
       args.project = args.projectId
       delete args.projectId
       const project = await Project.findById(args.project)
+      if (!project) throw new Error('Project not found')
       if (!project.members.includes(args.sender)) {
         throw new Error('Unauthorized')
       }
@@ -309,8 +310,11 @@ export default {
       args.phase = args.phaseId
       delete args.phaseId
       const phase = await Phase.findById(args.phase)
+      if (!phase) throw new Error('Phase not found')
       const process = await Process.findById(phase.process)
+      if (!process) throw new Error('Process not found')
       const project = await Project.findById(process.project)
+      if (!project) throw new Error('Project not found')
       args.project = project.id
       if (!phase.phaseMembers.includes(args.sender)) {
         throw new Error('Unauthorized')
