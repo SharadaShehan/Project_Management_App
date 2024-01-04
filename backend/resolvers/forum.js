@@ -2,7 +2,6 @@ import { Post, Reply } from '../models/forum.js'
 import * as Auth from '../auth.js'
 import { createPost, updatePost, createReply } from '../schemas/forum.js'
 import { Project } from '../models/index.js'
-import mongoose from 'mongoose'
 
 export default {
   Query: {
@@ -44,6 +43,61 @@ export default {
       await createPost.validateAsync(args)
       const post = await Post.create(args)
       return post
+    },
+    updatePost: async (root, args, { req }, info) => {
+      Auth.checkSignedIn(req)
+      const post = await Post.findById(args.id)
+      delete args.id
+      if (!post) throw new Error('Post not found')
+      if (post.owner.toString() !== req.session.userId) throw new Error('Unauthorized')
+      await updatePost.validateAsync(args)
+      await Post.updateOne({ _id: post.id }, args)
+      return await Post.findById(post.id)
+    },
+    deletePost: async (root, args, { req }, info) => {
+      Auth.checkSignedIn(req)
+      const post = await Post.findById(args.id)
+      if (!post) throw new Error('Post not found')
+      if (post.owner.toString() !== req.session.userId) throw new Error('Unauthorized')
+      await Post.deleteOne({ _id: post.id })
+      return true
+    },
+    upvotePost: async (root, args, { req }, info) => {
+      Auth.checkSignedIn(req)
+      const post = await Post.findById(args.id)
+      const project = await Project.findById(post.project)
+      if (!project.members.includes(req.session.userId)) throw new Error('Not a member of this project')
+      if (!post) throw new Error('Post not found')
+      if (post.upvotedUsers.includes(req.session.userId)) throw new Error('Already upvoted')
+      await Post.updateOne({ _id: post.id }, { upvotes: post.upvotes + 1, $push: { upvotedUsers: req.session.userId } })
+      return await Post.findById(post.id)
+    },
+    downvotePost: async (root, args, { req }, info) => {
+      Auth.checkSignedIn(req)
+      const post = await Post.findById(args.id)
+      const project = await Project.findById(post.project)
+      if (!project.members.includes(req.session.userId)) throw new Error('Not a member of this project')
+      if (!post) throw new Error('Post not found')
+      if (!post.upvotedUsers.includes(req.session.userId)) throw new Error('Not upvoted')
+      await Post.updateOne({ _id: post.id }, { upvotes: post.upvotes - 1, $pull: { upvotedUsers: req.session.userId } })
+      return await Post.findById(post.id)
+    },
+    replyPost: async (root, args, { req }, info) => {
+      Auth.checkSignedIn(req)
+      const post = await Post.findById(args.postId)
+      if (!post) throw new Error('Post not found')
+      delete args.postId
+      const project = await Project.findById(post.project)
+      if (!project) throw new Error('Project not found')
+      if (!project.members.includes(req.session.userId)) throw new Error('Not a member of this project')
+      args.post = post.id
+      args.owner = req.session.userId
+      args.upvotes = 0
+      args.upvotedUsers = []
+      await createReply.validateAsync(args)
+      const reply = await Reply.create(args)
+      await Post.updateOne({ _id: post.id }, { $push: { replies: reply.id } })
+      return await Post.findById(post.id)
     }
   },
 
@@ -67,6 +121,17 @@ export default {
     },
     owner: async (post, args, { req }, info) => {
       return (await post.populate('owner')).owner
+    }
+  },
+  Reply: {
+    post: async (reply, args, { req }, info) => {
+      return (await reply.populate('post')).post
+    },
+    upvotedUsers: async (reply, args, { req }, info) => {
+      return (await reply.populate('upvotedUsers')).upvotedUsers
+    },
+    owner: async (reply, args, { req }, info) => {
+      return (await reply.populate('owner')).owner
     }
   }
 }

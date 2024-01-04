@@ -12,7 +12,7 @@ export default gql`
       deletePost(id: ID!): Boolean!
       upvotePost(id: ID!): Post!
       downvotePost(id: ID!): Post!
-      replyPost(id: ID!, content: String!): Post!
+      replyPost(postId: ID!, content: String!): Post!
       upvoteReply(id: ID!): Post!
       downvoteReply(id: ID!): Post!
       deleteReply(id: ID!): Post!
@@ -32,6 +32,7 @@ export default gql`
 
     type Reply {
       id: ID!
+      post: Post!
       content: String!
       upvotes: Int!
       upvotedUsers: [UserShortened!]

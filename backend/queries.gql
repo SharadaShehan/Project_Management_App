@@ -567,3 +567,31 @@ query post {
         }
     }
 }
+
+mutation {
+    updatePost(id:"659690f8c048595cc7b6a041", content:"Content describing the bug in detail") {
+        id
+    }
+}
+
+mutation {
+    deletePost(id:"659690f8c048595cc7b6a041")
+}
+
+mutation {
+    upvotePost(id:"659690f8c048595cc7b6a041") {
+        id
+    }
+}
+
+mutation {
+    downvotePost(id:"659690f8c048595cc7b6a041") {
+        id
+    }
+}
+
+mutation {
+    replyPost(postId:"6596a637c9e8402dbf1cbb67", content:"Reply to the post") {
+        id
+    }
+}
