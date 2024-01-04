@@ -611,3 +611,51 @@ mutation {
 mutation {
     deleteReply(id:"6596ad063b084d367fa79495")
 }
+
+#------------------------------------------------------------------------------------
+
+# Requests
+
+mutation {
+    createRequest(projectId:"659251af749175ea95e8dfec", receiverId:"6591ae55bf6ef8e21660c912") {
+        id
+    }
+}
+
+mutation {
+    respondRequest(id:"65970b97032acc331a16ee22", status:"Accepted") {
+        id
+    }
+}
+
+mutation {
+    cancelRequest(id:"65970b97032acc331a16ee22")
+}
+
+query sentRequests {
+    sentRequests {
+        id
+        project {
+            id
+        }
+        receiver {
+            id
+        }
+        status
+    }
+}
+
+query receivedRequests {
+    receivedRequests {
+        id
+        project {
+            id
+        }
+        sender {
+            id
+        }
+        status
+    }
+}
+
+#------------------------------------------------------------------------------------

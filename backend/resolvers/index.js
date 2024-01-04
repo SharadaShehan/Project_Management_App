@@ -6,6 +6,7 @@ import task from './task.js'
 import message from './message.js'
 import root from './root.js'
 import forum from './forum.js'
+import request from './request.js'
 
 export default [
   user,
@@ -15,5 +16,6 @@ export default [
   task,
   message,
   root,
-  forum
+  forum,
+  request
 ]
