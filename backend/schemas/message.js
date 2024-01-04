@@ -1,6 +1,10 @@
 import Joi from 'joi'
 import mongoose from 'mongoose'
 
+const project = Joi.string().external(async (value) => {
+  const project = await mongoose.model('Project').findById(value)
+  if (!project) throw new Error('Invalid project')
+}).required().label('Project')
 const sender = Joi.string().external(async (value) => {
   const user = await mongoose.model('User').findById(value)
   if (!user) throw new Error('Invalid user')
@@ -19,4 +23,11 @@ export const createPrivateMessage = Joi.object().keys({
   content,
   index,
   read
+})
+
+export const createProjectMessage = Joi.object().keys({
+  project,
+  sender,
+  content,
+  index
 })

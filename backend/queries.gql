@@ -445,3 +445,22 @@ subscription{
         }
     }
 }
+
+mutation {
+    createProjectMessage(projectId:"659251af749175ea95e8dfec", content:"Hello, How are you?") {
+        id
+    }
+}
+
+query lastProjectMessages {
+    lastProjectMessages {
+        id
+        sender {
+            id
+        }
+        project {
+            id
+        }
+        content
+    }
+}
