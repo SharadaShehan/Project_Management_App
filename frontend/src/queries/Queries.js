@@ -34,8 +34,6 @@ const ONE_PROJECT_QUERY = gql`
             processes {
                 id
                 title
-                status
-                priority
             }
             defaultProcess {
                 id
@@ -48,18 +46,31 @@ const PROCESS_QUERY = gql`
     query process($id: ID!) {
         process(id: $id) {
             id
+            project {
+                id
+            }
             title
             description
             status
             priority
             managers {
                 id
+                username
+                firstName
+                lastName
+                gender
             }
             phases {
                 id
+                process {
+                    id
+                }
                 title
+                description
+                order
+                endDate
+                endTime
                 status
-                endDatetime
             }
         }
     }
