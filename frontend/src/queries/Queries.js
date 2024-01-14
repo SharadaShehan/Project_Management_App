@@ -5,6 +5,7 @@ const PROJECTS_QUERY = gql`
         projects {
             id
             title
+            description
             status
             defaultProcess {
                 id

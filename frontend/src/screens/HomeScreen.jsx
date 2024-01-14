@@ -26,6 +26,9 @@ const HomeScreen = ({ navigation }) => {
             headerRight: () => (
               <LogOutBtn navigation={navigation} />
             ),
+            headerStyle: { backgroundColor: '#6BB64a' },
+            headerTitleAlign: 'center',
+            headerTitleStyle: { fontSize: 24, color: '#fff' }
           }
         }/>
           
@@ -37,6 +40,9 @@ const HomeScreen = ({ navigation }) => {
             tabBarIcon: ({ color, size }) => (
               <MatIcon name="notifications" size={30} />
             ),
+            headerStyle: { backgroundColor: '#6BB64a' },
+            headerTitleAlign: 'center',
+            headerTitleStyle: { fontSize: 24, color: '#fff' }
         }}
         />
 
@@ -48,6 +54,9 @@ const HomeScreen = ({ navigation }) => {
             tabBarIcon: ({ color, size }) => (
               <MIcon name="chat-question" size={30} />
             ),
+            headerStyle: { backgroundColor: '#6BB64a' },
+            headerTitleAlign: 'center',
+            headerTitleStyle: { fontSize: 24, color: '#fff' }
           }}
         />
 
@@ -59,6 +68,9 @@ const HomeScreen = ({ navigation }) => {
             tabBarIcon: ({ color, size }) => (
               <Icon name="wechat" size={26} />
             ),
+            headerStyle: { backgroundColor: '#6BB64a' },
+            headerTitleAlign: 'center',
+            headerTitleStyle: { fontSize: 24, color: '#fff' }
           }}
         />
       </Tab.Navigator>
