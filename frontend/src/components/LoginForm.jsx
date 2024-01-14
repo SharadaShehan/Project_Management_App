@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { SIGNIN_MUTATION } from '../queries/Mutations';
 import { useMutation } from '@apollo/client';
+import { UserGlobalState } from '../layout/UserState';
 
 const LoginForm = ({navigation}) => {
+  const { userData, setUserData } = UserGlobalState();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [signIn, { data, loading, error }] = useMutation(SIGNIN_MUTATION);
@@ -35,6 +37,13 @@ const LoginForm = ({navigation}) => {
             });
             // response.data.signIn.firstName
             if (response.data.signIn.firstName) {
+              setUserData({
+                id: response.data.signIn.id,
+                firstName: response.data.signIn.firstName,
+                lastName: response.data.signIn.lastName,
+                username: response.data.signIn.username,
+                wsToken: response.data.signIn.wsToken,
+              });
               navigation.navigate('Home');
             } else {
               alert('Invalid username or password');

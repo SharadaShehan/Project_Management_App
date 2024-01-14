@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Button, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, Button, TouchableOpacity, FlatList, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ONE_PROJECT_QUERY, PROCESS_QUERY } from '../queries/Queries'; // Import your GraphQL queries
 import { useQuery } from '@apollo/client';
+import { UserGlobalState } from '../layout/UserState';
 
 const ProjectScreen = ({navigation, route}) => {
+
+    const { userData } = UserGlobalState();
 
     const { data:projectData, loading:projectLoading, error:projectError } = useQuery(ONE_PROJECT_QUERY, {
         variables: { id: route.params.id },
@@ -34,6 +37,7 @@ const ProjectScreen = ({navigation, route}) => {
 
     return (
         <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16 }}>
+            <ScrollView showsVerticalScrollIndicator={false}>
             {projectLoading && <Text>project Loading ...</Text>}
             {projectError && ( projectError.status === 401 ? navigation.navigate('Login') : console.log(projectError.message))}
 
@@ -66,11 +70,26 @@ const ProjectScreen = ({navigation, route}) => {
 
             {processData && (
                 <View>
-                    <Text>process : </Text>
+                    <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 12 }}>Process ~</Text>
                     <Text>title : {processData.process.title}</Text>
                     <Text>description : {processData.process.description}</Text>
+                    <Text>status: {processData.process.status}</Text>
+                    <Text>Priority: {processData.process.priority}</Text>
+                    <Text>Phases: </Text>
+                    {processData.process.phases.map((phase) => (
+                        <View style={{ margin: 10 }} key={phase.id+'0'}>
+                            <Text key={phase.id+'1'}>title: {phase.title}</Text>
+                            <Text key={phase.id+'2'}>description: {phase.description}</Text>
+                            <Text key={phase.id+'4'}>order: {phase.order}</Text>
+                            <Text key={phase.id+'3'}>status: {phase.status}</Text>
+                            <Text key={phase.id+'6'}>endDate: {phase.endDate}</Text>
+                            <Text key={phase.id+'7'}>endTime: {phase.endTime}</Text>
+                            <Text key={phase.id+'8'}>timezoneOffset: {phase.timezoneOffset}</Text>
+                        </View>
+                    ))}
                 </View>
             )}
+            </ScrollView>
         </SafeAreaView>
     );
 }

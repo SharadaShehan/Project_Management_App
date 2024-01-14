@@ -70,7 +70,11 @@ const PROCESS_QUERY = gql`
                 order
                 endDate
                 endTime
+                timezoneOffset
                 status
+                phaseMembers {
+                    id
+                }
             }
         }
     }

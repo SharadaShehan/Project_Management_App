@@ -5,8 +5,10 @@ import { SIGNOUT_MUTATION } from '../queries/Mutations';
 import { useMutation } from '@apollo/client';
 import MIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import MatIcon from 'react-native-vector-icons/MaterialIcons';
+import { UserGlobalState } from '../layout/UserState';
 
 const LogOutBtn = ({ navigation }) => {
+    const { userData, setUserData } = UserGlobalState();
     const [signOut, { data, loading, error }] = useMutation(SIGNOUT_MUTATION);
 
     return (
@@ -15,6 +17,12 @@ const LogOutBtn = ({ navigation }) => {
                 try {
                     const response = await signOut();
                     if (response.data.signOut) {
+                        setUserData({
+                            id: null,
+                            firstName: null,
+                            lastName: null,
+                            username: null
+                        });
                         navigation.navigate('Login');
                     } else {
                         alert('failed to logout');
