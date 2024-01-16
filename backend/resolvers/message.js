@@ -183,7 +183,7 @@ export default {
         },
         {
           $sort: {
-            index: 1
+            index: -1
           }
         }
       ])
@@ -217,7 +217,7 @@ export default {
         },
         {
           $sort: {
-            index: 1
+            index: -1
           }
         }
       ])
@@ -251,7 +251,7 @@ export default {
         },
         {
           $sort: {
-            index: 1
+            index: -1
           }
         }
       ])
