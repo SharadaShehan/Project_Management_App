@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
         margin: 20,
         // alignItems: 'center',
         justifyContent: 'center',
-        height: '80%',
+        height: '80%'
     },
     itemContainer: {
         paddingTop: 10,
