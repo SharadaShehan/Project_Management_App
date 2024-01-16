@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, Button, TouchableOpacity, ScrollView, FlatList, SafeAreaView, StyleSheet, TextInput } from 'react-native';
 import { PHASE_MESSAGES_QUERY } from '../queries/Queries';
-import { useQuery } from '@apollo/client';
+import { CREATE_PHASE_MESSAGE_MUTATION } from '../queries/Mutations';
+import { useQuery, useMutation } from '@apollo/client';
 import { MessagesGlobalState } from '../layout/MessagesState';
 import { UserGlobalState } from '../layout/UserState';
 import { text } from '@fortawesome/fontawesome-svg-core';
@@ -9,6 +10,7 @@ import MatIcon from 'react-native-vector-icons/MaterialIcons';
 
 const PhaseChatScreen = ({ navigation, route }) => {
     const flatListRef = useRef(null);
+    const [ isBtnDisabled, setIsBtnDisabled ] = useState(false);
     const phase = route.params.phase;
     const lastMessageIndex = useRef(route.params.lastMessageIndex || 0);
     const limit = route.params.limit || 100;
@@ -20,6 +22,8 @@ const PhaseChatScreen = ({ navigation, route }) => {
     const { data:recentMessages, loading:messagesLoading, error:messagesError } = useQuery(PHASE_MESSAGES_QUERY, {
         variables: { phaseId: phase.id, lastMessageIndex: lastMessageIndex.current, limit: limit },
     })
+
+    const [ createPhaseMessage, { data:createdMessage, loading:createdMessageLoading, error:createdMessageError } ] = useMutation(CREATE_PHASE_MESSAGE_MUTATION);
 
     useEffect(() => {
         if (recentMessages) {
@@ -56,7 +60,7 @@ const PhaseChatScreen = ({ navigation, route }) => {
                     <View style={[styles.messageContainer, { paddingTop: (!isSameUserAsPreviousMessage && !isSenderTheUser) ? 0 : 5 }]} key={item.id}>
                         <Text style={[styles.messageText, { color: isSenderTheUser ? '#fff' : '#000', paddingBottom: item.content.length > 37 ? 7 : 0 }]}>{item.content}</Text>
                         <Text style={[styles.timeText, { color: isSenderTheUser ? '#ddd' : '#666' }]}> {timeWithoutSeconds}</Text>
-                        <Text>   {item.index}</Text>
+                        {/* <Text>   {item.index}</Text> */}
                     </View>
                 </View>
             </TouchableOpacity>
@@ -92,7 +96,24 @@ const PhaseChatScreen = ({ navigation, route }) => {
                             onChangeText={(text) => setTextInput(text)}
                             // textAlignVertical='top'
                         />
-                        <MatIcon name='send' style={styles.sendIcon} />
+                        <MatIcon name='send' style={styles.sendIcon} onPress={async () => {
+                            setIsBtnDisabled(true);
+                            try {
+                                const response = await createPhaseMessage({
+                                    variables: {
+                                        content: textInput,
+                                        phaseId: phase.id,
+                                    }
+                                });
+                                console.log(response.data.createPhaseMessage);
+                                setTextInput('');
+                            } catch (err) {
+                                console.log(err);
+                            }
+                            setIsBtnDisabled(false);
+                        }} 
+                        disabled={isBtnDisabled}
+                        />
                     </View>
                 </View>
             )}
@@ -168,6 +189,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        // justifyContent: 'center',
+        verticalAlign: 'middle',
         marginBottom: 16
     },
     textInput: {
@@ -182,11 +205,11 @@ const styles = StyleSheet.create({
         width: '80%',
     },
     sendIcon: {
-        fontSize: 28,
+        fontSize: 25,
         backgroundColor: '#6BB64a',
-        paddingVertical: 10,
-        paddingLeft: 13,
-        paddingRight: 8,
+        paddingVertical: 9,
+        paddingLeft: 12,
+        paddingRight: 7,
         borderRadius: 35,
         color: '#fff'
     }

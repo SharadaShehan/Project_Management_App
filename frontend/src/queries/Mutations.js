@@ -18,4 +18,29 @@ const SIGNOUT_MUTATION = gql`
     }
 `;
 
-export { SIGNIN_MUTATION, SIGNOUT_MUTATION };
+const CREATE_PHASE_MESSAGE_MUTATION = gql`
+    mutation createPhaseMessage($phaseId: ID!, $content: String!) {
+        createPhaseMessage(phaseId: $phaseId, content: $content) {
+            id
+            content
+            createdAt
+            index
+            read
+            project {
+                id
+                title
+            }
+            phase {
+                id
+                title
+            }
+            sender {
+                id
+                firstName
+                lastName
+            }
+        }
+    }
+`;
+
+export { SIGNIN_MUTATION, SIGNOUT_MUTATION, CREATE_PHASE_MESSAGE_MUTATION };
