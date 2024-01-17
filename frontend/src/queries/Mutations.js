@@ -164,5 +164,29 @@ const DOWNVOTE_REPLY_MUTATION = gql`
     }
 `;
 
+const REPLY_POST_MUTATION = gql`
+    mutation replyPost($postId: ID!, $content: String!) {
+        replyPost(postId: $postId, content: $content) {
+            id
+            replies {
+                id
+                content
+                upvotes
+                upvotedUsers {
+                    id
+                    firstName
+                    lastName
+                }
+                owner {
+                    id
+                    firstName
+                    lastName
+                }
+                createdAt
+            }
+        }
+    }
+`;
+
 export { SIGNIN_MUTATION, SIGNOUT_MUTATION, CREATE_PHASE_MESSAGE_MUTATION, CREATE_PROJECT_MESSAGE_MUTATION, CREATE_PRIVATE_MESSAGE_MUTATION,
-    CREATE_POST_MUTATION, UPVOTE_POST_MUTATION, DOWNVOTE_POST_MUTATION, UPVOTE_REPLY_MUTATION, DOWNVOTE_REPLY_MUTATION };
+    CREATE_POST_MUTATION, UPVOTE_POST_MUTATION, DOWNVOTE_POST_MUTATION, UPVOTE_REPLY_MUTATION, DOWNVOTE_REPLY_MUTATION, REPLY_POST_MUTATION };

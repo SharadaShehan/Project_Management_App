@@ -1,9 +1,10 @@
 import React , { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Button, FlatList, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Button, FlatList, Image, TextInput, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { POST_QUERY } from '../queries/Queries';
-import { UPVOTE_POST_MUTATION, DOWNVOTE_POST_MUTATION, UPVOTE_REPLY_MUTATION, DOWNVOTE_REPLY_MUTATION } from '../queries/Mutations';
+import { UPVOTE_POST_MUTATION, DOWNVOTE_POST_MUTATION, UPVOTE_REPLY_MUTATION, DOWNVOTE_REPLY_MUTATION, REPLY_POST_MUTATION } from '../queries/Mutations';
 import { useQuery, useMutation } from '@apollo/client';
+import MatIcon from 'react-native-vector-icons/MaterialIcons';
 import MIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { UserGlobalState } from '../layout/UserState';
 
@@ -12,6 +13,8 @@ const PostScreen = ({ navigation, route }) => {
     const [ upvoteCount, setUpvoteCount ] = useState(0);
     const [ votedForReplies, setVotedForReplies ] = useState([]);
     const [ votedForRepliesCount, setVotedForRepliesCount ] = useState([]);
+    const [ commentBoxVisible, setCommentBoxVisible ] = useState(false);
+    const [ textInput, setTextInput ] = useState('');
     const { userData, setUserData } = UserGlobalState();
     const { data, loading, error } = useQuery(POST_QUERY, {
         variables: { id: route.params.id },
@@ -21,6 +24,7 @@ const PostScreen = ({ navigation, route }) => {
     const [ downvotePost, { data:downvotedPost, loading:downvotedPostLoading, error:downvotedPostError } ] = useMutation(DOWNVOTE_POST_MUTATION);
     const [ upvoteReply, { data:upvotedReply, loading:upvotedReplyLoading, error:upvotedReplyError } ] = useMutation(UPVOTE_REPLY_MUTATION);
     const [ downvoteReply, { data:downvotedReply, loading:downvotedReplyLoading, error:downvotedReplyError } ] = useMutation(DOWNVOTE_REPLY_MUTATION);
+    const [ replyPost, { data:createdReply, loading:createdReplyLoading, error:createdReplyError } ] = useMutation(REPLY_POST_MUTATION);
 
     const RenderItem = ({ item, index }) => {
         const datetimeObj = new Date(parseInt(item.createdAt));
@@ -35,7 +39,7 @@ const PostScreen = ({ navigation, route }) => {
         if (isDateToday) {
             datetimeOutput = timeWithoutSeconds;
         } else {
-            datetimeOutput = date
+            datetimeOutput = shortenedDate;
         }
 
         return (
@@ -56,14 +60,12 @@ const PostScreen = ({ navigation, route }) => {
                                     if (response.data.downvoteReply) {
                                         setVotedForReplies(votedForReplies.map((reply, i) => i === index ? false : reply));
                                         setVotedForRepliesCount(votedForRepliesCount.map((count, i) => i === index ? count - 1 : count));
-                                        console.log('downvoted');
                                     }
                                 } else {
                                     const response = await upvoteReply({ variables: { id: item.id } });
                                     if (response.data.upvoteReply) {
                                         setVotedForReplies(votedForReplies.map((reply, i) => i === index ? true : reply));
                                         setVotedForRepliesCount(votedForRepliesCount.map((count, i) => i === index ? count + 1 : count));
-                                        console.log('upvoted');
                                     }
                                 }
                                 console.log(votedForReplies);
@@ -88,12 +90,12 @@ const PostScreen = ({ navigation, route }) => {
     }, [data]);
 
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.postsContainer}>
+        <View style={styles.container}>
+            {/* <View style={styles.postsContainer}> */}
             {loading && <Text>Loading Post...</Text>}
             {error && ( error.status === 401 ? navigation.navigate('Login') : console.log(error.message))}
             {data && (
-                <View>
+                <View style={{ flex: 1 }}>
                     <Text style={styles.postAuthor}>{data.post.owner.firstName} {data.post.owner.lastName}  </Text>
                     <Text style={styles.postDate}>{(new Date(parseInt(data.post.createdAt))).toLocaleString('en-US', { month: 'long', day: 'numeric' })}</Text>
                     <Text style={styles.projectTitle}>{data.post.project.title}</Text>
@@ -124,17 +126,57 @@ const PostScreen = ({ navigation, route }) => {
                         }>
                             <MIcon name='arrow-up-bold' size={28} color={upvoted ? '#6BB64a' : '#d8d8d8'} />
                         </TouchableOpacity>
+                        <TouchableOpacity style={[styles.replyButton]} onPress={() => setCommentBoxVisible(!commentBoxVisible)}>
+                            <MatIcon name='add-comment' size={24} color='#434343' />
+                        </TouchableOpacity>
                     </View>
+                    <View style={{ flex: 1 }}>
                     <FlatList
                         data={data.post.replies}
                         keyExtractor={(item) => item.id.toString()}
                         renderItem={RenderItem}
                     />
-                    
-                </View>
+                    </View>
+                    {commentBoxVisible && (
+                        <View style={styles.newReplyContainer}>
+                            <TextInput
+                                style={styles.textInput}
+                                placeholder='Type a reply'
+                                onChangeText={(val) => setTextInput(val)}
+                                value={textInput}
+                                multiline={true}
+                                maxLength={1000}
+                            />
+                            <TouchableOpacity
+                                style={styles.sendBtn}
+                                onPress={async () => {
+                                    if (textInput.length > 0) {
+                                        try {
+                                            const response = await replyPost({
+                                                variables: {
+                                                    content: textInput,
+                                                    postId: data.post.id,
+                                                }
+                                            });
+                                            console.log(response.data.replyPost);
+                                            setTextInput('');
+                                            setCommentBoxVisible(false);
+                                            navigation.navigate('Post', { id: data.post.id });
+                                        } catch (err) {
+                                            console.log(err);
+                                        }
+                                    }
+                                }}
+                            >
+                                <MatIcon name='send' size={30} color='#6BB64a' />
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                </View> 
             )}
-            </View>
-        </SafeAreaView>
+
+            {/* </View> */}
+        </View>
     );
 }
 
@@ -142,10 +184,14 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 0,
-        height: '95%',
+        // marginBottom: 10,
+        paddingBottom: 15,
+        alignItems: 'justify',
+        backgroundColor: '#fff',
+        paddingHorizontal: 25,
     },
     postsContainer: {
-        flex: 1,
+        // flex: 1,
         // justifyContent: 'center',
         alignItems: 'justify',
         backgroundColor: '#fff',
@@ -216,8 +262,14 @@ const styles = StyleSheet.create({
         // padding: 3,
         // margin: 10,
         borderRadius: 20,
-        width: '16%',
+        width: '14%',
         alignItems: 'left'
+    },
+    replyButton: {
+        borderRadius: 20,
+        width: '10%',
+        alignItems: 'left',
+        marginTop: 5,
     },
     replyUser: {
         fontSize: 15,
@@ -235,6 +287,28 @@ const styles = StyleSheet.create({
         // marginBottom: 15,
         marginTop: 0,
         color: '#666',
+    },
+    newReplyContainer: {
+        flexDirection: 'row',
+        padding: 5,
+        borderRadius: 20,
+        marginTop: 10,
+        marginLeft: 5,
+    },
+    textInput: {
+        backgroundColor: '#f8f8f8',
+        borderRadius: 20,
+        padding: 10,
+        marginBottom: 5,
+        marginRight: 5,
+        paddingLeft: 15,
+        width: '80%',
+    },
+    sendBtn: {
+        // backgroundColor: '#6BB64a',
+        borderRadius: 50,
+        paddingTop: 8,
+        marginLeft: 10,
     },
     createPostButton: {
         backgroundColor: '#6BB64a',
