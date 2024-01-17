@@ -278,6 +278,7 @@ export default {
       await createPrivateMessage.validateAsync(args)
       const message = await PrivateMessage.create(args)
       pubSub.publish(args.receiver, { newMessage: message })
+      pubSub.publish(args.sender, { newMessage: message })
       return message
     },
     createProjectMessage: async (root, args, { req }, info) => {

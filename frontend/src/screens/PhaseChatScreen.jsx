@@ -1,11 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Button, TouchableOpacity, ScrollView, FlatList, SafeAreaView, StyleSheet, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, TextInput } from 'react-native';
 import { PHASE_MESSAGES_QUERY } from '../queries/Queries';
 import { CREATE_PHASE_MESSAGE_MUTATION } from '../queries/Mutations';
 import { useQuery, useMutation } from '@apollo/client';
 import { MessagesGlobalState } from '../layout/MessagesState';
 import { UserGlobalState } from '../layout/UserState';
-import { text } from '@fortawesome/fontawesome-svg-core';
 import MatIcon from 'react-native-vector-icons/MaterialIcons';
 
 const PhaseChatScreen = ({ navigation, route }) => {
@@ -32,10 +31,7 @@ const PhaseChatScreen = ({ navigation, route }) => {
             // take only messages with unique id in each list
             newMessagesData[phaseindexInMessagesData] = newMessagesData[phaseindexInMessagesData].filter((message, index, self) => self.findIndex((m) => m.id === message.id) === index);
             setMessagesData(newMessagesData);
-            console.log(messagesData);
-            console.log("index : ", newMessagesData[phaseindexInMessagesData][newMessagesData[phaseindexInMessagesData].length - 1].index )
             lastMessageIndex.current = newMessagesData[phaseindexInMessagesData][newMessagesData[phaseindexInMessagesData].length - 1].index;
-            console.log(lastMessageIndex.current);
         }
     }, [recentMessages]);
 
@@ -51,20 +47,19 @@ const PhaseChatScreen = ({ navigation, route }) => {
         const isSenderTheUser = item.sender.id === userData.id;
 
         return (
-        <View>
-            {!isDateSameAsPreviousMessage && <Text style={styles.dateText}>{date}</Text>}
-            
-            <TouchableOpacity style={[styles.itemContainer, { justifyContent: isSenderTheUser ? 'flex-end' : 'flex-start' }]} key={item.id}>
-                <View style={[styles.fullMessageContainer, { backgroundColor: isSenderTheUser ? '#6BB64a' : '#d8d8d8' }]}>
-                    {(!isSameUserAsPreviousMessage && !isSenderTheUser) && <Text style={styles.headerText}>{item.sender.firstName} {item.sender.lastName}</Text>}
-                    <View style={[styles.messageContainer, { paddingTop: (!isSameUserAsPreviousMessage && !isSenderTheUser) ? 0 : 5 }]} key={item.id}>
-                        <Text style={[styles.messageText, { color: isSenderTheUser ? '#fff' : '#000', paddingBottom: item.content.length > 37 ? 7 : 0 }]}>{item.content}</Text>
-                        <Text style={[styles.timeText, { color: isSenderTheUser ? '#ddd' : '#666' }]}> {timeWithoutSeconds}</Text>
-                        {/* <Text>   {item.index}</Text> */}
+            <View>
+                {!isDateSameAsPreviousMessage && <Text style={styles.dateText}>{date}</Text>}
+                <TouchableOpacity style={[styles.itemContainer, { justifyContent: isSenderTheUser ? 'flex-end' : 'flex-start' }]} key={item.id}>
+                    <View style={[styles.fullMessageContainer, { backgroundColor: isSenderTheUser ? '#6BB64a' : '#d8d8d8' }]}>
+                        {(!isSameUserAsPreviousMessage && !isSenderTheUser) && <Text style={styles.headerText}>{item.sender.firstName} {item.sender.lastName}</Text>}
+                        <View style={[styles.messageContainer, { paddingTop: (!isSameUserAsPreviousMessage && !isSenderTheUser) ? 0 : 5 }]} key={item.id}>
+                            <Text style={[styles.messageText, { color: isSenderTheUser ? '#fff' : '#000', paddingBottom: item.content.length > 37 ? 7 : 0 }]}>{item.content}</Text>
+                            <Text style={[styles.timeText, { color: isSenderTheUser ? '#ddd' : '#666' }]}> {timeWithoutSeconds}</Text>
+                            {/* <Text>   {item.index}</Text> */}
+                        </View>
                     </View>
-                </View>
-            </TouchableOpacity>
-        </View>
+                </TouchableOpacity>
+            </View>
         );
     };
 
@@ -84,9 +79,9 @@ const PhaseChatScreen = ({ navigation, route }) => {
                         // initialNumToRender={messagesData[phaseindexInMessagesData].length}  // Render all messages
                         initialNumToRender={limit}
                         // onScroll={handleScroll}
-                        scrollEventThrottle={100} // Adjust the throttle as needed
+                        scrollEventThrottle={16} // Adjust the throttle as needed
                     />
-                    <View style={styles.bottomRow}>
+                    <View style={styles.inputContainer}>
                         <TextInput
                             multiline
                             placeholder='Type a message ...'
@@ -96,24 +91,30 @@ const PhaseChatScreen = ({ navigation, route }) => {
                             onChangeText={(text) => setTextInput(text)}
                             // textAlignVertical='top'
                         />
-                        <MatIcon name='send' style={styles.sendIcon} onPress={async () => {
-                            setIsBtnDisabled(true);
-                            try {
-                                const response = await createPhaseMessage({
-                                    variables: {
-                                        content: textInput,
-                                        phaseId: phase.id,
+                        <TouchableOpacity
+                            style={styles.sendBtn}
+                            onPress={async () => {
+                                if (textInput.length > 0) {
+                                    setIsBtnDisabled(true);
+                                    try {
+                                        const response = await createPhaseMessage({
+                                            variables: {
+                                                phaseId: phase.id,
+                                                content: textInput,
+                                            }
+                                        });
+                                        console.log(response.data.createPhaseMessage);
+                                        setTextInput('');
+                                    } catch (err) {
+                                        console.log(err);
                                     }
-                                });
-                                console.log(response.data.createPhaseMessage);
-                                setTextInput('');
-                            } catch (err) {
-                                console.log(err);
-                            }
-                            setIsBtnDisabled(false);
-                        }} 
-                        disabled={isBtnDisabled}
-                        />
+                                    setIsBtnDisabled(false);
+                                }
+                            }}
+                            disabled={isBtnDisabled}
+                        >
+                            <MatIcon name="send" size={24} color="#fff" />
+                        </TouchableOpacity>
                     </View>
                 </View>
             )}
@@ -128,21 +129,15 @@ const styles = StyleSheet.create({
         marginTop: 30,
         marginBottom: 10,
         marginHorizontal: 10,
-        // alignItems: 'center',
         justifyContent: 'center',
         height: '90%'
     },
     itemContainer: {
         paddingTop: 5,
         paddingBottom: 0,
-        // borderBottomColor: 'black',
-        // borderBottomWidth: 1,
         flexDirection: 'row',
     },
     fullMessageContainer: {
-        // paddingHorizontal: 10,
-        // paddingTop: 6,
-        // paddingBottom: 0,
         borderRadius: 10,
         margin: 2,
     },
@@ -160,7 +155,6 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginTop: 15,
         marginBottom: 10,
-        // backgroundColor: '#434343',
         
     },
     messageContainer: {
@@ -184,35 +178,27 @@ const styles = StyleSheet.create({
         verticalAlign: 'bottom',
         paddingBottom: 0
     },
-    bottomRow: {
-        minHeight: 40,
+    inputContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        // justifyContent: 'center',
-        verticalAlign: 'middle',
-        marginBottom: 16
+        backgroundColor: '#fff',
+        padding: 5,
+        borderRadius: 20,
+        marginVertical: 10,
+        marginHorizontal: 5,
     },
     textInput: {
-        minHeight: 40,
-        borderColor: '#6BB64a',
-        borderWidth: 1,
-        borderRadius: 10,
-        marginHorizontal: 0,
-        marginVertical: 10,
-        padding: 5,
-        paddingHorizontal: 10,
-        width: '80%',
+        flex: 1,
+        padding: 10,
+        maxHeight: 100,
     },
-    sendIcon: {
-        fontSize: 25,
+    sendBtn: {
         backgroundColor: '#6BB64a',
-        paddingVertical: 9,
-        paddingLeft: 12,
-        paddingRight: 7,
-        borderRadius: 35,
-        color: '#fff'
-    }
+        borderRadius: 50,
+        padding: 10,
+        margin: 5,
+    },
 });
 
 export default PhaseChatScreen;

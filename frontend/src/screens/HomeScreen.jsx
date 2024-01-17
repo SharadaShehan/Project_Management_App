@@ -76,10 +76,45 @@ const HomeScreen = ({ navigation }) => {
           console.log(messagesData);
           console.log(phaseIndex);
         }
-      } else if (newMessage.project) {
-        console.log(project.id);
-      } else if (newMessage.sender) {
-        console.log(sender.id);
+        console.log("phase message")
+      } else if (newMessage.project && !newMessage.phase) {
+        // find whether project already exists in messagesData
+        const projectIndex = messagesData.findIndex((messageList) => messageList[0].project && messageList[0].project.id === newMessage.project.id);
+        if (projectIndex === -1) {
+          // if project doesn't exist, add new project to messagesData
+          const newMessagesData = [...messagesData];
+          newMessagesData.push([newMessage]);
+          setMessagesData(newMessagesData);
+        } else {
+          // if project exists, add new message to messagesData
+          const newMessagesData = [...messagesData];
+          newMessagesData[projectIndex].unshift(newMessage);
+          // take only messages with unique id in each list
+          newMessagesData[projectIndex] = newMessagesData[projectIndex].filter((message, index, self) => self.findIndex((m) => m.id === message.id) === index);
+          setMessagesData(newMessagesData);
+          console.log(messagesData);
+          console.log(projectIndex);
+        }
+        console.log("project message")
+      } else if (newMessage.receiver) {
+        // find whether sender already exists in messagesData
+        const userIndex = messagesData.findIndex((messageList) => messageList[0].receiver && ((newMessage.receiver.id !== userData.id && (messageList[0].receiver.id === newMessage.receiver.id || messageList[0].sender.id === newMessage.receiver.id)) || (newMessage.sender.id !== userData.id && (messageList[0].receiver.id === newMessage.sender.id || messageList[0].sender.id === newMessage.sender.id))));
+        if (userIndex === -1) {
+          // if sender doesn't exist, add new sender to messagesData
+          const newMessagesData = [...messagesData];
+          newMessagesData.push([newMessage]);
+          setMessagesData(newMessagesData);
+        } else {
+          // if sender exists, add new message to messagesData
+          const newMessagesData = [...messagesData];
+          newMessagesData[userIndex].unshift(newMessage);
+          // take only messages with unique id in each list
+          newMessagesData[userIndex] = newMessagesData[userIndex].filter((message, index, self) => self.findIndex((m) => m.id === message.id) === index);
+          setMessagesData(newMessagesData);
+          console.log(messagesData);
+          console.log(userIndex);
+        }
+        console.log("private message")
       } else {
         console.log('Invalid message');
       }

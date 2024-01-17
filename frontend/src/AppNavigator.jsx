@@ -7,6 +7,10 @@ import LoginScreen from './screens/LoginScreen';
 import ProjectScreen from './screens/ProjectScreen';
 import CreateProjectScreen from './screens/CreateProjectScreen';
 import PhaseChatScreen from './screens/PhaseChatScreen';
+import ProjectChatScreen from './screens/ProjectChatScreen';
+import PrivateChatScreen from './screens/PrivateChatScreen';
+import PostsScreen from './screens/PostsScreen';
+import PostScreen from './screens/PostScreen';
 import { UserGlobalStateProvider } from './layout/UserState';
 import { MessagesGlobalStateProvider } from './layout/MessagesState';
 
@@ -24,6 +28,10 @@ const AppNavigator = () => {
           <Stack.Screen name="Project" component={ProjectScreen}/>
           <Stack.Screen name="CreateProject" component={CreateProjectScreen}/>
           <Stack.Screen name="PhaseChat" component={PhaseChatScreen}/>
+          <Stack.Screen name="ProjectChat" component={ProjectChatScreen}/>
+          <Stack.Screen name="PrivateChat" component={PrivateChatScreen}/>
+          <Stack.Screen name="Posts" component={PostsScreen}/>
+          <Stack.Screen name="Post" component={PostScreen}/>
         </Stack.Navigator>
       </NavigationContainer>
     </MessagesGlobalStateProvider>

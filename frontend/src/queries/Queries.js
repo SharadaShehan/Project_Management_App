@@ -80,6 +80,8 @@ const PROCESS_QUERY = gql`
     }
 `;
 
+// Messages
+
 const LAST_PRIVATE_MESSAGES_QUERY = gql`
     query lastPrivateMessages {
         lastPrivateMessages {
@@ -91,6 +93,8 @@ const LAST_PRIVATE_MESSAGES_QUERY = gql`
             }
             receiver {
                 id
+                firstName
+                lastName
             }
             content
             createdAt
@@ -148,9 +152,13 @@ const PRIVATE_MESSAGES_QUERY = gql`
             id
             sender {
                 id
+                firstName
+                lastName
             }
             receiver {
                 id
+                firstName
+                lastName
             }
             content
             createdAt
@@ -166,11 +174,12 @@ const PROJECT_MESSAGES_QUERY = gql`
             id
             sender {
                 id
+                firstName
+                lastName
             }
             project {
                 id
-                firstName
-                lastName
+                title
             }
             content
             createdAt
@@ -191,6 +200,7 @@ const PHASE_MESSAGES_QUERY = gql`
             }
             phase {
                 id
+                title
             }
             content
             createdAt
@@ -200,5 +210,71 @@ const PHASE_MESSAGES_QUERY = gql`
     }
 `;
 
+// forum
+
+const POSTS_QUERY = gql`
+    query posts($projectId: ID!) {
+        posts(projectId: $projectId) {
+            id
+            project {
+                id
+                title
+            }
+            title
+            content
+            upvotes
+            owner {
+                id
+                firstName
+                lastName
+            }
+        }
+    }
+`;
+
+const POST_QUERY = gql`
+    query post ($id: ID!) {
+        post(id: $id) {
+            id
+            project {
+                id
+                title
+            }
+            title
+            content
+            upvotes
+            upvotedUsers {
+                id
+                firstName
+                lastName
+            }
+            owner {
+                id
+                firstName
+                lastName
+            }
+            createdAt
+            replies {
+                id
+                content
+                upvotes
+                upvotedUsers {
+                    id
+                    firstName
+                    lastName
+                }
+                owner {
+                    id
+                    firstName
+                    lastName
+                }
+                createdAt
+            }
+        }
+    }
+`;
+
+
 export { PROJECTS_QUERY, ONE_PROJECT_QUERY, PROCESS_QUERY, LAST_PRIVATE_MESSAGES_QUERY, LAST_PROJECT_MESSAGES_QUERY, 
-    LAST_PHASE_MESSAGES_QUERY, PRIVATE_MESSAGES_QUERY, PROJECT_MESSAGES_QUERY, PHASE_MESSAGES_QUERY };
+    LAST_PHASE_MESSAGES_QUERY, PRIVATE_MESSAGES_QUERY, PROJECT_MESSAGES_QUERY, PHASE_MESSAGES_QUERY,
+    POSTS_QUERY, POST_QUERY };
