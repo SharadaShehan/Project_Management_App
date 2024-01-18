@@ -20,8 +20,19 @@ const MessagesScreen = ({ navigation }) => {
             console.log(otherUser);
         }
         const dateObj = new Date(parseInt(firstItem.createdAt));
-        const convertedDate = dateObj.toLocaleString().replace(',', '');
-        console.log(convertedDate);
+        // const convertedDate = dateObj.toLocaleString().replace(',', '');
+        let convertedDate;
+        // check if date is today
+        if (dateObj.getDate() === new Date().getDate()) {
+            convertedDate = dateObj.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
+        } else if (dateObj.getDate() === new Date().getDate() - 1) {
+            convertedDate = 'Yesterday';
+        } else if (dateObj.getFullYear() !== new Date().getFullYear()) {
+            // check if year is not current year
+            convertedDate = dateObj.toLocaleString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        } else {
+            convertedDate = dateObj.toLocaleString('en-US', { month: 'long', day: 'numeric' });
+        }
 
         return (
             <TouchableOpacity onPress={() => {
@@ -34,12 +45,19 @@ const MessagesScreen = ({ navigation }) => {
                 }
             }} style={styles.itemContainer} key={firstItem.id}>
                 <View>
-                    {firstItem.project && <Text style={styles.headerText}>{firstItem.project.title}</Text>}
-                    {firstItem.phase && <Text style={styles.headerText}>{firstItem.phase.title}</Text>}
-                    {firstItem.sender && (firstItem.phase || firstItem.project) && <Text>{firstItem.sender.firstName} {firstItem.sender.lastName} : {firstItem.content}</Text>}
-                    {firstItem.receiver && <Text style={styles.headerText}>{otherUser.firstName} {otherUser.lastName}</Text>}
-                    {firstItem.receiver &&<Text>{firstItem.content}</Text>}
-                    <Text>At: {convertedDate}</Text>
+                    <View style={{ flexDirection: 'row' }}>
+                        <View style={{ width: '80%' }}>
+                            {firstItem.project && <Text style={styles.headerText}>{firstItem.project.title}</Text>}
+                            {firstItem.phase && <Text style={styles.headerText}>{firstItem.phase.title}</Text>}
+                            {firstItem.receiver && <Text style={styles.headerText}>{otherUser.firstName} {otherUser.lastName}</Text>}
+                        </View>
+                        <View style={{ width: '20%' }}>
+                            <Text style={{ textAlign: 'left', fontSize: 12, color: '#808080', paddingTop: 3 }}
+                            >{convertedDate}</Text>
+                        </View>
+                    </View>
+                    {firstItem.sender && (firstItem.phase || firstItem.project) && <Text style={{ fontWeight: 600, color: '#808080' }}>{firstItem.sender.firstName} {firstItem.sender.lastName} : {firstItem.content}</Text>}
+                    {firstItem.receiver &&<Text style={{ fontWeight: 600, color: '#808080' }}>{firstItem.content}</Text>}
                 </View>
             </TouchableOpacity>
         );
@@ -66,15 +84,18 @@ const styles = StyleSheet.create({
         height: '80%'
     },
     itemContainer: {
-        paddingTop: 10,
-        paddingBottom: 10,
-        borderBottomColor: 'black',
-        borderBottomWidth: 1,
+        paddingTop: 15,
+        paddingBottom: 15,
+        // borderBottomColor: 'black',
+        // borderBottomWidth: 1,
         flexDirection: 'row',
+        // backgroundColor: '#ddd',
+        // borderRadius: 5,
     },
     headerText: {
         fontWeight: 'bold',
-        fontSize: 16,
+        fontSize: 18,
+        marginBottom: 5,
     },
 });
 

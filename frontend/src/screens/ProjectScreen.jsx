@@ -47,7 +47,8 @@ const ProjectScreen = ({navigation, route}) => {
             {projectData && (
                 <View>
                     <Text style={styles.projectTitle}>{projectData.project.title}</Text>
-                    <Text style={styles.projectStatus}>{projectData.project.status}</Text>
+                    <Text style={[styles.projectStatus, { color: projectData.project.status === 'Active' ? '#009900' : '#FF0000' }
+                    ]}>{projectData.project.status}</Text>
                     <Text style={styles.projectDescription}>{projectData.project.description}</Text>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                         <FlatList
@@ -64,19 +65,21 @@ const ProjectScreen = ({navigation, route}) => {
             {processData && (
                 <View>
                     <Text style={styles.processTitle}>{processData.process.title}</Text>
-                    <Text>description : {processData.process.description}</Text>
-                    <Text>status: {processData.process.status}</Text>
-                    <Text>Priority: {processData.process.priority}</Text>
-                    <Text>Phases: </Text>
-                    {processData.process.phases.map((phase) => (
+                    <Text style={{ fontSize: 12, marginBottom: 10, color: processData.process.status === 'Active' ? '#009900' : '#FF0000' }}
+                    >{processData.process.status}</Text>
+                    <Text>{processData.process.description}</Text>                 
+                    {/* <Text>Priority: {processData.process.priority}</Text> */}
+                    {processData.process.phases.length > 0 && (
+                        <Text style={{ fontWeight: 'bold', fontSize: 17, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}>Phases</Text>
+                    )}
+                    {processData.process.phases.slice().sort((a, b) => a.order - b.order).map((phase) => (
                         <TouchableOpacity key={phase.id+'0'} style={styles.phaseContainer}>
-                            <Text key={phase.id+'1'}>title: {phase.title}</Text>
-                            <Text key={phase.id+'2'}>description: {phase.description}</Text>
-                            <Text key={phase.id+'4'}>order: {phase.order}</Text>
-                            <Text key={phase.id+'3'}>status: {phase.status}</Text>
-                            <Text key={phase.id+'6'}>endDate: {phase.endDate}</Text>
-                            <Text key={phase.id+'7'}>endTime: {phase.endTime}</Text>
-                            <Text key={phase.id+'8'}>timezoneOffset: {phase.timezoneOffset}</Text>
+                            <Text key={phase.id+'1'} style={{ fontWeight: 'bold', fontSize: 17 }}>{phase.title}</Text>
+                            <Text key={phase.id+'3'} style={{ fontSize: 12, marginBottom: 5, color: phase.status === 'Active' ? '#009900' : '#FF0000'
+                             }}>{phase.status}</Text>
+                            <Text key={phase.id+'2'}>{phase.description}</Text>
+                            {phase.endDate && !phase.endTime && (<Text key={phase.id+'6'}>Deadline: {phase.endDate}</Text>)}
+                            {phase.endTime && phase.endDate && (<Text key={phase.id+'9'}>Deadline: {(new Date((new Date(`${phase.endDate}T${phase.endTime}:00`)).getTime()-phase.timezoneOffset*60*1000)).toLocaleString('en-US', { month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true })}</Text>)}
                         </TouchableOpacity>
                     ))}
                 </View>
@@ -84,11 +87,14 @@ const ProjectScreen = ({navigation, route}) => {
 
             {projectData && (
                 <View>
-                    <Text>members : </Text>
+                    <Text style={{ fontWeight: 'bold', fontSize: 17, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}
+                    >Members</Text>
                     {projectData.project.members.map((member) => (
-                        <View style={{ margin: 10 }} key={member.username+'0'}>
-                            <Text key={member.username+'1'}>{member.firstName} {member.lastName}</Text>
-                            <Text key={member.username+'3'}>{member.username}</Text>
+                        <View style={styles.memberContainer} key={member.username+'0'}>
+                            <Text style={{ fontWeight: 'bold' }}
+                            key={member.username+'1'}>{member.firstName} {member.lastName}</Text>
+                            <Text style={{ fontSize: 12, color: '#434343' }}
+                            key={member.username+'3'}>{member.username}</Text>
                         </View>
                     ))}
                 </View>
@@ -103,7 +109,8 @@ const styles = {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 16,
+        paddingHorizontal: 10,
+        paddingBottom: 10,
         backgroundColor: '#fff'
     },
     projectTitle: {
@@ -126,7 +133,7 @@ const styles = {
         textAlign: 'center'
     },
     item: {
-        backgroundColor: '#d8d8d8',
+        backgroundColor: '#eee',
         padding: 10,
         margin: 5,
         borderRadius: 5,
@@ -143,14 +150,20 @@ const styles = {
     processTitle: {
         fontSize: 20,
         fontWeight: 'bold',
-        marginBottom: 12
+        // marginBottom: 12
     },
     phaseContainer: {
         backgroundColor: '#eee',
         padding: 10,
         margin: 5,
         borderRadius: 5,
-    }
+    },
+    memberContainer: {
+        backgroundColor: '#eee',
+        padding: 10,
+        margin: 5,
+        borderRadius: 5,
+    },
 }
 
 export default ProjectScreen;

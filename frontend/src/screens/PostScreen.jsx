@@ -29,7 +29,7 @@ const PostScreen = ({ navigation, route }) => {
     const RenderItem = ({ item, index }) => {
         const datetimeObj = new Date(parseInt(item.createdAt));
         const convertedDatetime = datetimeObj.toLocaleString();
-        const options = { month: 'long', day: 'numeric' };
+        const options = { month: 'long', day: 'numeric', hour12: true };
         const date = datetimeObj.toLocaleDateString('en-US', options);
         const shortenedDate = date.split(' ')[0].slice(0, 3) + ' ' + date.split(' ')[1];
         const time = convertedDatetime.split(',')[1];
