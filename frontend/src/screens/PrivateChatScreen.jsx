@@ -55,7 +55,7 @@ const PrivateChatScreen = ({ navigation, route }) => {
                         <View style={[styles.messageContainer]} key={item.id}>
                             <Text style={[styles.messageText, { color: isSenderTheUser ? '#fff' : '#000', paddingBottom: item.content.length > 37 ? 7 : 0 }]}>{item.content}</Text>
                             <Text style={[styles.timeText, { color: isSenderTheUser ? '#ddd' : '#666' }]}> {timeWithoutSeconds}</Text>
-                            <Text>   {item.index}</Text>
+                            {/* <Text>   {item.index}</Text> */}
                         </View>
                     </View>
                 </TouchableOpacity>

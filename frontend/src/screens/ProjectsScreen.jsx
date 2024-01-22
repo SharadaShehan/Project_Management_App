@@ -25,12 +25,15 @@ const styles = StyleSheet.create({
         flex: 1,
         // justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#fff'
+        backgroundColor: '#fff',
+        paddingLeft: 10,
+        paddingRight: 10,
     },
     createProjectButton: {
         backgroundColor: '#6BB64a',
         padding: 9,
         margin: 10,
+        marginTop: 10,
         borderRadius: 5,
         width: '90%',
         alignItems: 'center',

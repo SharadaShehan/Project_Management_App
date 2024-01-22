@@ -3,8 +3,8 @@ import mongoose from 'mongoose'
 
 const title = Joi.string().min(2).max(30).required().label('Title')
 const updateTitle = Joi.string().min(2).max(30).label('Title')
-const description = Joi.string().min(5).max(100).required().label('Description')
-const updateDescription = Joi.string().min(5).max(100).label('Description')
+const description = Joi.string().min(5).max(300).required().label('Description')
+const updateDescription = Joi.string().min(5).max(300).label('Description')
 const owner = Joi.string().external(async (value) => {
   const user = await mongoose.model('User').findById(value)
   if (!user) throw new Error('Invalid user')

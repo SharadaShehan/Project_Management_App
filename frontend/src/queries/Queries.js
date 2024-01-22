@@ -239,6 +239,7 @@ const POST_QUERY = gql`
             project {
                 id
                 title
+                description
             }
             title
             content

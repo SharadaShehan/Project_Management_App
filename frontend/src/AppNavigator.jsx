@@ -21,17 +21,44 @@ const AppNavigator = () => {
     <UserGlobalStateProvider>
     <MessagesGlobalStateProvider>
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="Login">
+        <Stack.Navigator initialRouteName="Login" screenOptions={{headerTitleAlign: 'center'}}>
           <Stack.Screen name="Login" component={LoginScreen}/>
           <Stack.Screen name="Home" component={HomeScreen} 
                         options={{ headerShown: false }}/>
-          <Stack.Screen name="Project" component={ProjectScreen}/>
+          <Stack.Screen name="Project" component={ProjectScreen}
+                        options={{
+                          headerStyle: {
+                            backgroundColor: '#6BB64a',
+                            fontWeight: 'bold'
+                          },
+                          headerTintColor: '#fff'
+                        }}/>
           <Stack.Screen name="CreateProject" component={CreateProjectScreen}/>
           <Stack.Screen name="PhaseChat" component={PhaseChatScreen}/>
-          <Stack.Screen name="ProjectChat" component={ProjectChatScreen}/>
-          <Stack.Screen name="PrivateChat" component={PrivateChatScreen}/>
+          <Stack.Screen name="ProjectChat" component={ProjectChatScreen}
+                        options={
+                          ({ route }) => ({
+                            title: route.params.project.title,
+                            headerStyle: {
+                              backgroundColor: '#6BB64a',
+                              fontWeight: 'bold',
+                            },
+                            headerTintColor: '#fff'
+                          })
+                        }/>
+          <Stack.Screen name="PrivateChat" component={PrivateChatScreen}
+                        options={
+                          ({ route }) => ({
+                            title: route.params.user.firstName + ' ' + route.params.user.lastName,
+                            headerStyle: {
+                              backgroundColor: '#6BB64a',
+                              fontWeight: 'bold',
+                            },
+                            headerTintColor: '#fff'
+                          })
+                        }/>
           <Stack.Screen name="Posts" component={PostsScreen}/>
-          <Stack.Screen name="Post" component={PostScreen}/>
+          <Stack.Screen name="Post" component={PostScreen} options={{ title: 'Questions' }}/>
         </Stack.Navigator>
       </NavigationContainer>
     </MessagesGlobalStateProvider>

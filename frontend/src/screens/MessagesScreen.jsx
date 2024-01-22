@@ -47,8 +47,8 @@ const MessagesScreen = ({ navigation }) => {
                 <View>
                     <View style={{ flexDirection: 'row' }}>
                         <View style={{ width: '80%' }}>
-                            {firstItem.project && <Text style={styles.headerText}>{firstItem.project.title}</Text>}
-                            {firstItem.phase && <Text style={styles.headerText}>{firstItem.phase.title}</Text>}
+                            {firstItem.project && !firstItem.phase && <Text style={styles.headerText}>{firstItem.project.title}</Text>}
+                            {firstItem.phase && <Text style={styles.headerText}>{firstItem.project.title}: {firstItem.phase.title}</Text>}
                             {firstItem.receiver && <Text style={styles.headerText}>{otherUser.firstName} {otherUser.lastName}</Text>}
                         </View>
                         <View style={{ width: '20%' }}>
@@ -86,8 +86,10 @@ const styles = StyleSheet.create({
     itemContainer: {
         paddingTop: 15,
         paddingBottom: 15,
-        // borderBottomColor: 'black',
-        // borderBottomWidth: 1,
+        borderBottomColor: 'black',
+        borderBottomWidth: 1,
+        borderBottomLeftRadius: 5,
+        borderBottomRightRadius: 5,
         flexDirection: 'row',
         // backgroundColor: '#ddd',
         // borderRadius: 5,
@@ -96,6 +98,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 18,
         marginBottom: 5,
+        color: '#070'
     },
 });
 

@@ -30,7 +30,7 @@ const ProjectsList = ({ navigation }) => {
         {loading && <Text>Loading projects...</Text>}
         {error && ( error.status === 401 ? navigation.navigate('Login') : console.log(error.message))}
         {data && (
-            <View>
+            <View style={{ flex: 1, width: '100%' }}>
             <FlatList
                 data={data.projects}
                 keyExtractor={(item) => item.id.toString()}
@@ -46,7 +46,7 @@ const ProjectsList = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         padding: 0,
-        height: '75%',
+        height: '80%',
     },
     itemContainer: {
         paddingTop: 10,
@@ -63,6 +63,7 @@ const styles = StyleSheet.create({
         color: '#434343'
     },
     projectDescription: {
+        maxWidth: '88%',
         fontSize: 14,
         color: '#434343'
     },

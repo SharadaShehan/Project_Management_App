@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
     },
     container: {
         padding: 0,
-        height: '75%',
+        height: '90%',
     },
     itemContainer: {
         paddingTop: 10,
@@ -70,6 +70,7 @@ const styles = StyleSheet.create({
         color: '#434343'
     },
     projectDescription: {
+        maxWidth: '90%',
         fontSize: 14,
         color: '#434343'
     },

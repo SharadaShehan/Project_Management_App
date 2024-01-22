@@ -6,7 +6,7 @@ const timePattern = /^\d{2}:\d{2}$|^$/
 
 const title = Joi.string().min(2).max(30).required().label('Title')
 const titleOptional = Joi.string().min(2).max(30).label('Title')
-const description = Joi.string().min(5).max(100).label('Description')
+const description = Joi.string().min(5).max(300).label('Description')
 const process = Joi.string().external(async (value) => {
   const process = await mongoose.model('Process').findById(value)
   if (!process) throw new Error('Invalid process')

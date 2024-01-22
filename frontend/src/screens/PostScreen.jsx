@@ -7,6 +7,11 @@ import { useQuery, useMutation } from '@apollo/client';
 import MatIcon from 'react-native-vector-icons/MaterialIcons';
 import MIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { UserGlobalState } from '../layout/UserState';
+import { API_KEY } from '@env';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+const genAI = new GoogleGenerativeAI(API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-pro"});
 
 const PostScreen = ({ navigation, route }) => {
     const [ upvoted, setUpvoted ] = useState(false);
@@ -16,6 +21,9 @@ const PostScreen = ({ navigation, route }) => {
     const [ commentBoxVisible, setCommentBoxVisible ] = useState(false);
     const [ textInput, setTextInput ] = useState('');
     const { userData, setUserData } = UserGlobalState();
+    const [ generatedAnswer, setGeneratedAnswer ] = useState('AI generated answer: \n');
+    const [ generatedAnswerLoading, setGeneratedAnswerLoading ] = useState(false);
+    const [ generatedAnswerVisible, setGeneratedAnswerVisible ] = useState(false);
     const { data, loading, error } = useQuery(POST_QUERY, {
         variables: { id: route.params.id },
         fetchPolicy: 'network-only',
@@ -129,6 +137,31 @@ const PostScreen = ({ navigation, route }) => {
                         <TouchableOpacity style={[styles.replyButton]} onPress={() => setCommentBoxVisible(!commentBoxVisible)}>
                             <MatIcon name='add-comment' size={24} color='#434343' />
                         </TouchableOpacity>
+                        <TouchableOpacity style={[styles.replyButton, { disabled: generatedAnswerLoading }]} onPress={async () => {
+                            try {
+                                if (generatedAnswerLoading) return;
+                                setGeneratedAnswerVisible(true);
+                                setGeneratedAnswerLoading(true);
+                                prompt = `Project description: ${data.post.project.description}\nTitle: ${data.post.title}\nQuestion: ${data.post.content}\nGive Answer in few sentences.`;
+                                const result = await model.generateContent(prompt);
+                                let text = 'AI generated answer: \n\n';
+                                const responseText = (await result.response).text() + '\n';
+                                text += responseText;
+                                setGeneratedAnswer(text);
+                                setGeneratedAnswerLoading(false);
+                            } catch (err) {
+                                console.log(err);
+                            }
+                        }}>
+                            <MatIcon name='lightbulb-outline' size={24} color={generatedAnswerVisible ? '#6BB64a' : '#434343'} />
+                        </TouchableOpacity>
+                    </View>
+                    <View>
+                      {generatedAnswerVisible && (
+                        <ScrollView style={styles.generatedAnswerContainer}>
+                          <Text style={styles.postContent}>{generatedAnswer}</Text>
+                        </ScrollView>
+                      )}
                     </View>
                     <View style={{ flex: 1 }}>
                     <FlatList
@@ -217,7 +250,7 @@ const styles = StyleSheet.create({
         fontSize: 13,
         textAlign: 'center',
         marginBottom: 5,
-        color: '#666',
+        color: '#222',
     },
     postTitle: {
         fontSize: 22,
@@ -264,6 +297,14 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         width: '14%',
         alignItems: 'left'
+    },
+    generatedAnswerContainer: {
+        maxHeight: 200,
+        backgroundColor: '#f8f8f8',
+        borderRadius: 10,
+        marginBottom: 10,
+        padding: 10,
+        marginLeft: 5,
     },
     replyButton: {
         borderRadius: 20,
