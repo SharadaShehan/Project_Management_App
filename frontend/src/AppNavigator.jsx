@@ -58,7 +58,17 @@ const AppNavigator = () => {
                           })
                         }/>
           <Stack.Screen name="Posts" component={PostsScreen}/>
-          <Stack.Screen name="Post" component={PostScreen} options={{ title: 'Questions' }}/>
+          <Stack.Screen name="Post" component={PostScreen}
+                        options={
+                          ({ route }) => ({
+                            title: route.params.projectTitle,
+                            headerStyle: {
+                              backgroundColor: '#6BB64a',
+                              fontWeight: 'bold',
+                            },
+                            headerTintColor: '#fff'
+                          })}
+                        />
         </Stack.Navigator>
       </NavigationContainer>
     </MessagesGlobalStateProvider>

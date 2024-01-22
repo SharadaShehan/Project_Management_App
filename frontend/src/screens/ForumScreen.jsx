@@ -10,7 +10,7 @@ const ForumScreen = ({ navigation }) => {
     const RenderItem = ({ item }) => {
         console.log(item.defaultProcess);
         return (
-            <TouchableOpacity onPress={() => navigation.navigate('Posts', { projectId: item.id })}
+            <TouchableOpacity onPress={() => navigation.navigate('Posts', { projectId: item.id, projectTitle: item.title })}
                 style={styles.itemContainer} key={item.id}
             >
                 <View style={styles.ImageContainer}>

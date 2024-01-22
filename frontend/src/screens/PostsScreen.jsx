@@ -11,7 +11,7 @@ const PostsScreen = ({ navigation, route }) => {
 
     const RenderItem = ({ item }) => {
         return (
-            <TouchableOpacity onPress={() => navigation.navigate('Post', { id: item.id })}
+            <TouchableOpacity onPress={() => navigation.navigate('Post', { id: item.id, projectTitle: route.params.projectTitle })}
                 style={styles.itemContainer} key={item.id}
             >
                 <Text style={styles.postTitle}>{item.title}</Text>
