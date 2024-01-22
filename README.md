@@ -5,7 +5,7 @@ React Native app for real-time project planning and efficient team coordination.
 ![sysArchi](resources/projects.jpg)
 ![sysArchi](resources/projects.jpg) -->
 
-<h2 align="center">Projects</h2>
+<h2 align="center">Project Management</h2>
 <p float="left" align="center">
 <img src="resources/projects.jpg"  width="25%">
 <img src="resources/process1.jpg"  width="25%">
@@ -26,9 +26,10 @@ React Native app for real-time project planning and efficient team coordination.
 <img src="resources/AI3.jpg"  width="25%">
 </p>
 
-<h2 align="center">Real-time chat</h2>
+<h2 align="center">Real-time Chat</h2>
 <p float="left" align="center">
-<img src="resources/Messages.jpg"  width="25%">
-<img src="resources/privateChat.jpg"  width="25%">
-<img src="resources/projectChat.jpg"  width="25%">
+<img src="resources/Messages.jpg"  width="23%">
+<img src="resources/privateChat.jpg"  width="23%">
+<img src="resources/projectChat.jpg"  width="23%">
+<img src="resources/real-time-chat.gif"  width="23%">
 </p>
