@@ -1,4 +1,5 @@
-# Project Management App
+<h1 align="center">Project Management App</h2>
+
 The application was engineered to facilitate real-time project planning and enhance team coordination efficiency. 
 
 Project management functionalities have been implemented at various hierarchical levels, including processes, phases, and tasks.
