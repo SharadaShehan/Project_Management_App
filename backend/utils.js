@@ -4,6 +4,19 @@ import session from 'express-session'
 
 const pubSub = new PubSub()
 
+// const sessionMiddleware = session({
+//   name: SESS_NAME,
+//   secret: SESS_SECRET,
+//   resave: true,
+//   rolling: true,
+//   saveUninitialized: false,
+//   cookie: {
+//     maxAge: parseInt(SESS_LIFETIME),
+//     sameSite: true,
+//     secure: IN_PROD
+//   }
+// })
+
 const sessionMiddleware = session({
   name: SESS_NAME,
   secret: SESS_SECRET,

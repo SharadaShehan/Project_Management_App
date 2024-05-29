@@ -10,9 +10,11 @@ export const {
   DB_HOST,
   DB_PORT,
   DB_NAME,
+  DB_STRING,
   SESS_NAME,
   SESS_SECRET,
-  SESS_LIFETIME
+  SESS_LIFETIME,
+  REDIS_URL
 } = process.env
 
 export const IN_PROD = NODE_ENV === 'production'
