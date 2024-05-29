@@ -9,13 +9,14 @@ import { WebSocketServer } from 'ws'
 import { useServer } from 'graphql-ws/lib/use/ws'
 import typeDefs from './typeDefs/index.js'
 import resolvers from './resolvers/index.js'
-import { APP_PORT, DB_STRING } from './config.js'
-// import { APP_PORT, DB_HOST, DB_PORT, DB_NAME, DB_USERNAME, DB_PASSWORD, DB_STRING } from './config.js'
+// import { APP_PORT, DB_STRING } from './config.js'
+import { APP_PORT, DB_HOST, DB_PORT, DB_NAME } from './config.js'
 import mongoose from 'mongoose'
 // import { MongoClient, ObjectId } from 'mongodb'
 import { pubSub, sessionMiddleware } from './utils.js'
 
 const port = APP_PORT
+const DB_STRING = `mongodb://${DB_HOST}:${DB_PORT}/${DB_NAME}`
 
 await mongoose.connect(DB_STRING)
   .then(() => console.log('MongoDB connected successfully'))
