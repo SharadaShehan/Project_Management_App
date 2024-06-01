@@ -7,6 +7,7 @@ const SIGNIN_MUTATION = gql`
             username
             firstName
             lastName
+            imageURL
             wsToken
         }
     }
@@ -15,6 +16,25 @@ const SIGNIN_MUTATION = gql`
 const SIGNOUT_MUTATION = gql`
     mutation signOut {
         signOut
+    }
+`;
+
+const SIGNUP_MUTATION = gql`
+    mutation signUp($username: String!, $password: String!, $firstName: String!, $lastName: String!, $gender: String, $country: String, $primaryEmail: String!, $secondaryEmail: String, $imageURL: String) {
+        signUp(username: $username, password: $password, firstName: $firstName, lastName: $lastName, gender: $gender, country: $country, primaryEmail: $primaryEmail, secondaryEmail: $secondaryEmail, imageURL: $imageURL) {
+            id
+            username
+            firstName
+            lastName
+            imageURL
+            wsToken
+        }
+    }
+`;
+
+const GET_PRESIGNED_URL_MUTATION = gql`
+    mutation getPresignedURL($filetype: String!) {
+        getPresignedURL(filetype: $filetype)
     }
 `;
 
@@ -188,5 +208,6 @@ const REPLY_POST_MUTATION = gql`
     }
 `;
 
-export { SIGNIN_MUTATION, SIGNOUT_MUTATION, CREATE_PHASE_MESSAGE_MUTATION, CREATE_PROJECT_MESSAGE_MUTATION, CREATE_PRIVATE_MESSAGE_MUTATION,
+
+export { SIGNIN_MUTATION, SIGNOUT_MUTATION, SIGNUP_MUTATION, GET_PRESIGNED_URL_MUTATION, CREATE_PHASE_MESSAGE_MUTATION, CREATE_PROJECT_MESSAGE_MUTATION, CREATE_PRIVATE_MESSAGE_MUTATION,
     CREATE_POST_MUTATION, UPVOTE_POST_MUTATION, DOWNVOTE_POST_MUTATION, UPVOTE_REPLY_MUTATION, DOWNVOTE_REPLY_MUTATION, REPLY_POST_MUTATION };
