@@ -50,7 +50,8 @@ const userSchema = new mongoose.Schema({
     type: String,
     minlength: 32,
     maxlength: 32
-  }
+  },
+  imageURL: String
 })
 
 userSchema.pre('save', async function (next) {

@@ -10,6 +10,7 @@ const gender = Joi.string().label('Gender')
 const country = Joi.string().label('Country')
 const primaryEmail = Joi.string().email().required().label('Email')
 const secondaryEmail = Joi.string().email().label('Secondary Email')
+const imageURL = Joi.string().uri().label('Image URL')
 
 export const signIn = Joi.object().keys({
   username,
@@ -24,5 +25,6 @@ export const signUp = Joi.object().keys({
   gender,
   country,
   primaryEmail,
-  secondaryEmail
+  secondaryEmail,
+  imageURL
 })
