@@ -1,16 +1,18 @@
 import { gql } from 'apollo-server-express'
 
 export default gql`
+    scalar Upload
+
     extend type Query {
         me: User
-        hi: String
         searchUser(searchText: String!): [UserShortened!]!
     }
 
     extend type Mutation {
-        signUp(username: String!, password: String!, firstName: String!, lastName: String!, gender: String, country: String, primaryEmail: String!, secondaryEmail: String): User
+        signUp(username: String!, password: String!, firstName: String!, lastName: String!, gender: String, country: String, primaryEmail: String!, secondaryEmail: String, imageURL: String): User
         signIn(username: String!, password: String!): User
         signOut: Boolean
+        getPresignedURL(filetype: String!): String
     }
 
     type User {
@@ -24,13 +26,15 @@ export default gql`
         secondaryEmail: String
         projects: [Project!]
         wsToken: String!
+        imageURL: String
     }
 
     type UserShortened {
-        id : ID!
+        id: ID!
         username: String!
         firstName: String!
         lastName: String!
         gender: String
+        imageURL: String
     }
 `
