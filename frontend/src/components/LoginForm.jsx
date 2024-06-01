@@ -43,6 +43,7 @@ const LoginForm = ({navigation}) => {
                 lastName: response.data.signIn.lastName,
                 username: response.data.signIn.username,
                 wsToken: response.data.signIn.wsToken,
+                imageURL: response.data.signIn.imageURL,
               });
               navigation.navigate('Home');
             } else {
