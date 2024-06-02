@@ -11,6 +11,8 @@ import ProjectChatScreen from './screens/ProjectChatScreen';
 import PrivateChatScreen from './screens/PrivateChatScreen';
 import PostsScreen from './screens/PostsScreen';
 import PostScreen from './screens/PostScreen';
+import SignUpScreen from './screens/SignUpScreen';
+import UpdateProfileScreen from './screens/UpdateProfileScreen';
 import { UserGlobalStateProvider } from './layout/UserState';
 import { MessagesGlobalStateProvider } from './layout/MessagesState';
 
@@ -22,7 +24,10 @@ const AppNavigator = () => {
     <MessagesGlobalStateProvider>
       <NavigationContainer>
         <Stack.Navigator initialRouteName="Login" screenOptions={{headerTitleAlign: 'center'}}>
-          <Stack.Screen name="Login" component={LoginScreen}/>
+          <Stack.Screen name="Login" component={LoginScreen}
+                        options={{ headerShown: false }}/>
+          <Stack.Screen name="SignUp" component={SignUpScreen}
+                        options={{ headerShown: false }}/>
           <Stack.Screen name="Home" component={HomeScreen} 
                         options={{ headerShown: false }}/>
           <Stack.Screen name="Project" component={ProjectScreen}
@@ -69,6 +74,8 @@ const AppNavigator = () => {
                             headerTintColor: '#fff'
                           })}
                         />
+          <Stack.Screen name="UpdateProfile" component={UpdateProfileScreen}
+                        options={{ headerShown: false }}/>
         </Stack.Navigator>
       </NavigationContainer>
     </MessagesGlobalStateProvider>
