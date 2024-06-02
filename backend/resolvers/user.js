@@ -1,5 +1,5 @@
 import { User } from '../models/index.js'
-import { signIn, signUp } from '../schemas/index.js'
+import { signIn, signUp, updateProfile, changePassword } from '../schemas/index.js'
 import * as Auth from '../auth.js'
 import crypto from 'crypto'
 import AWS from '../awsConfig.js'
@@ -30,6 +30,11 @@ export default {
       // check if imageURL is present and replace the bucket name
       if (args.imageURL) {
         args.imageURL = args.imageURL.replace(IMAGE_UPLOAD_S3_BUCKET_NAME, PUBLIC_READ_S3_BUCKET_NAME)
+        // check if '?' is present in the URL. If it is, remove everything after it
+        const questionMarkIndex = args.imageURL.indexOf('?')
+        if (questionMarkIndex !== -1) {
+          args.imageURL = args.imageURL.substring(0, questionMarkIndex)
+        }
       }
       const user = await User.create(args)
       req.session.userId = user.id
@@ -49,6 +54,36 @@ export default {
     signOut: async (root, args, { req, res }, info) => {
       Auth.checkSignedIn(req)
       await Auth.signOut(req, res)
+      return true
+    },
+    updateProfile: async (root, args, { req }, info) => {
+      Auth.checkSignedIn(req)
+      await updateProfile.validateAsync(args, { abortEarly: false })
+      // check if imageURL is present and replace the bucket name
+      if (args.imageURL) {
+        // check if imageURL contains the image upload bucket name
+        if (args.imageURL.includes(IMAGE_UPLOAD_S3_BUCKET_NAME)) {
+          args.imageURL = args.imageURL.replace(IMAGE_UPLOAD_S3_BUCKET_NAME, PUBLIC_READ_S3_BUCKET_NAME)
+          // check if '?' is present in the URL. If it is, remove everything after it
+          const questionMarkIndex = args.imageURL.indexOf('?')
+          if (questionMarkIndex !== -1) {
+            args.imageURL = args.imageURL.substring(0, questionMarkIndex)
+          }
+        }
+      }
+      await User.updateOne({ _id: req.session.userId }, args)
+      return User.findById(req.session.userId)
+    },
+    changePassword: async (root, args, { req }, info) => {
+      Auth.checkSignedIn(req)
+      const user = await User.findById(req.session.userId)
+      if (!user) {
+        throw new Error('User not found')
+      }
+      await changePassword.validateAsync(args, { abortEarly: false })
+      await Auth.checkPassword(user, args.currentPassword)
+      user.password = args.newPassword
+      await user.save()
       return true
     },
     getPresignedURL: async (root, args, { req }, info) => {
