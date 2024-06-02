@@ -7,6 +7,10 @@ const SIGNIN_MUTATION = gql`
             username
             firstName
             lastName
+            gender
+            country
+            primaryEmail
+            secondaryEmail
             imageURL
             wsToken
         }
@@ -26,9 +30,35 @@ const SIGNUP_MUTATION = gql`
             username
             firstName
             lastName
+            gender
+            country
+            primaryEmail
+            secondaryEmail
             imageURL
             wsToken
         }
+    }
+`;
+
+const UPDATE_PROFILE_MUTATION = gql`
+    mutation updateProfile($firstName: String!, $lastName: String!, $gender: String, $country: String, $primaryEmail: String!, $secondaryEmail: String, $imageURL: String) {
+        updateProfile(firstName: $firstName, lastName: $lastName, gender: $gender, country: $country, primaryEmail: $primaryEmail, secondaryEmail: $secondaryEmail, imageURL: $imageURL) {
+            id
+            username
+            firstName
+            lastName
+            gender
+            country
+            primaryEmail
+            secondaryEmail
+            imageURL
+        }
+    }
+`;
+
+const CHANGE_PASSWORD_MUTATION = gql`
+    mutation changePassword($currentPassword: String!, $newPassword: String!) {
+        changePassword(currentPassword: $currentPassword, newPassword: $newPassword)
     }
 `;
 
@@ -209,5 +239,5 @@ const REPLY_POST_MUTATION = gql`
 `;
 
 
-export { SIGNIN_MUTATION, SIGNOUT_MUTATION, SIGNUP_MUTATION, GET_PRESIGNED_URL_MUTATION, CREATE_PHASE_MESSAGE_MUTATION, CREATE_PROJECT_MESSAGE_MUTATION, CREATE_PRIVATE_MESSAGE_MUTATION,
+export { SIGNIN_MUTATION, SIGNOUT_MUTATION, SIGNUP_MUTATION, UPDATE_PROFILE_MUTATION, CHANGE_PASSWORD_MUTATION, GET_PRESIGNED_URL_MUTATION, CREATE_PHASE_MESSAGE_MUTATION, CREATE_PROJECT_MESSAGE_MUTATION, CREATE_PRIVATE_MESSAGE_MUTATION,
     CREATE_POST_MUTATION, UPVOTE_POST_MUTATION, DOWNVOTE_POST_MUTATION, UPVOTE_REPLY_MUTATION, DOWNVOTE_REPLY_MUTATION, REPLY_POST_MUTATION };
