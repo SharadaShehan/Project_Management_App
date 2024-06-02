@@ -11,7 +11,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useNavigation } from '@react-navigation/native';
 import ProjectsScreen from './ProjectsScreen';
 import ForumScreen from './ForumScreen';
-import NotificationsScreen from './NotificationsScreen';
+import ProfileScreen from './ProfileScreen';
 import MessagesScreen from './MessagesScreen';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import MIcon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -131,25 +131,11 @@ const HomeScreen = ({ navigation }) => {
             headerRight: () => (
               <LogOutBtn navigation={navigation} />
             ),
-            headerStyle: { backgroundColor: '#6BB64a' },
+            headerStyle: { backgroundColor: '#4CBB17' },
             headerTitleAlign: 'center',
             headerTitleStyle: { fontSize: 24, color: '#fff' }
           }
         }/>
-          
-        <Tab.Screen name="Notifications" component={NotificationsScreen} 
-          options={{
-            headerRight: () => (
-              <LogOutBtn navigation={navigation} />
-            ),
-            tabBarIcon: ({ color, size }) => (
-              <MatIcon name="notifications" size={30} />
-            ),
-            headerStyle: { backgroundColor: '#6BB64a' },
-            headerTitleAlign: 'center',
-            headerTitleStyle: { fontSize: 24, color: '#fff' }
-        }}
-        />
 
         <Tab.Screen name="Forum" component={ForumScreen} 
           options={{
@@ -159,7 +145,7 @@ const HomeScreen = ({ navigation }) => {
             tabBarIcon: ({ color, size }) => (
               <MIcon name="chat-question" size={30} />
             ),
-            headerStyle: { backgroundColor: '#6BB64a' },
+            headerStyle: { backgroundColor: '#4CBB17' },
             headerTitleAlign: 'center',
             headerTitleStyle: { fontSize: 24, color: '#fff' }
           }}
@@ -173,7 +159,21 @@ const HomeScreen = ({ navigation }) => {
             tabBarIcon: ({ color, size }) => (
               <Icon name="wechat" size={26} />
             ),
-            headerStyle: { backgroundColor: '#6BB64a' },
+            headerStyle: { backgroundColor: '#4CBB17' },
+            headerTitleAlign: 'center',
+            headerTitleStyle: { fontSize: 24, color: '#fff' }
+          }}
+        />
+
+        <Tab.Screen name="Profile" component={ProfileScreen} 
+          options={{
+            headerRight: () => (
+              <LogOutBtn navigation={navigation} />
+            ),
+            tabBarIcon: ({ color, size }) => (
+              <MatIcon name="account-circle" size={30} />
+            ),
+            headerStyle: { backgroundColor: '#4CBB17' },
             headerTitleAlign: 'center',
             headerTitleStyle: { fontSize: 24, color: '#fff' }
           }}
