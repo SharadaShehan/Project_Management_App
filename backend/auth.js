@@ -13,6 +13,12 @@ export const attemptSignIn = async (username, password) => {
   return user
 }
 
+export const checkPassword = async (user, password) => {
+  if (!user.matchesPassword(password)) {
+    throw new AuthenticationError('Incorrect password. Please try again.')
+  }
+}
+
 export const checkSignedIn = req => {
   if (!req.session.userId) {
     throw new AuthenticationError('You must be signed in.')
