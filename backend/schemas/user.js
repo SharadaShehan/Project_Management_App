@@ -28,3 +28,18 @@ export const signUp = Joi.object().keys({
   secondaryEmail,
   imageURL
 })
+
+export const updateProfile = Joi.object().keys({
+  firstName,
+  lastName,
+  gender,
+  country,
+  primaryEmail,
+  secondaryEmail,
+  imageURL
+})
+
+export const changePassword = Joi.object().keys({
+  currentPassword: password,
+  newPassword: password
+})
