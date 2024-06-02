@@ -12,6 +12,8 @@ export default gql`
         signUp(username: String!, password: String!, firstName: String!, lastName: String!, gender: String, country: String, primaryEmail: String!, secondaryEmail: String, imageURL: String): User
         signIn(username: String!, password: String!): User
         signOut: Boolean
+        updateProfile(firstName: String!, lastName: String!, gender: String, country: String, primaryEmail: String!, secondaryEmail: String, imageURL: String): User
+        changePassword(currentPassword: String!, newPassword: String!): Boolean
         getPresignedURL(filetype: String!): String
     }
 
