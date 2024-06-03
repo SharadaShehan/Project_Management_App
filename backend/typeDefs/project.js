@@ -7,7 +7,7 @@ export default gql`
     }
 
     extend type Mutation {
-        createProject(title: String!, description: String!, members: [ID!]): Project
+        createProject(title: String!, description: String!, members: [ID!], logo: String): Project
         updateProject(id: ID!, title: String, description: String, status: String, defaultProcess: ID): Project
         deleteProject(id: ID!): Boolean
     }
@@ -21,6 +21,7 @@ export default gql`
         status: String!
         processes: [ProcessShortened!]
         defaultProcess: ProcessShortened
+        logo: String
     }
 
     type ProjectShortened {
@@ -29,5 +30,6 @@ export default gql`
         description: String!
         status: String!
         defaultProcess: ProcessShortened
+        logo: String
     }
 `
