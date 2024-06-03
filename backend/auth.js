@@ -7,14 +7,14 @@ export const attemptSignIn = async (username, password) => {
   if (!user) {
     throw new AuthenticationError('Incorrect username or password. Please try again.')
   }
-  if (!user.matchesPassword(password)) {
+  if (!(await user.matchesPassword(password))) {
     throw new AuthenticationError('Incorrect username or password. Please try again.')
   }
   return user
 }
 
 export const checkPassword = async (user, password) => {
-  if (!user.matchesPassword(password)) {
+  if (!(await user.matchesPassword(password))) {
     throw new AuthenticationError('Incorrect password. Please try again.')
   }
 }
