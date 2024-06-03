@@ -113,6 +113,13 @@ const styles = {
         paddingBottom: 10,
         backgroundColor: '#fff'
     },
+    innerContainer: {
+        width: '90%',
+        height: '85%',
+        borderRadius: 40,
+        backgroundColor: '#4CBB17',
+        paddingHorizontal: '4%',
+    },
     projectTitle: {
         fontSize: 24,
         fontWeight: 'bold',
