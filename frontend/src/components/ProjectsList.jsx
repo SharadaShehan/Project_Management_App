@@ -2,24 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, Image } from 'react-native';
 import { PROJECTS_QUERY } from '../queries/Queries'; // Import your GraphQL queries
 import { useQuery } from '@apollo/client';
+import { getLogoImage } from '../logoImages';
 
 const ProjectsList = ({ navigation }) => {
 
     const { data, loading, error } = useQuery(PROJECTS_QUERY);
 
     const RenderItem = ({ item }) => {
-        console.log(item.defaultProcess);
         return (
             <TouchableOpacity onPress={() => navigation.navigate('Project', { id: item.id, defaultProcess:item.defaultProcess })} 
                 style={styles.itemContainer} key={item.id}
             >
                 <View style={styles.ImageContainer}>
-                    <Image source={require('../../images/projectIcon.jpg')} style={styles.imageItem} />
+                    <Image source={getLogoImage(item.logo)} style={styles.imageItem} />
                 </View>
                 <View>
                     <Text style={styles.projectTitle}>{item.title}</Text>
                     <Text style={styles.projectDescription}>{item.description}</Text>
-                    <Text style={styles.projectStatus}>Status: {item.status}</Text>
+                    {/* <Text style={styles.projectStatus}>Status: {item.status}</Text> */}
                 </View>
             </TouchableOpacity>
         );
@@ -45,25 +45,28 @@ const ProjectsList = ({ navigation }) => {
 
 const styles = StyleSheet.create({
     container: {
-        padding: 0,
-        height: '80%',
+        paddingHorizontal: 8,
+        height: '90%',
+        paddingTop: 0,
+        marginTop: 0,
     },
     itemContainer: {
-        paddingTop: 10,
-        paddingBottom: 10,
-        borderBottomColor: 'black',
-        borderBottomWidth: 1,
+        paddingTop: 8,
+        paddingBottom: 12,
+        marginBottom: 5,
         flexDirection: 'row',
+        backgroundColor: '#fff',
+        borderRadius: 25,
     },
     projectTitle: {
-        fontSize: 20,
+        fontSize: 18,
         fontWeight: 'bold',
         marginTop: 10,
         marginBottom: 5,
         color: '#434343'
     },
     projectDescription: {
-        maxWidth: '88%',
+        maxWidth: '87%',
         fontSize: 14,
         color: '#434343'
     },
@@ -75,11 +78,13 @@ const styles = StyleSheet.create({
         margin: 10,
     },
     ImageContainer: {
-        margin: 15
+        margin: 13,
+        marginTop: 15,
     },
     imageItem: {
         width: 60,
         height: 60,
+        borderRadius: 50,
         // margin: 10,
     }
 });
