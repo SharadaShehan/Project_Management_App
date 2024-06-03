@@ -5,6 +5,7 @@ import crypto from 'crypto'
 import AWS from '../awsConfig.js'
 import { IMAGE_UPLOAD_S3_BUCKET_NAME, PUBLIC_READ_S3_BUCKET_NAME } from '../config.js'
 import { v4 as uuidv4 } from 'uuid'
+import hash from 'bcryptjs'
 
 export default {
   Query: {
@@ -82,8 +83,8 @@ export default {
       }
       await changePassword.validateAsync(args, { abortEarly: false })
       await Auth.checkPassword(user, args.currentPassword)
-      user.password = args.newPassword
-      await user.save()
+      const newPassword = await hash.hash(args.newPassword, 10)
+      await User.updateOne({ _id: req.session.userId }, { password: newPassword })
       return true
     },
     getPresignedURL: async (root, args, { req }, info) => {
