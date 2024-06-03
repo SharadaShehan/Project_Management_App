@@ -32,7 +32,7 @@ const LogOutBtn = ({ navigation }) => {
                 }
             }
         }>
-        <MatIcon name="logout" size={30} 
+        <MatIcon name="logout" size={30} color="#fff"
         style={{
             marginRight: 12, 
         }}/>
