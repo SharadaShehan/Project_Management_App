@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, Button, TouchableOpacity, ScrollView, FlatList, SafeAreaView, StyleSheet } from 'react-native';
+import { View, Text, Button, TouchableOpacity, ScrollView, FlatList, SafeAreaView, StyleSheet, Image } from 'react-native';
 import { MessagesGlobalState } from '../layout/MessagesState';
 import { UserGlobalState } from '../layout/UserState';
+import { getLogoImage } from '../logoImages';
 
 const MessagesScreen = ({ navigation }) => {
     const mLimit = 100;
@@ -10,6 +11,7 @@ const MessagesScreen = ({ navigation }) => {
     let otherUser;
 
     const renderItem = ({ item }) => {
+        if (!item || item.length === 0) return null;
         const firstItem = item[0];
         if (firstItem && firstItem.receiver) {
             if (firstItem.receiver.id === userData.id) {
@@ -17,7 +19,6 @@ const MessagesScreen = ({ navigation }) => {
             } else {
                 otherUser = firstItem.receiver;
             }
-            console.log(otherUser);
         }
         const dateObj = new Date(parseInt(firstItem.createdAt));
         // const convertedDate = dateObj.toLocaleString().replace(',', '');
@@ -44,62 +45,84 @@ const MessagesScreen = ({ navigation }) => {
                     else console.log('invalid message');
                 }
             }} style={styles.itemContainer} key={firstItem.id}>
-                <View>
-                    <View style={{ flexDirection: 'row' }}>
-                        <View style={{ width: '80%' }}>
+                <View style={styles.ImageContainer}>
+                    {firstItem.project && !firstItem.phase && <Image source={getLogoImage(firstItem.project.logo)} style={styles.imageItem} />}
+                    {firstItem.phase && <Image source={getLogoImage(firstItem.project.logo)} style={styles.imageItem} />}
+                    {firstItem.receiver && <Image source={otherUser.imageURL ? { uri: otherUser.imageURL } : require('../../images/profile.webp')}  style={styles.imageItem} />}
+                </View>
+                <View style={{ flexDirection: 'column', marginTop: 10 }}>
+                    <View style={{ flexDirection: 'row', width: '88%' }}>
+                        <View style={{ width: '75%' }}>
                             {firstItem.project && !firstItem.phase && <Text style={styles.headerText}>{firstItem.project.title}</Text>}
                             {firstItem.phase && <Text style={styles.headerText}>{firstItem.project.title}: {firstItem.phase.title}</Text>}
                             {firstItem.receiver && <Text style={styles.headerText}>{otherUser.firstName} {otherUser.lastName}</Text>}
                         </View>
-                        <View style={{ width: '20%' }}>
-                            <Text style={{ textAlign: 'left', fontSize: 12, color: '#808080', paddingTop: 3 }}
+                        <View style={{ width: '25%' }}>
+                            <Text style={{ textAlign: 'left', fontSize: 11, color: '#808080', paddingTop: 4 }}
                             >{convertedDate}</Text>
                         </View>
                     </View>
-                    {firstItem.sender && (firstItem.phase || firstItem.project) && <Text style={{ fontWeight: 600, color: '#808080' }}>{firstItem.sender.firstName} {firstItem.sender.lastName} : {firstItem.content}</Text>}
-                    {firstItem.receiver &&<Text style={{ fontWeight: 600, color: '#808080' }}>{firstItem.content}</Text>}
+                    <View style={{ flexDirection: 'row', width: '90%', marginBottom: firstItem.content.length > 30 ? 15 : 0 }}>
+                        {firstItem.sender && (firstItem.phase || firstItem.project) && <Text style={styles.contentText}>{firstItem.sender.firstName} {firstItem.sender.lastName} : {firstItem.content}</Text>}
+                        {firstItem.receiver &&<Text style={styles.contentText}>{firstItem.content}</Text>}
+                    </View>
                 </View>
             </TouchableOpacity>
         );
     }
-    console.log(messagesData);
 
     return (
         <View style={styles.container}>
             <FlatList
-                data={messagesData}
+                data={messagesData.filter((item) => item.length > 0)}
                 renderItem={renderItem}
                 keyExtractor={(item) => item[0].id.toString()}
             />
+            <TouchableOpacity onPress={() => navigation.navigate('NewChat')} style={{ position: 'absolute', bottom: 15, right: 15, backgroundColor: '#007BFF', borderRadius: 50, width: 50, height: 50, alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={{ color: '#fff', fontSize: 20 }}>+</Text>
+            </TouchableOpacity>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
-        padding: 5,
-        margin: 20,
-        // alignItems: 'center',
+        flex: 1,
         justifyContent: 'center',
-        height: '80%'
+        alignItems: 'center',
+        backgroundColor: '#4CBB17',
+        paddingHorizontal: 8,
+        paddingTop: 20,
     },
     itemContainer: {
-        paddingTop: 15,
-        paddingBottom: 15,
-        borderBottomColor: 'black',
-        borderBottomWidth: 1,
-        borderBottomLeftRadius: 5,
-        borderBottomRightRadius: 5,
+        paddingTop: 2,
+        paddingBottom: 6,
+        marginBottom: 4,
         flexDirection: 'row',
-        // backgroundColor: '#ddd',
-        // borderRadius: 5,
+        backgroundColor: '#fff',
+        borderRadius: 25,
+        width: '95%',
+    },
+    ImageContainer: {
+        margin: 12,
+        // marginTop: 10,
+    },
+    imageItem: {
+        width: 50,
+        height: 50,
+        borderRadius: 50,
+        // margin: 10,
     },
     headerText: {
         fontWeight: 'bold',
-        fontSize: 18,
+        fontSize: 16,
         marginBottom: 5,
         color: '#070'
     },
+    contentText: {
+        fontWeight: 'bold',
+        color: '#808080'
+    }
 });
 
 export default MessagesScreen;

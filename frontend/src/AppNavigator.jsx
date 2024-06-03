@@ -9,6 +9,7 @@ import CreateProjectScreen from './screens/CreateProjectScreen';
 import PhaseChatScreen from './screens/PhaseChatScreen';
 import ProjectChatScreen from './screens/ProjectChatScreen';
 import PrivateChatScreen from './screens/PrivateChatScreen';
+import NewChatScreen from './screens/NewChatScreen';
 import PostsScreen from './screens/PostsScreen';
 import PostScreen from './screens/PostScreen';
 import SignUpScreen from './screens/SignUpScreen';
@@ -39,7 +40,8 @@ const AppNavigator = () => {
                           },
                           headerTintColor: '#fff'
                         }}/>
-          <Stack.Screen name="CreateProject" component={CreateProjectScreen}/>
+          <Stack.Screen name="CreateProject" component={CreateProjectScreen}
+                        options={{ headerShown: false }}/>
           <Stack.Screen name="PhaseChat" component={PhaseChatScreen}/>
           <Stack.Screen name="ProjectChat" component={ProjectChatScreen}
                         options={
@@ -63,6 +65,7 @@ const AppNavigator = () => {
                             headerTintColor: '#fff'
                           })
                         }/>
+          <Stack.Screen name="NewChat" component={NewChatScreen}/>
           <Stack.Screen name="Posts" component={PostsScreen}/>
           <Stack.Screen name="Post" component={PostScreen}
                         options={

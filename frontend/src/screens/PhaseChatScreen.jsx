@@ -16,7 +16,7 @@ const PhaseChatScreen = ({ navigation, route }) => {
     const { userData, setUserData } = UserGlobalState();
     const { messagesData, setMessagesData } = MessagesGlobalState();
     const [ textInput, setTextInput ] = useState('');
-    const phaseindexInMessagesData = messagesData.findIndex((messageList) => messageList[0].phase && messageList[0].phase.id === phase.id);
+    var phaseindexInMessagesData = messagesData.findIndex((messageList) => messageList[0] && messageList[0].phase && messageList[0].phase.id === phase.id);
 
     const { data:recentMessages, loading:messagesLoading, error:messagesError } = useQuery(PHASE_MESSAGES_QUERY, {
         variables: { phaseId: phase.id, lastMessageIndex: lastMessageIndex.current, limit: limit },
@@ -27,11 +27,18 @@ const PhaseChatScreen = ({ navigation, route }) => {
     useEffect(() => {
         if (recentMessages) {
             const newMessagesData = [...messagesData];
-            newMessagesData[phaseindexInMessagesData].push(...recentMessages.phaseMessages);
-            // take only messages with unique id in each list
-            newMessagesData[phaseindexInMessagesData] = newMessagesData[phaseindexInMessagesData].filter((message, index, self) => self.findIndex((m) => m.id === message.id) === index);
-            setMessagesData(newMessagesData);
-            lastMessageIndex.current = newMessagesData[phaseindexInMessagesData][newMessagesData[phaseindexInMessagesData].length - 1].index;
+            if (phaseindexInMessagesData === -1) {
+                phaseindexInMessagesData = messagesData.length;
+                newMessagesData.push([]);
+                setMessagesData(newMessagesData);
+                lastMessageIndex.current = 0;
+            } else {
+                newMessagesData[phaseindexInMessagesData].push(...recentMessages.phaseMessages);
+                // take only messages with unique id in each list
+                newMessagesData[phaseindexInMessagesData] = newMessagesData[phaseindexInMessagesData].filter((message, index, self) => self.findIndex((m) => m.id === message.id) === index);
+                setMessagesData(newMessagesData);
+                lastMessageIndex.current = newMessagesData[phaseindexInMessagesData][newMessagesData[phaseindexInMessagesData].length - 1].index;
+            }
         }
     }, [recentMessages]);
 
@@ -55,7 +62,6 @@ const PhaseChatScreen = ({ navigation, route }) => {
                         <View style={[styles.messageContainer, { paddingTop: (!isSameUserAsPreviousMessage && !isSenderTheUser) ? 0 : 5 }]} key={item.id}>
                             <Text style={[styles.messageText, { color: isSenderTheUser ? '#fff' : '#000', paddingBottom: item.content.length > 37 ? 7 : 0 }]}>{item.content}</Text>
                             <Text style={[styles.timeText, { color: isSenderTheUser ? '#ddd' : '#666' }]}> {timeWithoutSeconds}</Text>
-                            {/* <Text>   {item.index}</Text> */}
                         </View>
                     </View>
                 </TouchableOpacity>

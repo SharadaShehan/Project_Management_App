@@ -16,7 +16,7 @@ const ProjectChatScreen = ({ navigation, route }) => {
     const { userData, setUserData } = UserGlobalState();
     const { messagesData, setMessagesData } = MessagesGlobalState();
     const [ textInput, setTextInput ] = useState('');
-    const projectindexInMessagesData = messagesData.findIndex((messageList) => messageList[0].project && messageList[0].project.id === project.id && !messageList[0].phase);
+    var projectindexInMessagesData = messagesData.findIndex((messageList) => messageList[0] && messageList[0].project && messageList[0].project.id === project.id && !messageList[0].phase);
 
     const { data:recentMessages, loading:messagesLoading, error:messagesError } = useQuery(PROJECT_MESSAGES_QUERY, {
         variables: { projectId: project.id, lastMessageIndex: lastMessageIndex.current, limit: limit },
@@ -27,11 +27,18 @@ const ProjectChatScreen = ({ navigation, route }) => {
     useEffect(() => {
         if (recentMessages) {
             const newMessagesData = [...messagesData];
-            newMessagesData[projectindexInMessagesData].push(...recentMessages.projectMessages);
-            // take only messages with unique id in each list
-            newMessagesData[projectindexInMessagesData] = newMessagesData[projectindexInMessagesData].filter((message, index, self) => self.findIndex((m) => m.id === message.id) === index);
-            setMessagesData(newMessagesData);
-            lastMessageIndex.current = newMessagesData[projectindexInMessagesData][newMessagesData[projectindexInMessagesData].length - 1].index;
+            if (projectindexInMessagesData === -1) {
+                projectindexInMessagesData = messagesData.length;
+                newMessagesData.push([]);
+                setMessagesData(newMessagesData);
+                lastMessageIndex.current = 0;
+            } else {
+                newMessagesData[projectindexInMessagesData].push(...recentMessages.projectMessages);
+                // take only messages with unique id in each list
+                newMessagesData[projectindexInMessagesData] = newMessagesData[projectindexInMessagesData].filter((message, index, self) => self.findIndex((m) => m.id === message.id) === index);
+                setMessagesData(newMessagesData);
+                lastMessageIndex.current = newMessagesData[projectindexInMessagesData][newMessagesData[projectindexInMessagesData].length - 1].index;
+            }
         }
     }, [recentMessages]);
 
@@ -55,7 +62,6 @@ const ProjectChatScreen = ({ navigation, route }) => {
                         <View style={[styles.messageContainer, { paddingTop: (!isSameUserAsPreviousMessage && !isSenderTheUser) ? 0 : 5 }]} key={item.id}>
                             <Text style={[styles.messageText, { color: isSenderTheUser ? '#fff' : '#000', paddingBottom: item.content.length > 37 ? 7 : 0 }]}>{item.content}</Text>
                             <Text style={[styles.timeText, { color: isSenderTheUser ? '#ddd' : '#666' }]}> {timeWithoutSeconds}</Text>
-                            {/* <Text>   {item.index}</Text> */}
                         </View>
                     </View>
                 </TouchableOpacity>
@@ -67,51 +73,55 @@ const ProjectChatScreen = ({ navigation, route }) => {
         <View style={styles.container}>
             {messagesLoading && <Text>Loading ...</Text>}
             {messagesError && ( messagesError.status === 401 ? navigation.navigate('Login') : console.log(messagesError.message))}
-            <FlatList
-                ref={flatListRef}
-                data={messagesData[projectindexInMessagesData] || []}
-                renderItem={renderItem}
-                keyExtractor={(item) => item.id.toString()}
-                inverted={true}
-                initialScrollIndex={0}
-                initialNumToRender={limit}
-                scrollEventThrottle={16}
-            />
-            <View style={styles.inputContainer}>
-                <TextInput
-                    style={styles.textInput}
-                    onChangeText={setTextInput}
-                    value={textInput}
-                    placeholder="Type a message"
-                    multiline={true}
-                    editable={!isBtnDisabled}
-                    maxLength={1000}
-                />
-                <TouchableOpacity
-                    style={styles.sendBtn}
-                    onPress={async () => {
-                        if (textInput.length > 0) {
-                            setIsBtnDisabled(true);
-                            try {
-                                const response = await createProjectMessage({
-                                    variables: {
-                                        projectId: project.id,
-                                        content: textInput,
+            {messagesData && (
+                <View>
+                    <FlatList
+                        ref={flatListRef}
+                        data={messagesData[projectindexInMessagesData] || []}
+                        renderItem={renderItem}
+                        keyExtractor={(item) => item.id.toString()}
+                        inverted={true}
+                        initialScrollIndex={0}
+                        initialNumToRender={limit}
+                        scrollEventThrottle={16}
+                    />
+                    <View style={styles.inputContainer}>
+                        <TextInput
+                            style={styles.textInput}
+                            onChangeText={setTextInput}
+                            value={textInput}
+                            placeholder="Type a message"
+                            multiline={true}
+                            editable={!isBtnDisabled}
+                            maxLength={1000}
+                        />
+                        <TouchableOpacity
+                            style={styles.sendBtn}
+                            disabled={isBtnDisabled}
+                            onPress={async () => {
+                                if (textInput.length > 0) {
+                                    setIsBtnDisabled(true);
+                                    try {
+                                        const response = await createProjectMessage({
+                                            variables: {
+                                                projectId: project.id,
+                                                content: textInput,
+                                            }
+                                        });
+                                        console.log(response.data.createProjectMessage);
+                                        setTextInput('');
+                                    } catch (err) {
+                                        console.log(err);
                                     }
-                                });
-                                console.log(response.data.createProjectMessage);
-                                setTextInput('');
-                            } catch (err) {
-                                console.log(err);
-                            }
-                            setIsBtnDisabled(false);
-                        }
-                    }}
-                    disabled={isBtnDisabled}
-                >
-                    <MatIcon name="send" size={24} color="#fff" />
-                </TouchableOpacity>
-            </View>
+                                    setIsBtnDisabled(false);
+                                }
+                            }}
+                        >
+                            <MatIcon name="send" size={24} color="#fff" />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            )}
         </View>
     );
 }

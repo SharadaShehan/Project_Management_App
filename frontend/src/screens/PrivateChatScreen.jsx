@@ -16,7 +16,7 @@ const PrivateChatScreen = ({ navigation, route }) => {
     const { userData, setUserData } = UserGlobalState();
     const { messagesData, setMessagesData } = MessagesGlobalState();
     const [ textInput, setTextInput ] = useState('');
-    const userindexInMessagesData = messagesData.findIndex((messageList) => messageList[0].receiver && (messageList[0].receiver.id === user.id || messageList[0].sender.id === user.id));
+    var userindexInMessagesData = messagesData.findIndex((messageList) => messageList[0] && messageList[0].receiver && (messageList[0].receiver.id === user.id || messageList[0].sender.id === user.id));
 
     const { data:recentMessages, loading:messagesLoading, error:messagesError } = useQuery(PRIVATE_MESSAGES_QUERY, {
         variables: { userId: user.id, lastMessageIndex: lastMessageIndex.current, limit: limit },
@@ -27,11 +27,18 @@ const PrivateChatScreen = ({ navigation, route }) => {
     useEffect(() => {
         if (recentMessages) {
             const newMessagesData = [...messagesData];
-            newMessagesData[userindexInMessagesData].push(...recentMessages.privateMessages);
-            // take only messages with unique id in each list
-            newMessagesData[userindexInMessagesData] = newMessagesData[userindexInMessagesData].filter((message, index, self) => self.findIndex((m) => m.id === message.id) === index);
-            setMessagesData(newMessagesData);
-            lastMessageIndex.current = newMessagesData[userindexInMessagesData][newMessagesData[userindexInMessagesData].length - 1].index;
+            if (userindexInMessagesData === -1) {
+                userindexInMessagesData = messagesData.length;
+                newMessagesData.push([]);
+                setMessagesData(newMessagesData);
+                lastMessageIndex.current = 0;
+            } else {
+                newMessagesData[userindexInMessagesData].push(...recentMessages.privateMessages);
+                // take only messages with unique id in each list
+                newMessagesData[userindexInMessagesData] = newMessagesData[userindexInMessagesData].filter((message, index, self) => self.findIndex((m) => m.id === message.id) === index);
+                setMessagesData(newMessagesData);
+                lastMessageIndex.current = newMessagesData[userindexInMessagesData][newMessagesData[userindexInMessagesData].length - 1].index;
+            }
         }
     }, [recentMessages]);
 
@@ -51,11 +58,9 @@ const PrivateChatScreen = ({ navigation, route }) => {
                 {!isDateSameAsPreviousMessage && <Text style={styles.dateText}>{date}</Text>}
                 <TouchableOpacity style={[styles.itemContainer, { justifyContent: isSenderTheUser ? 'flex-end' : 'flex-start' }]} key={item.id}>
                     <View style={[styles.fullMessageContainer, { backgroundColor: isSenderTheUser ? '#6BB64a' : '#d8d8d8' }]}>
-                        {/* {(!isSameUserAsPreviousMessage && !isSenderTheUser) && <Text style={styles.headerText}>{item.sender.firstName} {item.sender.lastName}</Text>} */}
                         <View style={[styles.messageContainer]} key={item.id}>
                             <Text style={[styles.messageText, { color: isSenderTheUser ? '#fff' : '#000', paddingBottom: item.content.length > 37 ? 7 : 0 }]}>{item.content}</Text>
                             <Text style={[styles.timeText, { color: isSenderTheUser ? '#ddd' : '#666' }]}> {timeWithoutSeconds}</Text>
-                            {/* <Text>   {item.index}</Text> */}
                         </View>
                     </View>
                 </TouchableOpacity>
@@ -65,6 +70,8 @@ const PrivateChatScreen = ({ navigation, route }) => {
 
     return (
         <View style={styles.container}>
+            {messagesLoading && <Text>Loading...</Text>}
+            {messagesError && ( messagesError.status === 401 ? navigation.navigate('Login') : console.log(messagesError.message))}
             <FlatList
                 ref={flatListRef}
                 data={messagesData[userindexInMessagesData] || []}
