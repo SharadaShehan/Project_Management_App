@@ -52,7 +52,7 @@ const SignUpScreen = ({navigation}) => {
             }
             setImageUploaded(true);
         } catch (err) {
-            console.error(err);
+            Alert.alert('Error', err.message);
         }
     }
 
