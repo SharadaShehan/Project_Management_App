@@ -24,6 +24,7 @@ const defaultProcess = Joi.string().external(async (value) => {
   const process = await mongoose.model('Process').findById(value)
   if (!process) throw new Error('Invalid process')
 }).label('Default process')
+const logo = Joi.string().label('Logo')
 
 export const createProject = Joi.object().keys({
   title,
@@ -31,7 +32,8 @@ export const createProject = Joi.object().keys({
   owner,
   members,
   status,
-  processes
+  processes,
+  logo
 })
 
 export const updateProject = Joi.object().keys({

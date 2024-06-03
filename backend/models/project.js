@@ -21,7 +21,11 @@ const projectSchema = new mongoose.Schema({
     default: 'Active'
   },
   processes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Process' }],
-  defaultProcess: { type: mongoose.Schema.Types.ObjectId, ref: 'Process' }
+  defaultProcess: { type: mongoose.Schema.Types.ObjectId, ref: 'Process' },
+  logo: {
+    type: String,
+    default: 'logo-default.png'
+  }
 })
 
 const Project = mongoose.model('Project', projectSchema)
