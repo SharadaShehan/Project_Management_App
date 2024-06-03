@@ -12,16 +12,6 @@ export default {
     me: async (root, args, { req }, info) => {
       Auth.checkSignedIn(req)
       return await User.findById(req.session.userId)
-    },
-    searchUser: async (root, args, { req }, info) => {
-      Auth.checkSignedIn(req)
-      return await User.find({
-        $or: [
-          { firstName: { $regex: args.searchText, $options: 'i' } },
-          { lastName: { $regex: args.searchText, $options: 'i' } },
-          { username: { $regex: args.searchText, $options: 'i' } }
-        ]
-      })
     }
   },
   Mutation: {
@@ -56,6 +46,16 @@ export default {
       Auth.checkSignedIn(req)
       await Auth.signOut(req, res)
       return true
+    },
+    searchUsers: async (root, args, { req }, info) => {
+      Auth.checkSignedIn(req)
+      return await User.find({
+        $or: [
+          { firstName: { $regex: args.searchText, $options: 'i' } },
+          { lastName: { $regex: args.searchText, $options: 'i' } },
+          { username: { $regex: args.searchText, $options: 'i' } }
+        ]
+      })
     },
     updateProfile: async (root, args, { req }, info) => {
       Auth.checkSignedIn(req)
