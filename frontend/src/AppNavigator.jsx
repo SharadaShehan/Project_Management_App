@@ -13,6 +13,7 @@ import PostsScreen from './screens/PostsScreen';
 import PostScreen from './screens/PostScreen';
 import SignUpScreen from './screens/SignUpScreen';
 import UpdateProfileScreen from './screens/UpdateProfileScreen';
+import ChangePasswordScreen from './screens/ChangePasswordScreen';
 import { UserGlobalStateProvider } from './layout/UserState';
 import { MessagesGlobalStateProvider } from './layout/MessagesState';
 
@@ -75,6 +76,8 @@ const AppNavigator = () => {
                           })}
                         />
           <Stack.Screen name="UpdateProfile" component={UpdateProfileScreen}
+                        options={{ headerShown: false }}/>
+          <Stack.Screen name="ChangePassword" component={ChangePasswordScreen}
                         options={{ headerShown: false }}/>
         </Stack.Navigator>
       </NavigationContainer>
