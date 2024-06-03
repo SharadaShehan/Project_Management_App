@@ -9,7 +9,8 @@ const PROJECTS_QUERY = gql`
             status
             defaultProcess {
                 id
-            }
+            },
+            logo
         }
     }
 `;
@@ -37,7 +38,8 @@ const ONE_PROJECT_QUERY = gql`
             }
             defaultProcess {
                 id
-            }
+            },
+            logo
         }
     }
 `;
@@ -90,11 +92,13 @@ const LAST_PRIVATE_MESSAGES_QUERY = gql`
                 id
                 firstName
                 lastName
+                imageURL
             }
             receiver {
                 id
                 firstName
                 lastName
+                imageURL
             }
             content
             createdAt
@@ -112,10 +116,12 @@ const LAST_PROJECT_MESSAGES_QUERY = gql`
                 id
                 firstName
                 lastName
+                imageURL
             }
             project {
                 id
                 title
+                logo
             }
             content
             createdAt
@@ -133,10 +139,16 @@ const LAST_PHASE_MESSAGES_QUERY = gql`
                 id
                 firstName
                 lastName
+                imageURL
             }
             phase {
                 id
                 title
+            }
+            project {
+                id
+                title
+                logo
             }
             content
             createdAt
@@ -154,11 +166,13 @@ const PRIVATE_MESSAGES_QUERY = gql`
                 id
                 firstName
                 lastName
+                imageURL
             }
             receiver {
                 id
                 firstName
                 lastName
+                imageURL
             }
             content
             createdAt
@@ -176,10 +190,12 @@ const PROJECT_MESSAGES_QUERY = gql`
                 id
                 firstName
                 lastName
+                imageURL
             }
             project {
                 id
                 title
+                logo
             }
             content
             createdAt
@@ -197,10 +213,16 @@ const PHASE_MESSAGES_QUERY = gql`
                 id
                 firstName
                 lastName
+                imageURL
             }
             phase {
                 id
                 title
+            }
+            project {
+                id
+                title
+                logo
             }
             content
             createdAt

@@ -7,16 +7,22 @@ const NEW_MESSAGE_SUBSCRIPTION = gql`
             content
             sender {
                 id
+                username
                 firstName
                 lastName
+                imageURL
             }
             receiver {
                 id
+                username
                 firstName
+                lastName
+                imageURL
             }
             project {
                 id
                 title
+                logo
             }
             phase {
                 id
