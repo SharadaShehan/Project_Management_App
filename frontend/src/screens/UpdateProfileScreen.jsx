@@ -147,9 +147,10 @@ const UpdateProfileScreen = ({navigation}) => {
                                     imageURL: response.data.updateProfile.imageURL,
                                     wsToken: userData.wsToken,
                                 });
+                                Alert.alert('Profile Updated');
                                 navigation.navigate('Profile');
                             } else {
-                                alert('Invalid Details');
+                                Alert.alert('An error occurred, please try again');
                             }
                         } catch (err) {
                             // separate each sentence into new line in err.message
