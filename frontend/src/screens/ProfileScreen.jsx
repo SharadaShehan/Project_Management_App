@@ -94,18 +94,18 @@ const styles = {
         color: 'gray',
     },
     buttonsContainer: {
-        marginTop: '6%',
+        marginTop: '3%',
     },
     updateButton: {
         backgroundColor: '#007BFF',
-        marginTop: '3%',
+        marginTop: '4%',
         borderRadius: 8,
-        padding: 6
+        padding: 8
     },
     updateButtonText: {
         color: 'white',
         textAlign: 'center',
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: 'bold'
     }
 }

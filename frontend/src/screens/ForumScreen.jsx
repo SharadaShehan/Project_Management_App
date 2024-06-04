@@ -9,7 +9,6 @@ const ForumScreen = ({ navigation }) => {
     const { data, loading, error } = useQuery(PROJECTS_QUERY);
 
     const RenderItem = ({ item }) => {
-        console.log(item.defaultProcess);
         return (
             <TouchableOpacity onPress={() => navigation.navigate('Posts', { projectId: item.id, projectTitle: item.title })}
                 style={styles.itemContainer} key={item.id}
