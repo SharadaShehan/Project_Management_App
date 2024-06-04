@@ -2,16 +2,11 @@ import React , { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Button, FlatList, Image, TextInput, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { POST_QUERY } from '../queries/Queries';
-import { UPVOTE_POST_MUTATION, DOWNVOTE_POST_MUTATION, UPVOTE_REPLY_MUTATION, DOWNVOTE_REPLY_MUTATION, REPLY_POST_MUTATION, DELETE_POST_MUTATION } from '../queries/Mutations';
+import { UPVOTE_POST_MUTATION, DOWNVOTE_POST_MUTATION, UPVOTE_REPLY_MUTATION, DOWNVOTE_REPLY_MUTATION, REPLY_POST_MUTATION, DELETE_POST_MUTATION, GET_GEMINI_RESPONSE_FOR_POST_MUTATION } from '../queries/Mutations';
 import { useQuery, useMutation } from '@apollo/client';
 import MatIcon from 'react-native-vector-icons/MaterialIcons';
 import MIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { UserGlobalState } from '../layout/UserState';
-import { API_KEY } from '@env';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-const genAI = new GoogleGenerativeAI(API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-pro"});
 
 const PostScreen = ({ navigation, route }) => {
     const [ upvoted, setUpvoted ] = useState(false);
@@ -34,6 +29,7 @@ const PostScreen = ({ navigation, route }) => {
     const [ downvoteReply, { data:downvotedReply, loading:downvotedReplyLoading, error:downvotedReplyError } ] = useMutation(DOWNVOTE_REPLY_MUTATION);
     const [ replyPost, { data:createdReply, loading:createdReplyLoading, error:createdReplyError } ] = useMutation(REPLY_POST_MUTATION);
     const [ deletePost, { data:deletedPost, loading:deletedPostLoading, error:deletedPostError } ] = useMutation(DELETE_POST_MUTATION);
+    const [ getGeminiResponseForPost, { data:geminiResponse, loading:geminiResponseLoading, error:geminiResponseError } ] = useMutation(GET_GEMINI_RESPONSE_FOR_POST_MUTATION);
 
     const RenderItem = ({ item, index }) => {
         const datetimeObj = new Date(parseInt(item.createdAt));
@@ -159,11 +155,9 @@ const PostScreen = ({ navigation, route }) => {
                                 if (generatedAnswerLoading) return;
                                 setGeneratedAnswerVisible(true);
                                 setGeneratedAnswerLoading(true);
-                                prompt = `Project description: ${data.post.project.description}\nTitle: ${data.post.title}\nQuestion: ${data.post.content}\nGive Answer in few sentences.`;
-                                const result = await model.generateContent(prompt);
-                                let text = 'AI generated answer: \n\n';
-                                const responseText = (await result.response).text() + '\n';
-                                text += responseText;
+                                const response = await getGeminiResponseForPost({ variables: { postId: data.post.id } });
+                                const text = response.data.getGeminiResponseForPost;
+                                if (typeof text !== 'string') throw new Error('Invalid response from server');
                                 setGeneratedAnswer(text);
                                 setGeneratedAnswerLoading(false);
                             } catch (err) {
@@ -175,9 +169,11 @@ const PostScreen = ({ navigation, route }) => {
                     </View>
                     <View>
                       {generatedAnswerVisible && (
-                        <ScrollView style={styles.generatedAnswerContainer}>
-                          <Text style={styles.postContent}>{generatedAnswer}</Text>
-                        </ScrollView>
+                        <View style={styles.generatedAnswerContainer}>
+                            <ScrollView>
+                            <Text style={styles.generatedAnswerContent}>{generatedAnswer}</Text>
+                            </ScrollView>
+                        </View>
                       )}
                     </View>
                     <View style={styles.repliesContainer}>
@@ -295,7 +291,7 @@ const styles = StyleSheet.create({
     postContent: {
         fontSize: 15,
         textAlign: 'center',
-        marginBottom: 10,
+        marginBottom: 10
     },
     postAuthor: {
         fontSize: 17,
@@ -339,11 +335,16 @@ const styles = StyleSheet.create({
         backgroundColor: '#eee',
         marginBottom: 10,
         marginHorizontal: 10,
-        paddingTop: 8,
-        paddingBottom: 15,
+        paddingTop: 10,
+        paddingBottom: 10,
         paddingLeft: 13,
         paddingRight: 10,
         borderRadius: 10,
+    },
+    generatedAnswerContent: {
+        fontSize: 15,
+        textAlign: 'center',
+        marginBottom: 10,
     },
     replyButton: {
         borderRadius: 20,
