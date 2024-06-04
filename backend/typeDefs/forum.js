@@ -16,6 +16,7 @@ export default gql`
       upvoteReply(id: ID!): Post!
       downvoteReply(id: ID!): Post!
       deleteReply(id: ID!): Boolean!
+      getGeminiResponseForPost(postId: ID!): String!
     }
 
     type Post {

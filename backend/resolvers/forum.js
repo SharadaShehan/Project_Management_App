@@ -2,6 +2,7 @@ import { Post, Reply } from '../models/forum.js'
 import * as Auth from '../auth.js'
 import { createPost, updatePost, createReply } from '../schemas/forum.js'
 import { Project } from '../models/index.js'
+import { geminiModel } from '../utils.js'
 
 export default {
   Query: {
@@ -135,6 +136,20 @@ export default {
       await Reply.deleteOne({ _id: reply.id })
       await Post.updateOne({ _id: post.id }, { $pull: { replies: reply.id } })
       return true
+    },
+    getGeminiResponseForPost: async (root, args, { req }, info) => {
+      Auth.checkSignedIn(req)
+      if (!args.postId) throw new Error('Post ID required')
+      const post = await Post.findById(args.postId)
+      if (!post) throw new Error('Post not found')
+      const project = await Project.findById(post.project)
+      if (!project) throw new Error('Project not found')
+      const prompt = `Project title: ${project.title}\nProject description: ${project.description}\nTopic: ${post.title}\nQuestion: ${post.content}\nGive Answer in few sentences.`
+      const result = await geminiModel.generateContent(prompt)
+      let text = 'AI generated answer: \n\n'
+      const responseText = (await result.response).text() + '\n'
+      text += responseText
+      return text
     }
   },
 
