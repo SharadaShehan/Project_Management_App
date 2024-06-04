@@ -1,8 +1,8 @@
 import React , { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Button, FlatList, Image, TextInput, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Button, FlatList, Image, TextInput, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { POST_QUERY } from '../queries/Queries';
-import { UPVOTE_POST_MUTATION, DOWNVOTE_POST_MUTATION, UPVOTE_REPLY_MUTATION, DOWNVOTE_REPLY_MUTATION, REPLY_POST_MUTATION } from '../queries/Mutations';
+import { UPVOTE_POST_MUTATION, DOWNVOTE_POST_MUTATION, UPVOTE_REPLY_MUTATION, DOWNVOTE_REPLY_MUTATION, REPLY_POST_MUTATION, DELETE_POST_MUTATION } from '../queries/Mutations';
 import { useQuery, useMutation } from '@apollo/client';
 import MatIcon from 'react-native-vector-icons/MaterialIcons';
 import MIcon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -33,6 +33,7 @@ const PostScreen = ({ navigation, route }) => {
     const [ upvoteReply, { data:upvotedReply, loading:upvotedReplyLoading, error:upvotedReplyError } ] = useMutation(UPVOTE_REPLY_MUTATION);
     const [ downvoteReply, { data:downvotedReply, loading:downvotedReplyLoading, error:downvotedReplyError } ] = useMutation(DOWNVOTE_REPLY_MUTATION);
     const [ replyPost, { data:createdReply, loading:createdReplyLoading, error:createdReplyError } ] = useMutation(REPLY_POST_MUTATION);
+    const [ deletePost, { data:deletedPost, loading:deletedPostLoading, error:deletedPostError } ] = useMutation(DELETE_POST_MUTATION);
 
     const RenderItem = ({ item, index }) => {
         const datetimeObj = new Date(parseInt(item.createdAt));
@@ -97,11 +98,27 @@ const PostScreen = ({ navigation, route }) => {
         }
     }, [data]);
 
+    const deletePostHandler = async () => {
+        try {
+            const response = await deletePost({ variables: { id: data.post.id } });
+            if (response.data.deletePost) {
+                navigation.navigate('Posts', { projectId: data.post.project.id, projectTitle: data.post.project.title });
+            } else {
+                Alert.alert('Error', 'Could not delete post.');
+            }
+        } catch (err) {
+            console.log(err);
+            const message = err.message.split('.').join('.\n');
+            Alert.alert('Error', message);
+        }
+    }
+
     return (
         <View style={styles.container}>
-            {/* <View style={styles.postsContainer}> */}
+            <View style={styles.postsContainer}>
             {loading && <Text>Loading Post...</Text>}
             {error && ( error.status === 401 ? navigation.navigate('Login') : console.log(error.message))}
+            {error && error.status !== 401 && navigation.navigate('Posts', { projectId: route.params.id, projectTitle: route.params.projectTitle })}
             {data && (
                 <View style={{ flex: 1 }}>
                     <Text style={styles.postAuthor}>{data.post.owner.firstName} {data.post.owner.lastName}  </Text>
@@ -163,7 +180,7 @@ const PostScreen = ({ navigation, route }) => {
                         </ScrollView>
                       )}
                     </View>
-                    <View style={{ flex: 1 }}>
+                    <View style={styles.repliesContainer}>
                     <FlatList
                         data={data.post.replies}
                         keyExtractor={(item) => item.id.toString()}
@@ -205,10 +222,24 @@ const PostScreen = ({ navigation, route }) => {
                             </TouchableOpacity>
                         </View>
                     )}
+                    { userData.id === data.post.owner.id &&
+                        <TouchableOpacity style={styles.deletePostButton} onPress={() => {
+                            Alert.alert(
+                                'Delete Post',
+                                'Are you sure you want to delete this post?',
+                                [
+                                    { text: 'Cancel', onPress: () => console.log('Cancel Pressed'), style: 'cancel' },
+                                    { text: 'Delete', onPress: deletePostHandler }
+                                ]
+                            );
+                        }}>
+                            <Text style={{ color: '#fff', fontSize: 17 }}>🗑</Text>
+                        </TouchableOpacity>
+                    }
                 </View> 
             )}
 
-            {/* </View> */}
+            </View>
         </View>
     );
 }
@@ -218,17 +249,19 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 0,
         // marginBottom: 10,
-        paddingBottom: 15,
+        paddingTop: 10,
+        paddingBottom: 10,
         alignItems: 'justify',
-        backgroundColor: '#fff',
-        paddingHorizontal: 25,
+        backgroundColor: '#4CBB17',
+        paddingHorizontal: 10,
     },
     postsContainer: {
-        // flex: 1,
+        flex: 1,
+        borderRadius: 10,
         // justifyContent: 'center',
         alignItems: 'justify',
         backgroundColor: '#fff',
-        paddingHorizontal: 25,
+        paddingHorizontal: 5
     },
     itemContainer: {
         paddingTop: 5,
@@ -237,7 +270,8 @@ const styles = StyleSheet.create({
     itemContentContainer: {
         marginLeft: 5,
         paddingLeft: 15,
-        backgroundColor: '#f8f8f8',
+        paddingRight: 8,
+        backgroundColor: '#eee',
         borderRadius: 10,
     },
     rowContainer: {
@@ -268,12 +302,14 @@ const styles = StyleSheet.create({
         textAlign: 'left',
         marginBottom: 0,
         marginTop: 15,
+        marginLeft: 15,
     },
     postDate: {
         fontSize: 14,
         textAlign: 'left',
         marginBottom: 0,
         color: '#666',
+        marginLeft: 15,
     },
     postUpvotes: {
         fontSize: 13,
@@ -300,11 +336,14 @@ const styles = StyleSheet.create({
     },
     generatedAnswerContainer: {
         maxHeight: 200,
-        backgroundColor: '#f8f8f8',
-        borderRadius: 10,
+        backgroundColor: '#eee',
         marginBottom: 10,
-        padding: 10,
-        marginLeft: 5,
+        marginHorizontal: 10,
+        paddingTop: 8,
+        paddingBottom: 15,
+        paddingLeft: 13,
+        paddingRight: 10,
+        borderRadius: 10,
     },
     replyButton: {
         borderRadius: 20,
@@ -312,16 +351,27 @@ const styles = StyleSheet.create({
         alignItems: 'left',
         marginTop: 5,
     },
+    repliesContainer: {
+        flex: 1,
+        width: '100%',
+        paddingHorizontal: 5,
+        // marginTop: 10,
+        marginBottom: 15,
+        borderRadius: 10,
+    },
     replyUser: {
         fontSize: 15,
         fontWeight: 'bold',
         marginBottom: 0,
         marginTop: 10,
+        color: '#000',
     },
     replyMsg: {
         fontSize: 14,
         marginBottom: 10,
         marginTop: 0,
+        color: '#111',
+        fontWeight: 'semi-bold',
     },
     replyDatetime: {
         fontSize: 13,
@@ -337,7 +387,7 @@ const styles = StyleSheet.create({
         marginLeft: 5,
     },
     textInput: {
-        backgroundColor: '#f8f8f8',
+        backgroundColor: '#eee',
         borderRadius: 20,
         padding: 10,
         marginBottom: 5,
@@ -350,6 +400,7 @@ const styles = StyleSheet.create({
         borderRadius: 50,
         paddingTop: 8,
         marginLeft: 10,
+        color: '#4CBB17',
     },
     createPostButton: {
         backgroundColor: '#6BB64a',
@@ -358,6 +409,17 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         width: '90%',
         alignItems: 'center',
+    },
+    deletePostButton: {
+        position: 'absolute',
+        bottom: 15,
+        right: 15,
+        backgroundColor: '#dd0000',
+        borderRadius: 50,
+        width: 50,
+        height: 50,
+        alignItems: 'center',
+        justifyContent: 'center'
     }
 });
 
