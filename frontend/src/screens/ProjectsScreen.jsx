@@ -8,8 +8,8 @@ const ProjectsScreen = ({ navigation }) => {
     return (
         <SafeAreaView style={styles.innerContainer}>
         <ProjectsList navigation={navigation} />
-        <TouchableOpacity style={styles.createProjectButton} onPress={() => navigation.navigate('CreateProject')}>
-            <Text style={{ color: '#fff', fontSize: 17 }}>Create New Project</Text>
+        <TouchableOpacity style={styles.addNewButton} onPress={() => navigation.navigate('CreateProject')}>
+            <Text style={{ color: '#fff', fontSize: 20 }}>+</Text>
         </TouchableOpacity>
         </SafeAreaView>
     );
@@ -32,6 +32,17 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         alignSelf: 'center',
+    },
+    addNewButton: {
+        position: 'absolute',
+        bottom: 15,
+        right: 15,
+        backgroundColor: '#007BFF',
+        borderRadius: 50,
+        width: 50,
+        height: 50,
+        alignItems: 'center',
+        justifyContent: 'center'
     }
 });
 

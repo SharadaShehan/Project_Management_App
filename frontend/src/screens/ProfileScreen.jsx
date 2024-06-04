@@ -54,7 +54,7 @@ const styles = {
     },
     innerContainer: {
         width: '90%',
-        height: '95%',
+        height: '93%',
         borderRadius: 40,
         backgroundColor: 'white',
         paddingHorizontal: '4%',

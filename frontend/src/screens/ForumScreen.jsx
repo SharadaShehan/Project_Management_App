@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Button, FlatList, Image } fro
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PROJECTS_QUERY } from '../queries/Queries';
 import { useQuery } from '@apollo/client';
+import { getLogoImage } from '../logoImages';
 
 const ForumScreen = ({ navigation }) => {
     const { data, loading, error } = useQuery(PROJECTS_QUERY);
@@ -14,20 +15,19 @@ const ForumScreen = ({ navigation }) => {
                 style={styles.itemContainer} key={item.id}
             >
                 <View style={styles.ImageContainer}>
-                    <Image source={require('../../images/projectIcon.jpg')} style={styles.imageItem} />
+                    <Image source={getLogoImage(item.logo)} style={styles.imageItem} />
                 </View>
                 <View>
                     <Text style={styles.projectTitle}>{item.title}</Text>
                     <Text style={styles.projectDescription}>{item.description}</Text>
-                    <Text style={styles.projectStatus}>Status: {item.status}</Text>
                 </View>
             </TouchableOpacity>
         );
     }
 
     return (
-        <SafeAreaView style={styles.projectsContainer}>
-            <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
+            <View style={styles.innerContainer}>
             {loading && <Text>Loading projects...</Text>}
             {error && ( error.status === 401 ? navigation.navigate('Login') : console.log(error.message))}
             {data && (
@@ -45,32 +45,35 @@ const ForumScreen = ({ navigation }) => {
 }
 
 const styles = StyleSheet.create({
-    projectsContainer: {
-        flex: 1,
-        // justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#fff'
-    },
     container: {
-        padding: 0,
-        height: '90%',
+        flex: 1,
+        backgroundColor: '#4CBB17',
+        paddingHorizontal: '4%',
+    },
+    innerContainer: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 40,
+        backgroundColor: '#4CBB17',
+        paddingHorizontal: '2%',
     },
     itemContainer: {
-        paddingTop: 10,
-        paddingBottom: 10,
-        borderBottomColor: 'black',
-        borderBottomWidth: 1,
+        paddingTop: 8,
+        paddingBottom: 12,
+        marginBottom: 5,
         flexDirection: 'row',
+        backgroundColor: '#fff',
+        borderRadius: 25,
     },
     projectTitle: {
-        fontSize: 20,
+        fontSize: 18,
         fontWeight: 'bold',
         marginTop: 10,
         marginBottom: 5,
         color: '#434343'
     },
     projectDescription: {
-        maxWidth: '90%',
+        maxWidth: '87%',
         fontSize: 14,
         color: '#434343'
     },
@@ -82,12 +85,13 @@ const styles = StyleSheet.create({
         margin: 10,
     },
     ImageContainer: {
-        margin: 15
+        margin: 13,
+        marginTop: 15,
     },
     imageItem: {
         width: 60,
         height: 60,
-        // margin: 10,
+        borderRadius: 50,
     },
     createForumButton: {
         backgroundColor: '#6BB64a',

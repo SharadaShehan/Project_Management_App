@@ -78,7 +78,7 @@ const MessagesScreen = ({ navigation }) => {
                 renderItem={renderItem}
                 keyExtractor={(item) => item[0].id.toString()}
             />
-            <TouchableOpacity onPress={() => navigation.navigate('NewChat')} style={{ position: 'absolute', bottom: 15, right: 15, backgroundColor: '#007BFF', borderRadius: 50, width: 50, height: 50, alignItems: 'center', justifyContent: 'center' }}>
+            <TouchableOpacity onPress={() => navigation.navigate('NewChat')} style={styles.addNewButton}>
                 <Text style={{ color: '#fff', fontSize: 20 }}>+</Text>
             </TouchableOpacity>
         </View>
@@ -122,6 +122,17 @@ const styles = StyleSheet.create({
     contentText: {
         fontWeight: 'bold',
         color: '#808080'
+    },
+    addNewButton: {
+        position: 'absolute',
+        bottom: 15,
+        right: 15,
+        backgroundColor: '#007BFF',
+        borderRadius: 50,
+        width: 50,
+        height: 50,
+        alignItems: 'center',
+        justifyContent: 'center'
     }
 });
 

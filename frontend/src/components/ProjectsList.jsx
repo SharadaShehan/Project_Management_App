@@ -46,7 +46,7 @@ const ProjectsList = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         paddingHorizontal: 8,
-        height: '90%',
+        height: '100%',
         paddingTop: 0,
         marginTop: 0,
     },
