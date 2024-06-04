@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Button, Image, TouchableOpacity } from 'react-native';
 import { UserGlobalState } from '../layout/UserState';
+import { color } from 'react-native-elements/dist/helpers';
 
 const ProfileScreen = ({ navigation }) => {
     const { userData, setUserData } = UserGlobalState();
@@ -23,14 +24,17 @@ const ProfileScreen = ({ navigation }) => {
                         <Text style={styles.topicText}>Country : </Text>
                         <Text style={userData.country ? styles.valueText : styles.valueNotSetText}>{userData.country ? userData.country : 'Not set'}</Text>
                     </View>
-                    <View style={styles.topicValueContainer}>
-                        <Text style={styles.topicText}>Email(1) : </Text>
-                        <Text style={userData.primaryEmail ? styles.valueText : styles.valueNotSetText}>{userData.primaryEmail ? userData.primaryEmail : 'Not set'}</Text>
-                    </View>
-                    <View style={styles.topicValueContainer}>
-                        <Text style={styles.topicText}>Email(2) : </Text>
-                        <Text style={userData.secondaryEmail ? styles.valueText : styles.valueNotSetText}>{userData.secondaryEmail ? userData.secondaryEmail : 'Not set'}</Text>
-                    </View>
+                    { (userData.primaryEmail || userData.secondaryEmail) && <Text style={styles.emailTopicText}>Email Addresses</Text>}
+                    { userData.primaryEmail &&
+                        <View style={styles.topicValueContainer}>
+                            <Text style={userData.primaryEmail ? styles.valueText : styles.valueNotSetText}>{userData.primaryEmail ? userData.primaryEmail : 'Not set'}</Text>
+                        </View>
+                    }
+                    { userData.secondaryEmail &&
+                        <View style={styles.topicValueContainer}>
+                            <Text style={userData.secondaryEmail ? styles.valueText : styles.valueNotSetText}>{userData.secondaryEmail ? userData.secondaryEmail : 'Not set'}</Text>
+                        </View>
+                    }
                 </View>
                 <View style={styles.buttonsContainer}>
                     <TouchableOpacity title='update profile' onPress={() => navigation.navigate('UpdateProfile')} style={styles.updateButton}>
@@ -69,15 +73,21 @@ const styles = {
     topicValueContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginTop: '5%',
+        marginTop: '3%',
     },
     topicText: {
         fontSize: 18,
         fontWeight: 'bold',
     },
+    emailTopicText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginTop: '5%',
+    },
     valueText: {
         fontSize: 18,
-        // marginTop: '2%',
+        fontWeight: 'semi-bold',
+        color: '#555',
     },
     valueNotSetText: {
         fontSize: 18,

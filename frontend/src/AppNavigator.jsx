@@ -12,6 +12,7 @@ import PrivateChatScreen from './screens/PrivateChatScreen';
 import NewChatScreen from './screens/NewChatScreen';
 import PostsScreen from './screens/PostsScreen';
 import PostScreen from './screens/PostScreen';
+import CreatePostScreen from './screens/CreatePostScreen';
 import SignUpScreen from './screens/SignUpScreen';
 import UpdateProfileScreen from './screens/UpdateProfileScreen';
 import ChangePasswordScreen from './screens/ChangePasswordScreen';
@@ -35,14 +36,24 @@ const AppNavigator = () => {
           <Stack.Screen name="Project" component={ProjectScreen}
                         options={{
                           headerStyle: {
-                            backgroundColor: '#6BB64a',
+                            backgroundColor: '#228B22',
                             fontWeight: 'bold'
                           },
                           headerTintColor: '#fff'
                         }}/>
           <Stack.Screen name="CreateProject" component={CreateProjectScreen}
                         options={{ headerShown: false }}/>
-          <Stack.Screen name="PhaseChat" component={PhaseChatScreen}/>
+          <Stack.Screen name="PhaseChat" component={PhaseChatScreen}
+                        options={
+                          ({ route }) => ({
+                            title: route.params.project.title,
+                            headerStyle: {
+                              backgroundColor: '#6BB64a',
+                              fontWeight: 'bold',
+                            },
+                            headerTintColor: '#fff'
+                          })
+                        }/>
           <Stack.Screen name="ProjectChat" component={ProjectChatScreen}
                         options={
                           ({ route }) => ({
@@ -65,14 +76,44 @@ const AppNavigator = () => {
                             headerTintColor: '#fff'
                           })
                         }/>
-          <Stack.Screen name="NewChat" component={NewChatScreen}/>
-          <Stack.Screen name="Posts" component={PostsScreen}/>
+          <Stack.Screen name="NewChat" component={NewChatScreen}
+                        options={
+                          ({ route }) => ({
+                            headerStyle: {
+                              backgroundColor: '#228B22',
+                              fontWeight: 'bold',
+                            },
+                            headerTintColor: '#fff'
+                          })}
+                        />
+          <Stack.Screen name="Posts" component={PostsScreen}
+                        options={
+                          ({ route }) => ({
+                            title: route.params.projectTitle,
+                            headerStyle: {
+                              backgroundColor: '#228B22',
+                              fontWeight: 'bold',
+                            },
+                            headerTintColor: '#fff'
+                          })}
+                        />
           <Stack.Screen name="Post" component={PostScreen}
                         options={
                           ({ route }) => ({
                             title: route.params.projectTitle,
                             headerStyle: {
-                              backgroundColor: '#6BB64a',
+                              backgroundColor: '#228B22',
+                              fontWeight: 'bold',
+                            },
+                            headerTintColor: '#fff'
+                          })}
+                        />
+          <Stack.Screen name="CreatePost" component={CreatePostScreen}
+                        options={
+                          ({ route }) => ({
+                            title: route.params.projectTitle,
+                            headerStyle: {
+                              backgroundColor: '#228B22',
                               fontWeight: 'bold',
                             },
                             headerTintColor: '#fff'

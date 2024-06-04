@@ -75,13 +75,13 @@ const NewChatScreen = ({ navigation }) => {
             <View style={styles.innerContainer}>
                 <Text style={styles.title}>Select User/Project</Text>
                 <View style={styles.inputContainer}>
-                    <Text style={{ textAlign: 'center', fontSize: 16, fontWeight: 'bold', marginTop: '5%' }}>Users</Text>
+                    <Text style={{ textAlign: 'center', fontSize: 18, fontWeight: 'bold', marginTop: '5%' }}>Users</Text>
                     <SearchBar
                         placeholder="Search for Users"
                         onChangeText={searchTextChangeHandler}
                         value={searchText}
                         onClear={() => setSearchList([])}
-                        containerStyle={{ backgroundColor: 'transparent', borderColor: 'transparent', width: '80%' }}
+                        containerStyle={{ backgroundColor: 'transparent', borderColor: 'transparent', width: '85%' }}
                         inputContainerStyle={{ backgroundColor: '#eee' }}
                         inputStyle={{ color: '#000', fontSize: 14 }}
                         leftIconContainerStyle={{ paddingLeft: 5 }}
@@ -101,7 +101,7 @@ const NewChatScreen = ({ navigation }) => {
                         renderItem={renderProjectItem}
                         keyExtractor={(item) => item.id}
                         initialNumToRender={5}
-                        ListHeaderComponent={<Text style={{ textAlign: 'center', fontSize: 16, fontWeight: 'bold', marginBottom: '3%', marginTop: '5%' }}>Projects</Text>}
+                        ListHeaderComponent={<Text style={{ textAlign: 'center', fontSize: 18, fontWeight: 'bold', marginBottom: '6%', marginTop: '8%' }}>Projects</Text>}
                     />
                 </View>
             </View>
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
         borderRadius: 10,
     },
     title: {
-        fontSize: 20,
+        fontSize: 24,
         marginTop: '12%',
         textAlign: 'center',
         color: '#000',

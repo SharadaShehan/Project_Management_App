@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         paddingTop: 7,
         paddingLeft: 10,
-        color: '#080',
+        color: '#228B22',
     },
     dateText: {
         fontSize: 16,
