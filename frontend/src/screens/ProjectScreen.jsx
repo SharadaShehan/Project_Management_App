@@ -61,7 +61,7 @@ const ProjectScreen = ({navigation, route}) => {
                                 ListFooterComponent={() => {
                                     if (userData.id === projectData.project.owner.id) {
                                         return (
-                                            <TouchableOpacity style={[styles.item, { backgroundColor: '#007BFF', borderRadius: 8 }]} onPress={() => navigation.navigate('CreateProcess', { projectId: projectData.project.id })}>
+                                            <TouchableOpacity style={[styles.item, { backgroundColor: '#007BFF', borderRadius: 8 }]} onPress={() => { console.log('Add Process') }}>
                                                 <Text style={styles.addProcessText}>+</Text>
                                             </TouchableOpacity>
                                         );
@@ -86,18 +86,17 @@ const ProjectScreen = ({navigation, route}) => {
                             <Text style={{ fontWeight: 'bold', color: '#aaa', fontSize: 17, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}>No Phases in current Process</Text>
                         )}
                         {processData.process.phases.slice().sort((a, b) => a.order - b.order).map((phase) => (
-                            <TouchableOpacity key={phase.id+'0'} style={styles.phaseContainer}>
+                            <TouchableOpacity key={phase.id+'0'} style={styles.phaseContainer} onPress={() => navigation.navigate('Phase', { id: phase.id, project: projectData.project, projectMembers: projectData.project.members })} disabled={(phase.phaseMembers.map((member) => member.id).includes(userData.id) || processData.process.managers.map((manager) => manager.id).includes(userData.id)) ? false : true}>
                                 <Text key={phase.id+'1'} style={{ fontWeight: 'bold', fontSize: 17 }}>{phase.title}</Text>
-                                <Text key={phase.id+'3'} style={{ fontSize: 12, marginBottom: 5, color: phase.status === 'Active' ? '#009900' : '#FF0000'
-                                }}>{phase.status}</Text>
+                                <Text key={phase.id+'3'} style={{ fontSize: 12, marginBottom: 5, color: phase.status === 'Active' ? '#009900' : '#FF0000' }}>{phase.status}</Text>
                                 <Text key={phase.id+'2'}>{phase.description}</Text>
                                 {phase.endDate && !phase.endTime && (<Text key={phase.id+'6'}>Deadline: {phase.endDate}</Text>)}
                                 {phase.endTime && phase.endDate && (<Text key={phase.id+'9'}>Deadline: {(new Date((new Date(`${phase.endDate}T${phase.endTime}:00`)).getTime()-phase.timezoneOffset*60*1000)).toLocaleString('en-US', { month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true })}</Text>)}
                             </TouchableOpacity>
                         ))}
                         {projectData && processData && (userData.id === projectData.project.owner.id || processData.process.managers.map((manager) => manager.id).includes(userData.id)) && (
-                            <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#007BFF', borderRadius: 8, marginTop: 8 }]} onPress={() => navigation.navigate('CreatePhase', { processId: selectedOption })}>
-                                <Text style={styles.addProcessText}>Create New Phase</Text>
+                            <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#007BFF', borderRadius: 8, marginTop: 8 }]} onPress={() => { console.log('Add Phase') }}>
+                                <Text style={styles.addProcessText}>Add New Phase</Text>
                             </TouchableOpacity>
                         )}
                     </View>
@@ -105,25 +104,47 @@ const ProjectScreen = ({navigation, route}) => {
 
                 {projectData && (
                     <View>
-                        <Text style={{ fontWeight: 'bold', fontSize: 17, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}>Project Members</Text>
-                        {projectData.project.members.map((member) => (
-                            <View style={styles.memberContainer} key={member.username+'0'}>
-                                <Text style={{ fontWeight: 'bold' }}
-                                key={member.username+'1'}>{member.firstName} {member.lastName}</Text>
-                                <Text style={{ fontSize: 12, color: '#434343' }}
-                                key={member.username+'3'}>{member.username}</Text>
+                        <Text style={{ fontWeight: 'bold', fontSize: 17, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}>Process Managers</Text>
+                        {processData && processData.process.managers.length === 0 && (<Text style={{ fontWeight: 'bold', color: '#aaa', fontSize: 17, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}>No Managers in current Process</Text>)}
+                        {processData && processData.process.managers.map((manager) => (
+                            <View style={styles.memberContainer} key={manager.username+'0'}>
+                                <Text style={{ fontWeight: 'bold' }} key={manager.username+'1'}>{manager.firstName} {manager.lastName}</Text>
+                                <Text style={{ fontSize: 12, color: '#434343' }} key={manager.username+'3'}>{manager.username}</Text>
                             </View>
                         ))}
                         {userData.id === projectData.project.owner.id && (
-                            <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#007BFF', borderRadius: 8, marginTop: 8 }]} onPress={() => navigation.navigate('AddMember', { projectId: projectData.project.id })}>
+                            <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#007BFF', borderRadius: 8, marginTop: 8 }]} onPress={() => { console.log('Add/Remove Managers') }}>
+                                <Text style={styles.addProcessText}>Add/Remove Managers</Text>
+                            </TouchableOpacity>
+                        )}
+                        <Text style={{ fontWeight: 'bold', fontSize: 17, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}>Project Members</Text>
+                        {projectData.project.members.length === 0 && (<Text style={{ fontWeight: 'bold', color: '#aaa', fontSize: 17, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}>No Members in current Project</Text>)}
+                        {projectData.project.members.map((member) => (
+                            <View style={styles.memberContainer} key={member.username+'0'}>
+                                <Text style={{ fontWeight: 'bold' }} key={member.username+'1'}>{member.firstName} {member.lastName}</Text>
+                                <Text style={{ fontSize: 12, color: '#434343' }} key={member.username+'3'}>{member.username}</Text>
+                            </View>
+                        ))}
+                        {userData.id === projectData.project.owner.id && (
+                            <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#007BFF', borderRadius: 8, marginTop: 8 }]} onPress={() => { console.log('Add/Remove Members') }}>
                                 <Text style={styles.addProcessText}>Add/Remove Members</Text>
                             </TouchableOpacity>
                         )}
                     </View>
                 )}
                 {projectData && processData && (userData.id === projectData.project.owner.id || processData.process.managers.map((manager) => manager.id).includes(userData.id)) && (
+                    <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#007BFF', borderRadius: 8, marginTop: 8 }]} onPress={() => { console.log('Edit Process') }}>
+                        <Text style={styles.addProcessText}>Edit Process</Text>
+                    </TouchableOpacity>
+                )}
+                {projectData && processData && (userData.id === projectData.project.owner.id) && (
                     <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#dd0000', borderRadius: 8, marginTop: 8 }]} onPress={() => { console.log('Delete Process') }}>
                         <Text style={styles.addProcessText}>Delete Process</Text>
+                    </TouchableOpacity>
+                )}
+                {projectData && userData.id === projectData.project.owner.id && (
+                    <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#007BFF', borderRadius: 8, marginTop: 8 }]} onPress={() => { console.log('Edit Project') }}>
+                        <Text style={styles.addProcessText}>Edit Project</Text>
                     </TouchableOpacity>
                 )}
                 {projectData && userData.id === projectData.project.owner.id && (
