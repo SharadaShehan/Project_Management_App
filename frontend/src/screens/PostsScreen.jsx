@@ -22,53 +22,74 @@ const PostsScreen = ({ navigation, route }) => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <View style={styles.postsContainer}>
-            {loading && <Text>Loading Posts...</Text>}
-            {error && ( error.status === 401 ? navigation.navigate('Login') : console.log(error.message))}
-            {data && (
-                <View>
-                <FlatList
-                    data={data.posts}
-                    keyExtractor={(item) => item.id.toString()}
-                    renderItem={RenderItem}
-                />
+            <View style={styles.innerContainer}>
+                <View style={styles.postsContainer}>
+                {loading && <Text>Loading Posts...</Text>}
+                {error && ( error.status === 401 ? navigation.navigate('Login') : console.log(error.message))}
+                {data && data.posts.length === 0 && 
+                    <View style={{ alignItems: 'center', marginTop: 250 }}>
+                        <Text>No Posts Found</Text>
+                    </View>
+                }
+                {data && (
+                    <View>
+                    <FlatList
+                        data={data.posts}
+                        keyExtractor={(item) => item.id.toString()}
+                        renderItem={RenderItem}
+                    />
+                    </View>
+                )}
                 </View>
-            )}
+                <TouchableOpacity style={styles.createPostButton} onPress={() => navigation.navigate('CreatePost', { projectId: route.params.projectId, projectTitle: route.params.projectTitle })}>
+                    <Text style={{ color: '#fff', fontSize: 17 }}>Create New Post</Text>
+                </TouchableOpacity>
             </View>
-            <TouchableOpacity style={styles.createPostButton} onPress={() => navigation.navigate('CreatePost', { projectId: route.params.projectId })}>
-                <Text style={{ color: '#fff', fontSize: 17 }}>Create New Post</Text>
-            </TouchableOpacity>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
+        flex: 1,
         padding: 0,
-        height: '75%',
+        backgroundColor: '#4CBB17'
+    },
+    innerContainer: {
+        width: '90%',
+        marginLeft: '5%',
+        height: '95%',
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        padding: 10,
+        // margin: 10,
     },
     postsContainer: {
         flex: 1,
         // justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#fff'
+        paddingTop: 10,
     },
     itemContainer: {
         paddingTop: 10,
-        paddingBottom: 10,
-        borderBottomColor: 'black',
+        paddingBottom: 14,
+        marginBottom: 5,
+        backgroundColor: '#fff',
+        borderRadius: 25,
         borderBottomWidth: 1,
+        alignItems: 'center',
+        marginHorizontal: '2%'
     },
     postTitle: {
-        fontSize: 20,
+        fontSize: 18,
         fontWeight: 'bold',
         marginBottom: 5,
     },
     postDescription: {
-        fontSize: 15,
+        fontSize: 14,
     },
     createPostButton: {
-        backgroundColor: '#6BB64a',
+        backgroundColor: '#007BFF',
         padding: 9,
         margin: 10,
         borderRadius: 5,
