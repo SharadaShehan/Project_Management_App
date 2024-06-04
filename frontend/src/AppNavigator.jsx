@@ -46,7 +46,6 @@ const AppNavigator = () => {
           <Stack.Screen name="PhaseChat" component={PhaseChatScreen}
                         options={
                           ({ route }) => ({
-                            title: route.params.project.title,
                             headerStyle: {
                               backgroundColor: '#6BB64a',
                               fontWeight: 'bold',
