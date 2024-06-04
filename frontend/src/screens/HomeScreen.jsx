@@ -142,7 +142,7 @@ const HomeScreen = ({ navigation }) => {
           }
         }/>
 
-        <Tab.Screen name="Forum" component={ForumScreen} 
+        <Tab.Screen name="Forums" component={ForumScreen} 
           options={{
             headerRight: () => (
               <LogOutBtn navigation={navigation} />
