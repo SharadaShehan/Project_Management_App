@@ -37,69 +37,102 @@ const ProjectScreen = ({navigation, route}) => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <ScrollView showsVerticalScrollIndicator={false}>
-            {projectLoading && <Text>project Loading ...</Text>}
-            {projectError && ( projectError.status === 401 ? navigation.navigate('Login') : console.log(projectError.message))}
+            <View style={styles.innerContainer}>
+                <ScrollView showsVerticalScrollIndicator={false}>
+                {projectLoading && <Text>project Loading ...</Text>}
+                {projectError && ( projectError.status === 401 ? navigation.navigate('Login') : console.log(projectError.message))}
 
-            {processLoading && <Text>process Loading ...</Text>}
-            {processError && ( processError.status === 401 ? navigation.navigate('Login') : console.log(processError.message))}        
+                {processLoading && <Text>process Loading ...</Text>}
+                {processError && ( processError.status === 401 ? navigation.navigate('Login') : console.log(processError.message))}        
 
-            {projectData && (
-                <View>
-                    <Text style={styles.projectTitle}>{projectData.project.title}</Text>
-                    <Text style={[styles.projectStatus, { color: projectData.project.status === 'Active' ? '#009900' : '#FF0000' }
-                    ]}>{projectData.project.status}</Text>
-                    <Text style={styles.projectDescription}>{projectData.project.description}</Text>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                        <FlatList
-                            data={projectData.project.processes}
-                            renderItem={renderItem}
-                            keyExtractor={(item) => item.id}
-                            horizontal={true}
-                            showsHorizontalScrollIndicator={false}
-                        />
-                    </View>
-                </View>
-            )}
-
-            {processData && (
-                <View>
-                    <Text style={styles.processTitle}>{processData.process.title}</Text>
-                    <Text style={{ fontSize: 12, marginBottom: 10, color: processData.process.status === 'Active' ? '#009900' : '#FF0000' }}
-                    >{processData.process.status}</Text>
-                    <Text>{processData.process.description}</Text>                 
-                    {/* <Text>Priority: {processData.process.priority}</Text> */}
-                    {processData.process.phases.length > 0 && (
-                        <Text style={{ fontWeight: 'bold', fontSize: 17, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}>Phases</Text>
-                    )}
-                    {processData.process.phases.slice().sort((a, b) => a.order - b.order).map((phase) => (
-                        <TouchableOpacity key={phase.id+'0'} style={styles.phaseContainer}>
-                            <Text key={phase.id+'1'} style={{ fontWeight: 'bold', fontSize: 17 }}>{phase.title}</Text>
-                            <Text key={phase.id+'3'} style={{ fontSize: 12, marginBottom: 5, color: phase.status === 'Active' ? '#009900' : '#FF0000'
-                             }}>{phase.status}</Text>
-                            <Text key={phase.id+'2'}>{phase.description}</Text>
-                            {phase.endDate && !phase.endTime && (<Text key={phase.id+'6'}>Deadline: {phase.endDate}</Text>)}
-                            {phase.endTime && phase.endDate && (<Text key={phase.id+'9'}>Deadline: {(new Date((new Date(`${phase.endDate}T${phase.endTime}:00`)).getTime()-phase.timezoneOffset*60*1000)).toLocaleString('en-US', { month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true })}</Text>)}
-                        </TouchableOpacity>
-                    ))}
-                </View>
-            )}
-
-            {projectData && (
-                <View>
-                    <Text style={{ fontWeight: 'bold', fontSize: 17, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}
-                    >Members</Text>
-                    {projectData.project.members.map((member) => (
-                        <View style={styles.memberContainer} key={member.username+'0'}>
-                            <Text style={{ fontWeight: 'bold' }}
-                            key={member.username+'1'}>{member.firstName} {member.lastName}</Text>
-                            <Text style={{ fontSize: 12, color: '#434343' }}
-                            key={member.username+'3'}>{member.username}</Text>
+                {projectData && (
+                    <View>
+                        <Text style={styles.projectTitle}>{projectData.project.title}</Text>
+                        <Text style={[styles.projectStatus, { color: projectData.project.status === 'Active' ? '#009900' : '#FF0000' }
+                        ]}>{projectData.project.status}</Text>
+                        <Text style={styles.projectDescription}>{projectData.project.description}</Text>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                            <FlatList
+                                data={projectData.project.processes}
+                                renderItem={renderItem}
+                                keyExtractor={(item) => item.id}
+                                horizontal={true}
+                                showsHorizontalScrollIndicator={false}
+                                ListFooterComponent={() => {
+                                    if (userData.id === projectData.project.owner.id) {
+                                        return (
+                                            <TouchableOpacity style={[styles.item, { backgroundColor: '#007BFF', borderRadius: 8 }]} onPress={() => navigation.navigate('CreateProcess', { projectId: projectData.project.id })}>
+                                                <Text style={styles.addProcessText}>+</Text>
+                                            </TouchableOpacity>
+                                        );
+                                    } else return null;
+                                }}
+                            />
                         </View>
-                    ))}
-                </View>
-            )}
-            </ScrollView>
+                    </View>
+                )}
+
+                {processData && (
+                    <View style={{ marginHorizontal: 10 }}>
+                        <Text style={styles.processTitle}>{processData.process.title}</Text>
+                        <Text style={{ fontSize: 12, marginBottom: 10, color: processData.process.status === 'Active' ? '#009900' : '#FF0000' }}
+                        >{processData.process.status}</Text>
+                        <Text>{processData.process.description}</Text>                 
+                        {/* <Text>Priority: {processData.process.priority}</Text> */}
+                        {processData.process.phases.length > 0 && (
+                            <Text style={{ fontWeight: 'bold', fontSize: 17, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}>Phases</Text>
+                        )}
+                        {processData.process.phases.length === 0 && (
+                            <Text style={{ fontWeight: 'bold', color: '#aaa', fontSize: 17, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}>No Phases in current Process</Text>
+                        )}
+                        {processData.process.phases.slice().sort((a, b) => a.order - b.order).map((phase) => (
+                            <TouchableOpacity key={phase.id+'0'} style={styles.phaseContainer}>
+                                <Text key={phase.id+'1'} style={{ fontWeight: 'bold', fontSize: 17 }}>{phase.title}</Text>
+                                <Text key={phase.id+'3'} style={{ fontSize: 12, marginBottom: 5, color: phase.status === 'Active' ? '#009900' : '#FF0000'
+                                }}>{phase.status}</Text>
+                                <Text key={phase.id+'2'}>{phase.description}</Text>
+                                {phase.endDate && !phase.endTime && (<Text key={phase.id+'6'}>Deadline: {phase.endDate}</Text>)}
+                                {phase.endTime && phase.endDate && (<Text key={phase.id+'9'}>Deadline: {(new Date((new Date(`${phase.endDate}T${phase.endTime}:00`)).getTime()-phase.timezoneOffset*60*1000)).toLocaleString('en-US', { month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true })}</Text>)}
+                            </TouchableOpacity>
+                        ))}
+                        {projectData && processData && (userData.id === projectData.project.owner.id || processData.process.managers.map((manager) => manager.id).includes(userData.id)) && (
+                            <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#007BFF', borderRadius: 8, marginTop: 8 }]} onPress={() => navigation.navigate('CreatePhase', { processId: selectedOption })}>
+                                <Text style={styles.addProcessText}>Create New Phase</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                )}
+
+                {projectData && (
+                    <View>
+                        <Text style={{ fontWeight: 'bold', fontSize: 17, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}>Project Members</Text>
+                        {projectData.project.members.map((member) => (
+                            <View style={styles.memberContainer} key={member.username+'0'}>
+                                <Text style={{ fontWeight: 'bold' }}
+                                key={member.username+'1'}>{member.firstName} {member.lastName}</Text>
+                                <Text style={{ fontSize: 12, color: '#434343' }}
+                                key={member.username+'3'}>{member.username}</Text>
+                            </View>
+                        ))}
+                        {userData.id === projectData.project.owner.id && (
+                            <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#007BFF', borderRadius: 8, marginTop: 8 }]} onPress={() => navigation.navigate('AddMember', { projectId: projectData.project.id })}>
+                                <Text style={styles.addProcessText}>Add/Remove Members</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                )}
+                {projectData && processData && (userData.id === projectData.project.owner.id || processData.process.managers.map((manager) => manager.id).includes(userData.id)) && (
+                    <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#dd0000', borderRadius: 8, marginTop: 8 }]} onPress={() => { console.log('Delete Process') }}>
+                        <Text style={styles.addProcessText}>Delete Process</Text>
+                    </TouchableOpacity>
+                )}
+                {projectData && userData.id === projectData.project.owner.id && (
+                    <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#dd0000', borderRadius: 8, marginTop: 8 }]} onPress={() => { console.log('Delete Project') }}>
+                        <Text style={styles.addProcessText}>Delete Project</Text>
+                    </TouchableOpacity>
+                )}
+                </ScrollView>
+            </View>
         </SafeAreaView>
     );
 }
@@ -109,21 +142,23 @@ const styles = {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        paddingHorizontal: 10,
+        paddingHorizontal: 2,
         paddingBottom: 10,
-        backgroundColor: '#fff'
+        backgroundColor: '#4CBB17'
     },
     innerContainer: {
-        width: '90%',
-        height: '85%',
-        borderRadius: 40,
-        backgroundColor: '#4CBB17',
+        width: '95%',
+        height: '100%',
+        borderRadius: 10,
+        backgroundColor: '#fff',
         paddingHorizontal: '4%',
+        paddingBottom: 10,
     },
     projectTitle: {
-        fontSize: 24,
+        fontSize: 22,
         fontWeight: 'bold',
         marginBottom: 0,
+        marginTop: 20,
         color: '#434343',
         textAlign: 'center'
     },
@@ -154,6 +189,14 @@ const styles = {
         selectedItemText: {
             color: '#fff',
         },
+    addProcessText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: 'bold',
+        paddingHorizontal: 5,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
     processTitle: {
         fontSize: 20,
         fontWeight: 'bold',
@@ -163,6 +206,7 @@ const styles = {
         backgroundColor: '#eee',
         padding: 10,
         margin: 5,
+        marginHorizontal: 0,
         borderRadius: 5,
     },
     memberContainer: {
@@ -171,6 +215,14 @@ const styles = {
         margin: 5,
         borderRadius: 5,
     },
+    lowerButton: {
+        padding: 10,
+        margin: 5,
+        borderRadius: 5,
+        // width: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
+    }
 }
 
 export default ProjectScreen;
