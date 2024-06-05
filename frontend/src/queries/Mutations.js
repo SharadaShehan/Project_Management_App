@@ -274,7 +274,126 @@ const CREATE_PROJECT_MUTATION = gql`
     }
 `;
 
+const CREATE_PROCESS_MUTATION = gql`
+    mutation createProcess($projectId: ID!, $title: String!, $description: String, $priority: String!, $managers: [ID!]) {
+        createProcess(projectId: $projectId, title: $title, description: $description, priority: $priority, managers: $managers) {
+            id
+            project {
+                id
+            }
+            title
+            description
+            status
+            priority
+            managers {
+                id
+                username
+                firstName
+                lastName
+                imageURL
+            }
+            phases {
+                id
+                process {
+                    id
+                }
+                title
+                description
+                order
+                endDate
+                endTime
+                timezoneOffset
+                status
+                phaseMembers {
+                    id
+                }
+            }
+        }
+    }
+`;
+
+const CREATE_PHASE_MUTATION = gql`
+    mutation createPhase($processId: ID!, $title: String!, $description: String, $startDate: String, $endDate: String, $endTime: String, $timezoneOffset: Int) {
+        createPhase(processId: $processId, title: $title, description: $description, startDate: $startDate, endDate: $endDate, endTime: $endTime, timezoneOffset: $timezoneOffset) {
+            id
+            process {
+                id
+                title
+                managers {
+                    id
+                }
+            }
+            title
+            description
+            order
+            startDate
+            endDate
+            endTime
+            timezoneOffset
+            phaseAdmins {
+                id
+                username
+                firstName
+                lastName
+                imageURL
+            }
+            phaseMembers {
+                id
+                username
+                firstName
+                lastName
+                imageURL
+            }
+            status
+            tasks {
+                id
+                phase {
+                    id
+                }
+                title
+                description
+                endDate
+                endTime
+                timezoneOffset
+                status
+                taskAssignees {
+                    id
+                    username
+                    firstName
+                    lastName
+                    imageURL
+                }
+            }
+        }
+    }
+`;
+
+const CREATE_TASK_MUTATION = gql`
+    mutation createTask($phaseId: ID!, $title: String!, $description: String, $endDate: String, $endTime: String, $timezoneOffset: Int) {
+        createTask(phaseId: $phaseId, title: $title, description: $description, endDate: $endDate, endTime: $endTime, timezoneOffset: $timezoneOffset) {
+            id
+            phase {
+                id
+            }
+            title
+            description
+            endDate
+            endTime
+            timezoneOffset
+            status
+            taskAssignees {
+                id
+                username
+                firstName
+                lastName
+                imageURL
+            }
+        }
+    }
+`;
+
 
 export { SIGNIN_MUTATION, SIGNOUT_MUTATION, SIGNUP_MUTATION, SEARCH_USERS_MUTATION, UPDATE_PROFILE_MUTATION, CHANGE_PASSWORD_MUTATION, GET_PRESIGNED_URL_MUTATION, CREATE_PHASE_MESSAGE_MUTATION, CREATE_PROJECT_MESSAGE_MUTATION, CREATE_PRIVATE_MESSAGE_MUTATION,
     CREATE_POST_MUTATION, DELETE_POST_MUTATION, UPVOTE_POST_MUTATION, DOWNVOTE_POST_MUTATION, UPVOTE_REPLY_MUTATION, DOWNVOTE_REPLY_MUTATION, REPLY_POST_MUTATION, GET_GEMINI_RESPONSE_FOR_POST_MUTATION,
-    CREATE_PROJECT_MUTATION};
+    CREATE_PROJECT_MUTATION, CREATE_PROCESS_MUTATION, CREATE_PHASE_MUTATION, CREATE_TASK_MUTATION };
+

@@ -29,7 +29,7 @@ const ONE_PROJECT_QUERY = gql`
                 username
                 firstName
                 lastName
-                gender
+                imageURL
             }
             status
             processes {
@@ -60,7 +60,7 @@ const PROCESS_QUERY = gql`
                 username
                 firstName
                 lastName
-                gender
+                imageURL
             }
             phases {
                 id
@@ -77,6 +77,86 @@ const PROCESS_QUERY = gql`
                 phaseMembers {
                     id
                 }
+            }
+        }
+    }
+`;
+
+const PHASE_QUERY = gql`
+    query phase($id: ID!) {
+        phase(id: $id) {
+            id
+            process {
+                id
+                title
+                managers {
+                    id
+                }
+            }
+            title
+            description
+            order
+            startDate
+            endDate
+            endTime
+            timezoneOffset
+            phaseAdmins {
+                id
+                username
+                firstName
+                lastName
+                imageURL
+            }
+            phaseMembers {
+                id
+                username
+                firstName
+                lastName
+                imageURL
+            }
+            status
+            tasks {
+                id
+                phase {
+                    id
+                }
+                title
+                description
+                endDate
+                endTime
+                timezoneOffset
+                status
+                taskAssignees {
+                    id
+                    username
+                    firstName
+                    lastName
+                    imageURL
+                }
+            }
+        }
+    }
+`;
+
+const TASK_QUERY = gql`
+    query task($id: ID!) {
+        task(id: $id) {
+            id
+            phase {
+                id
+            }
+            title
+            description
+            endDate
+            endTime
+            timezoneOffset
+            status
+            taskAssignees {
+                id
+                username
+                firstName
+                lastName
+                imageURL
             }
         }
     }
@@ -297,6 +377,6 @@ const POST_QUERY = gql`
     }
 `;
 
-export { PROJECTS_QUERY, ONE_PROJECT_QUERY, PROCESS_QUERY, LAST_PRIVATE_MESSAGES_QUERY, LAST_PROJECT_MESSAGES_QUERY, 
+export { PROJECTS_QUERY, ONE_PROJECT_QUERY, PROCESS_QUERY, PHASE_QUERY, TASK_QUERY, LAST_PRIVATE_MESSAGES_QUERY, LAST_PROJECT_MESSAGES_QUERY, 
     LAST_PHASE_MESSAGES_QUERY, PRIVATE_MESSAGES_QUERY, PROJECT_MESSAGES_QUERY, PHASE_MESSAGES_QUERY,
     POSTS_QUERY, POST_QUERY };
