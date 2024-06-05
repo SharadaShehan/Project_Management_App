@@ -6,16 +6,14 @@ import { useQuery } from '@apollo/client';
 import { UserGlobalState } from '../layout/UserState';
 
 const PhaseScreen = ({navigation, route}) => {
-    const project = route.params.project;
     const phaseId = route.params.id;
-    const projectMembers = route.params.projectMembers;
-
+    const process = route.params.process;
     const { userData } = UserGlobalState();
     const { data:phaseData, loading:phaseLoading, error:phaseError } = useQuery(PHASE_QUERY, { variables: { id: phaseId } });
 
     const renderItem = ({ item }) => (
         <TouchableOpacity style={styles.taskContainer} disabled={phaseData.phase.phaseAdmins.map((admin) => admin.id).includes(userData.id) ? false : true}
-            onPress={() => { console.log('Task Pressed') }}>
+            onPress={() => navigation.navigate('Task', { id: item.id, phase: phaseData.phase })}>
             <Text style={{ fontWeight: 'bold' }}>{item.title}</Text>
             <Text style={{ fontSize: 12, color: '#434343' }}>{item.status}</Text>
             <Text>{item.description}</Text>
@@ -42,15 +40,11 @@ const PhaseScreen = ({navigation, route}) => {
                 <ScrollView showsVerticalScrollIndicator={false}>
                 {phaseLoading && <Text>phase Loading ...</Text>}
                 {phaseError && ( phaseError.status === 401 ? navigation.navigate('Login') : console.log(phaseError.message))}
-
-                {phaseLoading && <Text>phase Loading ...</Text>}
-                {phaseError && ( phaseError.status === 401 ? navigation.navigate('Login') : console.log(phaseError.message))}        
-
                 {phaseData && (
                     <View>
                         <Text style={styles.phaseTitle}>{phaseData.phase.title}</Text>
                         <Text style={[styles.phaseStatus, { color: phaseData.phase.status === 'Active' ? '#009900' : '#FF0000' }]}>{phaseData.phase.status}</Text>
-                        <Text style={styles.phaseDescription}>{phaseData.phase.description}</Text>
+                        {taskData.task.description && <Text style={styles.phaseDescription}>{phaseData.phase.description}</Text>}
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                             <FlatList
                                 data={phaseData.phase.tasks}
@@ -59,7 +53,7 @@ const PhaseScreen = ({navigation, route}) => {
                                 ListHeaderComponent={() => (<Text style={{ fontWeight: 'bold', fontSize: 17, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}>Tasks</Text>)}
                             />
                             {(phaseData.phase.phaseAdmins.map((admin) => admin.id).includes(userData.id)) && (
-                                <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#007BFF', borderRadius: 8 }]} onPress={() => { console.log('Add Task') }}>
+                                <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#007BFF', borderRadius: 8 }]} onPress={() => navigation.navigate('CreateTask', { phase: phaseData.phase })}>
                                     <Text style={styles.lowerButtonText}>Add New Task</Text>
                                 </TouchableOpacity>
                             )}
