@@ -61,7 +61,7 @@ const ProjectScreen = ({navigation, route}) => {
                                 ListFooterComponent={() => {
                                     if (userData.id === projectData.project.owner.id) {
                                         return (
-                                            <TouchableOpacity style={[styles.item, { backgroundColor: '#007BFF', borderRadius: 8 }]} onPress={() => { console.log('Add Process') }}>
+                                            <TouchableOpacity style={[styles.item, { backgroundColor: '#007BFF', borderRadius: 8 }]} onPress={() => navigation.navigate('CreateProcess', { project: projectData.project })}>
                                                 <Text style={styles.addProcessText}>+</Text>
                                             </TouchableOpacity>
                                         );
@@ -86,7 +86,7 @@ const ProjectScreen = ({navigation, route}) => {
                             <Text style={{ fontWeight: 'bold', color: '#aaa', fontSize: 17, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}>No Phases in current Process</Text>
                         )}
                         {processData.process.phases.slice().sort((a, b) => a.order - b.order).map((phase) => (
-                            <TouchableOpacity key={phase.id+'0'} style={styles.phaseContainer} onPress={() => navigation.navigate('Phase', { id: phase.id, project: projectData.project, projectMembers: projectData.project.members })} disabled={(phase.phaseMembers.map((member) => member.id).includes(userData.id) || processData.process.managers.map((manager) => manager.id).includes(userData.id)) ? false : true}>
+                            <TouchableOpacity key={phase.id+'0'} style={styles.phaseContainer} onPress={() => navigation.navigate('Phase', { id: phase.id, process: processData.process })} disabled={(phase.phaseMembers.map((member) => member.id).includes(userData.id) || processData.process.managers.map((manager) => manager.id).includes(userData.id)) ? false : true}>
                                 <Text key={phase.id+'1'} style={{ fontWeight: 'bold', fontSize: 17 }}>{phase.title}</Text>
                                 <Text key={phase.id+'3'} style={{ fontSize: 12, marginBottom: 5, color: phase.status === 'Active' ? '#009900' : '#FF0000' }}>{phase.status}</Text>
                                 <Text key={phase.id+'2'}>{phase.description}</Text>
@@ -95,7 +95,7 @@ const ProjectScreen = ({navigation, route}) => {
                             </TouchableOpacity>
                         ))}
                         {projectData && processData && (userData.id === projectData.project.owner.id || processData.process.managers.map((manager) => manager.id).includes(userData.id)) && (
-                            <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#007BFF', borderRadius: 8, marginTop: 8 }]} onPress={() => { console.log('Add Phase') }}>
+                            <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#007BFF', borderRadius: 8, marginTop: 8 }]} onPress={() => navigation.navigate('CreatePhase', { process: processData.process })}>
                                 <Text style={styles.addProcessText}>Add New Phase</Text>
                             </TouchableOpacity>
                         )}

@@ -163,7 +163,7 @@ const CreateProjectScreen = ({ navigation }) => {
                         <Text style={styles.buttonText}>Cancel</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.button} onPress={createProjectHandler}>
-                        <Text style={styles.buttonText}>Update</Text>
+                        <Text style={styles.buttonText}>Create</Text>
                     </TouchableOpacity>
                 </View>
             </View>
