@@ -6,6 +6,11 @@ import HomeScreen from './screens/HomeScreen';
 import LoginScreen from './screens/LoginScreen';
 import ProjectScreen from './screens/ProjectScreen';
 import CreateProjectScreen from './screens/CreateProjectScreen';
+import CreateProcessScreen from './screens/CreatePhaseScreen';
+import PhaseScreen from './screens/PhaseScreen';
+import CreatePhaseScreen from './screens/CreatePhaseScreen';
+import TaskScreen from './screens/TaskScreen';
+import CreateTaskScreen from './screens/CreateTaskScreen';
 import PhaseChatScreen from './screens/PhaseChatScreen';
 import ProjectChatScreen from './screens/ProjectChatScreen';
 import PrivateChatScreen from './screens/PrivateChatScreen';
@@ -43,6 +48,60 @@ const AppNavigator = () => {
                         }}/>
           <Stack.Screen name="CreateProject" component={CreateProjectScreen}
                         options={{ headerShown: false }}/>
+          <Stack.Screen name="CreateProcess" component={CreateProcessScreen}
+                        options={
+                          ({ route }) => ({
+                            title: route.params.project.title,
+                            headerStyle: {
+                              backgroundColor: '#228B22',
+                              fontWeight: 'bold',
+                            },
+                            headerTintColor: '#fff'
+                          })
+                        }/>
+          <Stack.Screen name="Phase" component={PhaseScreen}
+                        options={
+                          ({ route }) => ({
+                            title: route.params.process.title,
+                            headerStyle: {
+                              backgroundColor: '#228B22',
+                              fontWeight: 'bold',
+                            },
+                            headerTintColor: '#fff'
+                          })
+                        }/>
+          <Stack.Screen name="CreatePhase" component={CreatePhaseScreen}
+                        options={
+                          ({ route }) => ({
+                            title: route.params.process.title,
+                            headerStyle: {
+                              backgroundColor: '#228B22',
+                              fontWeight: 'bold',
+                            },
+                            headerTintColor: '#fff'
+                          })
+                        }/>
+          <Stack.Screen name="Task" component={TaskScreen}
+                        options={
+                          ({ route }) => ({
+                            title: route.params.phase.title,
+                            headerStyle: {
+                              backgroundColor: '#228B22',
+                              fontWeight: 'bold',
+                            },
+                            headerTintColor: '#fff'
+                          })
+                        }/>
+          <Stack.Screen name="CreateTask" component={CreateTaskScreen}
+                        options={
+                          ({ route }) => ({
+                            headerStyle: {
+                              backgroundColor: '#228B22',
+                              fontWeight: 'bold',
+                            },
+                            headerTintColor: '#fff'
+                          })
+                        }/>
           <Stack.Screen name="PhaseChat" component={PhaseChatScreen}
                         options={
                           ({ route }) => ({
