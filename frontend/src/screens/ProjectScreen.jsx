@@ -1,23 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Button, TouchableOpacity, FlatList, ScrollView } from 'react-native';
+import { View, Text, Button, TouchableOpacity, FlatList, ScrollView, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ONE_PROJECT_QUERY, PROCESS_QUERY } from '../queries/Queries'; // Import your GraphQL queries
-import { useQuery } from '@apollo/client';
+import { ONE_PROJECT_QUERY, PROCESS_QUERY } from '../queries/Queries';
+import { DELETE_PROJECT_MUTATION, DELETE_PROCESS_MUTATION } from '../queries/Mutations';
+import { useQuery, useMutation } from '@apollo/client';
 import { UserGlobalState } from '../layout/UserState';
 
 const ProjectScreen = ({navigation, route}) => {
-
     const { userData } = UserGlobalState();
-
-    const { data:projectData, loading:projectLoading, error:projectError } = useQuery(ONE_PROJECT_QUERY, {
-        variables: { id: route.params.id },
-    });
-
     const [selectedOption, setSelectedOption] = useState(route.params.defaultProcess.id);
-
-    const { data:processData, loading:processLoading, error:processError } = useQuery(PROCESS_QUERY, {
-        variables: { id: route.params.defaultProcess.id },
+    const { data:projectData, loading:projectLoading, error:projectError } = useQuery(ONE_PROJECT_QUERY, {
+        variables: { id: route.params.id }, fetchPolicy: 'network-only'
     });
+    const { data:processData, loading:processLoading, error:processError } = useQuery(PROCESS_QUERY, {
+        variables: { id: route.params.defaultProcess.id }, fetchPolicy: 'network-only'
+    });
+    const [deleteProject] = useMutation(DELETE_PROJECT_MUTATION);
+    const [deleteProcess] = useMutation(DELETE_PROCESS_MUTATION);
 
     const renderItem = ({ item }) => (
         <TouchableOpacity
@@ -72,21 +71,17 @@ const ProjectScreen = ({navigation, route}) => {
                     </View>
                 )}
 
-                {processData && (
+                {projectData && processData && (
                     <View style={{ marginHorizontal: 10 }}>
                         <Text style={styles.processTitle}>{processData.process.title}</Text>
-                        <Text style={{ fontSize: 12, marginBottom: 10, color: processData.process.status === 'Active' ? '#009900' : '#FF0000' }}
-                        >{processData.process.status}</Text>
-                        <Text>{processData.process.description}</Text>                 
-                        {/* <Text>Priority: {processData.process.priority}</Text> */}
-                        {processData.process.phases.length > 0 && (
-                            <Text style={{ fontWeight: 'bold', fontSize: 17, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}>Phases</Text>
-                        )}
+                        <Text style={{ fontSize: 12, marginBottom: 10, color: processData.process.status === 'Active' ? '#009900' : '#FF0000' }}>{processData.process.status}</Text>
+                        <Text>{processData.process.description}</Text>
+                        <Text style={{ fontWeight: 'bold', fontSize: 17, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}>Phases</Text>
                         {processData.process.phases.length === 0 && (
                             <Text style={{ fontWeight: 'bold', color: '#aaa', fontSize: 17, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}>No Phases in current Process</Text>
                         )}
                         {processData.process.phases.slice().sort((a, b) => a.order - b.order).map((phase) => (
-                            <TouchableOpacity key={phase.id+'0'} style={styles.phaseContainer} onPress={() => navigation.navigate('Phase', { id: phase.id, process: processData.process })} disabled={(phase.phaseMembers.map((member) => member.id).includes(userData.id) || processData.process.managers.map((manager) => manager.id).includes(userData.id)) ? false : true}>
+                            <TouchableOpacity key={phase.id+'0'} style={styles.phaseContainer} onPress={() => navigation.navigate('Phase', { id: phase.id, process: processData.process, project: projectData.project })} disabled={(phase.phaseMembers.map((member) => member.id).includes(userData.id) || processData.process.managers.map((manager) => manager.id).includes(userData.id)) ? false : true}>
                                 <Text key={phase.id+'1'} style={{ fontWeight: 'bold', fontSize: 17 }}>{phase.title}</Text>
                                 <Text key={phase.id+'3'} style={{ fontSize: 12, marginBottom: 5, color: phase.status === 'Active' ? '#009900' : '#FF0000' }}>{phase.status}</Text>
                                 <Text key={phase.id+'2'}>{phase.description}</Text>
@@ -94,40 +89,46 @@ const ProjectScreen = ({navigation, route}) => {
                                 {phase.endTime && phase.endDate && (<Text key={phase.id+'9'}>Deadline: {(new Date((new Date(`${phase.endDate}T${phase.endTime}:00`)).getTime()-phase.timezoneOffset*60*1000)).toLocaleString('en-US', { month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true })}</Text>)}
                             </TouchableOpacity>
                         ))}
-                        {projectData && processData && (userData.id === projectData.project.owner.id || processData.process.managers.map((manager) => manager.id).includes(userData.id)) && (
-                            <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#007BFF', borderRadius: 8, marginTop: 8 }]} onPress={() => navigation.navigate('CreatePhase', { process: processData.process })}>
+                        {(userData.id === projectData.project.owner.id || processData.process.managers.map((manager) => manager.id).includes(userData.id)) && (
+                            <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#007BFF', borderRadius: 8, marginTop: 8 }]} onPress={() => navigation.navigate('CreatePhase', { process: processData.process, project: projectData.project })}>
                                 <Text style={styles.addProcessText}>Add New Phase</Text>
                             </TouchableOpacity>
                         )}
                     </View>
                 )}
-
-                {projectData && (
+                
+                {projectData && processData && (
                     <View>
                         <Text style={{ fontWeight: 'bold', fontSize: 17, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}>Process Managers</Text>
                         {processData && processData.process.managers.length === 0 && (<Text style={{ fontWeight: 'bold', color: '#aaa', fontSize: 17, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}>No Managers in current Process</Text>)}
                         {processData && processData.process.managers.map((manager) => (
-                            <View style={styles.memberContainer} key={manager.username+'0'}>
-                                <Text style={{ fontWeight: 'bold' }} key={manager.username+'1'}>{manager.firstName} {manager.lastName}</Text>
-                                <Text style={{ fontSize: 12, color: '#434343' }} key={manager.username+'3'}>{manager.username}</Text>
+                            <View style={[styles.memberContainer,{ flexDirection: 'row', alignItems: 'center' }]} key={manager.username+'0'}>
+                                <Image source={manager.imageURL ? { uri: manager.imageURL } : require('../../images/profile.webp')} style={{ width: 25, height: 25, borderRadius: 25, marginLeft: 5 }} />
+                                <View style={{ marginLeft: 15 }} key={manager.username+'2'}>
+                                    <Text style={{ fontWeight: 'bold' }} key={manager.username+'1'}>{manager.firstName} {manager.lastName}</Text>
+                                    <Text style={{ fontSize: 12, color: '#434343' }} key={manager.username+'3'}>{manager.username}</Text>
+                                </View>
                             </View>
                         ))}
                         {userData.id === projectData.project.owner.id && (
-                            <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#007BFF', borderRadius: 8, marginTop: 8 }]} onPress={() => { console.log('Add/Remove Managers') }}>
+                            <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#007BFF', borderRadius: 8, marginTop: 8 }]} onPress={() => navigation.navigate('UpdateProcessManagers', { process: processData.process, projectMembers: projectData.project.members })}>
                                 <Text style={styles.addProcessText}>Add/Remove Managers</Text>
                             </TouchableOpacity>
                         )}
                         <Text style={{ fontWeight: 'bold', fontSize: 17, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}>Project Members</Text>
                         {projectData.project.members.length === 0 && (<Text style={{ fontWeight: 'bold', color: '#aaa', fontSize: 17, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}>No Members in current Project</Text>)}
                         {projectData.project.members.map((member) => (
-                            <View style={styles.memberContainer} key={member.username+'0'}>
-                                <Text style={{ fontWeight: 'bold' }} key={member.username+'1'}>{member.firstName} {member.lastName}</Text>
-                                <Text style={{ fontSize: 12, color: '#434343' }} key={member.username+'3'}>{member.username}</Text>
+                            <View style={[styles.memberContainer,{ flexDirection: 'row', alignItems: 'center' }]} key={member.username+'0'}>
+                                <Image source={member.imageURL ? { uri: member.imageURL } : require('../../images/profile.webp')} style={{ width: 25, height: 25, borderRadius: 25, marginLeft: 5 }} />
+                                <View style={{ marginLeft: 15 }} key={member.username+'2'}>
+                                    <Text style={{ fontWeight: 'bold' }} key={member.username+'1'}>{member.firstName} {member.lastName}</Text>
+                                    <Text style={{ fontSize: 12, color: '#434343' }} key={member.username+'3'}>{member.username}</Text>
+                                </View>
                             </View>
                         ))}
                         {userData.id === projectData.project.owner.id && (
-                            <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#007BFF', borderRadius: 8, marginTop: 8 }]} onPress={() => { console.log('Add/Remove Members') }}>
-                                <Text style={styles.addProcessText}>Add/Remove Members</Text>
+                            <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#007BFF', borderRadius: 8, marginTop: 8 }]} onPress={() => navigation.navigate('InviteUsers', { project: projectData.project })}>
+                                <Text style={styles.addProcessText}>Invite/Remove Members</Text>
                             </TouchableOpacity>
                         )}
                     </View>
@@ -138,7 +139,29 @@ const ProjectScreen = ({navigation, route}) => {
                     </TouchableOpacity>
                 )}
                 {projectData && processData && (userData.id === projectData.project.owner.id) && (
-                    <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#dd0000', borderRadius: 8, marginTop: 8 }]} onPress={() => { console.log('Delete Process') }}>
+                    <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#dd0000', borderRadius: 8, marginTop: 8 }]} onPress={() => {
+                        Alert.alert(
+                            'Delete Process',
+                            'Are you sure you want to delete this process?',
+                            [
+                                {
+                                    text: 'Cancel',
+                                    onPress: () => console.log('Cancelled'),
+                                    style: 'cancel'
+                                },
+                                {
+                                    text: 'Delete', onPress: async () => {
+                                        try {
+                                            await deleteProcess({ variables: { id: processData.process.id } });
+                                            navigation.goBack();
+                                        } catch (error) {
+                                            Alert.alert('Error', error.message);
+                                        }
+                                    }
+                                }
+                            ]
+                        );
+                    }}>
                         <Text style={styles.addProcessText}>Delete Process</Text>
                     </TouchableOpacity>
                 )}
@@ -148,7 +171,29 @@ const ProjectScreen = ({navigation, route}) => {
                     </TouchableOpacity>
                 )}
                 {projectData && userData.id === projectData.project.owner.id && (
-                    <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#dd0000', borderRadius: 8, marginTop: 8 }]} onPress={() => { console.log('Delete Project') }}>
+                    <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#dd0000', borderRadius: 8, marginTop: 8 }]} onPress={() => {
+                        Alert.alert(
+                            'Delete Project',
+                            'Are you sure you want to delete this project?',
+                            [
+                                {
+                                    text: 'Cancel',
+                                    onPress: () => console.log('Cancelled'),
+                                    style: 'cancel'
+                                },
+                                {
+                                    text: 'Delete', onPress: async () => {
+                                        try {
+                                            await deleteProject({ variables: { id: projectData.project.id } });
+                                            navigation.goBack();
+                                        } catch (error) {
+                                            Alert.alert('Error', error.message);
+                                        }
+                                    }
+                                }
+                            ]
+                        );
+                    }}>
                         <Text style={styles.addProcessText}>Delete Project</Text>
                     </TouchableOpacity>
                 )}
