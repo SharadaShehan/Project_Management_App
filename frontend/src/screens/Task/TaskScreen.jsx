@@ -32,7 +32,7 @@ const TaskScreen = ({navigation, route}) => {
                                 <View>
                                     {taskData.task.taskAssignees.map((assignee) => (
                                         <View style={[styles.memberContainer,{ flexDirection: 'row', alignItems: 'center' }]} key={assignee.username+'0'}>
-                                            <Image source={assignee.imageURL ? { uri: assignee.imageURL } : require('../../images/profile.webp')} style={{ width: 25, height: 25, borderRadius: 25, marginLeft: 5 }} />
+                                            <Image source={assignee.imageURL ? { uri: assignee.imageURL } : require('../../../images/profile.webp')} style={{ width: 25, height: 25, borderRadius: 25, marginLeft: 5 }} />
                                             <View style={{ marginLeft: 15 }} key={assignee.username+'2'}>
                                                 <Text style={{ fontWeight: 'bold' }} key={assignee.username+'1'}>{assignee.firstName} {assignee.lastName}</Text>
                                                 <Text style={{ fontSize: 12, color: '#434343' }} key={assignee.username+'3'}>{assignee.username}</Text>

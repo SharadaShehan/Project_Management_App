@@ -81,8 +81,6 @@ const PrivateChatScreen = ({ navigation, route }) => {
                 initialScrollIndex={0}
                 initialNumToRender={limit}
                 scrollEventThrottle={16}
-                // onContentSizeChange={() => flatListRef.current.scrollToEnd({ animated: true })}
-                // onLayout={() => flatListRef.current.scrollToEnd({ animated: true })}
             />
             <View style={styles.inputContainer}>
                 <TextInput

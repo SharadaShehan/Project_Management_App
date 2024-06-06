@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, Image } from 'react-native';
-import { PROJECTS_QUERY } from '../queries/Queries'; // Import your GraphQL queries
+import { PROJECTS_QUERY } from '../graphql/Queries';
 import { useQuery } from '@apollo/client';
 import { getLogoImage } from '../logoImages';
 
@@ -19,7 +19,6 @@ const ProjectsList = ({ navigation }) => {
                 <View>
                     <Text style={styles.projectTitle}>{item.title}</Text>
                     <Text style={styles.projectDescription}>{item.description}</Text>
-                    {/* <Text style={styles.projectStatus}>Status: {item.status}</Text> */}
                 </View>
             </TouchableOpacity>
         );

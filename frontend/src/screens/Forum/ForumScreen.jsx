@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { PROJECTS_QUERY } from '../../queries/Queries';
+import { PROJECTS_QUERY } from '../../graphql/Queries';
 import { useQuery } from '@apollo/client';
 import { getLogoImage } from '../../logoImages';
 

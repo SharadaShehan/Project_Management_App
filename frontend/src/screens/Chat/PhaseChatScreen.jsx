@@ -82,9 +82,7 @@ const PhaseChatScreen = ({ navigation, route }) => {
                         keyExtractor={(item) => item.id.toString()}
                         inverted={true}  // Reverse the order of rendering
                         initialScrollIndex={0}  // Scroll to the bottom
-                        // initialNumToRender={messagesData[phaseindexInMessagesData].length}  // Render all messages
                         initialNumToRender={limit}
-                        // onScroll={handleScroll}
                         scrollEventThrottle={16} // Adjust the throttle as needed
                     />
                     <View style={styles.inputContainer}>

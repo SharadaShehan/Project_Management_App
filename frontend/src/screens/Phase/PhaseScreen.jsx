@@ -64,7 +64,7 @@ const PhaseScreen = ({navigation, route}) => {
                         {phaseData.phase.phaseAdmins.length === 0 && <Text style={{ fontWeight: 'bold', color: '#aaa', fontSize: 17, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}>No Admins in current Phase</Text>}
                         {phaseData.phase.phaseAdmins.map((admin) => (
                             <View style={[styles.memberContainer,{ flexDirection: 'row', alignItems: 'center' }]} key={admin.username+'0'}>
-                                <Image source={admin.imageURL ? { uri: admin.imageURL } : require('../../images/profile.webp')} style={{ width: 25, height: 25, borderRadius: 25, marginLeft: 5 }} />
+                                <Image source={admin.imageURL ? { uri: admin.imageURL } : require('../../../images/profile.webp')} style={{ width: 25, height: 25, borderRadius: 25, marginLeft: 5 }} />
                                 <View style={{ marginLeft: 15 }} key={admin.username+'2'}>
                                     <Text style={{ fontWeight: 'bold' }} key={admin.username+'1'}>{admin.firstName} {admin.lastName}</Text>
                                     <Text style={{ fontSize: 12, color: '#434343' }} key={admin.username+'3'}>{admin.username}</Text>
@@ -80,7 +80,7 @@ const PhaseScreen = ({navigation, route}) => {
                         {phaseData.phase.phaseMembers.length === 0 && <Text style={{ fontWeight: 'bold', color: '#aaa', fontSize: 17, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}>No Members in current Phase</Text>}
                         {phaseData.phase.phaseMembers.map((member) => (
                             <View style={[styles.memberContainer,{ flexDirection: 'row', alignItems: 'center' }]} key={member.username+'0'}>
-                                <Image source={member.imageURL ? { uri: member.imageURL } : require('../../images/profile.webp')} style={{ width: 25, height: 25, borderRadius: 25, marginLeft: 5 }} />
+                                <Image source={member.imageURL ? { uri: member.imageURL } : require('../../../images/profile.webp')} style={{ width: 25, height: 25, borderRadius: 25, marginLeft: 5 }} />
                                 <View style={{ marginLeft: 15 }} key={member.username+'2'}>
                                     <Text style={{ fontWeight: 'bold' }} key={member.username+'1'}>{member.firstName} {member.lastName}</Text>
                                     <Text style={{ fontSize: 12, color: '#434343' }} key={member.username+'3'}>{member.username}</Text>

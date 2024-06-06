@@ -5,7 +5,6 @@ import { ADD_PHASE_ADMINS_MUTATION, REMOVE_PHASE_ADMINS_MUTATION } from '../../g
 import { useMutation } from '@apollo/client';
 import { Alert } from 'react-native';
 import { useState, useEffect } from 'react';
-import { UserGlobalState } from '../../layout/UserState';
 
 const UpdatePhaseAdmins = ({ navigation, route }) => {
     const phaseId = route.params.phase.id;
@@ -15,7 +14,6 @@ const UpdatePhaseAdmins = ({ navigation, route }) => {
     const [adminsToRemove, setAdminsToRemove] = useState([]);
     const [shownAdmins, setShownAdmins] = useState([]);
     const [shownNonAdmins, setShownNonAdmins] = useState([]);
-    const { userData, setUserData } = UserGlobalState();
     const [addPhaseAdmins] = useMutation(ADD_PHASE_ADMINS_MUTATION);
     const [removePhaseAdmins] = useMutation(REMOVE_PHASE_ADMINS_MUTATION);
 
@@ -62,7 +60,7 @@ const UpdatePhaseAdmins = ({ navigation, route }) => {
     const RenderItem = ({ item, cross }) => {
         return (
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Image source={item.imageURL ? { uri: item.imageURL } : require('../../images/profile.webp')} style={{ width: 20, height: 20, borderRadius: 25 }} />
+                <Image source={item.imageURL ? { uri: item.imageURL } : require('../../../images/profile.webp')} style={{ width: 20, height: 20, borderRadius: 25 }} />
                 <Text style={styles.fullName}>{item.firstName} {item.lastName}</Text>
                 <Text style={styles.username}> ({item.username})</Text>
                 {cross && <Text style={{ color: 'red', fontSize: 20, marginLeft: 'auto' }}>X</Text>}

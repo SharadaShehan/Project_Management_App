@@ -9,7 +9,7 @@ const ProfileScreen = ({ navigation }) => {
         <View style={styles.container}>
             <View style={styles.innerContainer}>
                 <View style={{ alignItems: 'center', marginTop: '10%' }}>
-                    <Image source={userData.imageURL ? { uri: userData.imageURL } : require('../../images/profile.webp')} style={{ width: 150, height: 150, borderRadius: 75 }} />
+                    <Image source={userData.imageURL ? { uri: userData.imageURL } : require('../../../images/profile.webp')} style={{ width: 150, height: 150, borderRadius: 75 }} />
                     <Text style={styles.fullNameText}>{userData.firstName} {userData.lastName}</Text>
                     <View style={styles.topicValueContainer}>
                         <Text style={styles.topicText}>Username : </Text>

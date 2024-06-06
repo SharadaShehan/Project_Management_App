@@ -69,7 +69,7 @@ const InviteUsersScreen = ({ navigation, route }) => {
     const RenderItem = ({ item, cross }) => {
         return (
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Image source={item.imageURL ? { uri: item.imageURL } : require('../../images/profile.webp')} style={{ width: 20, height: 20, borderRadius: 25 }} />
+                <Image source={item.imageURL ? { uri: item.imageURL } : require('../../../images/profile.webp')} style={{ width: 20, height: 20, borderRadius: 25 }} />
                 <Text style={styles.fullName}>{item.firstName} {item.lastName}</Text>
                 <Text style={styles.username}> ({item.username})</Text>
                 {cross && <Text style={{ color: 'red', fontSize: 20, marginLeft: 'auto' }}>X</Text>}

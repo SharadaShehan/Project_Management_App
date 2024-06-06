@@ -48,7 +48,7 @@ const NewChatScreen = ({ navigation }) => {
         return (
             <TouchableOpacity onPress={() => { navigation.navigate('PrivateChat', { user: item }) }}  style={styles.userItemContainer} key={item.id}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Image source={item.imageURL ? { uri: item.imageURL } : require('../../images/profile.webp')} style={{ width: 20, height: 20, borderRadius: 25 }} />
+                    <Image source={item.imageURL ? { uri: item.imageURL } : require('../../../images/profile.webp')} style={{ width: 20, height: 20, borderRadius: 25 }} />
                     <Text style={styles.fullName}>{item.firstName} {item.lastName}</Text>
                     <Text style={styles.username}> ({item.username})</Text>
                 </View>

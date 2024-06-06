@@ -48,7 +48,7 @@ const MessagesScreen = ({ navigation }) => {
                 <View style={styles.ImageContainer}>
                     {firstItem.project && !firstItem.phase && <Image source={getLogoImage(firstItem.project.logo)} style={styles.imageItem} />}
                     {firstItem.phase && <Image source={getLogoImage(firstItem.project.logo)} style={styles.imageItem} />}
-                    {firstItem.receiver && <Image source={otherUser.imageURL ? { uri: otherUser.imageURL } : require('../../images/profile.webp')}  style={styles.imageItem} />}
+                    {firstItem.receiver && <Image source={otherUser.imageURL ? { uri: otherUser.imageURL } : require('../../../images/profile.webp')}  style={styles.imageItem} />}
                 </View>
                 <View style={{ flexDirection: 'column', marginTop: 10 }}>
                     <View style={{ flexDirection: 'row', width: '88%' }}>

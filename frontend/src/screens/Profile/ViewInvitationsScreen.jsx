@@ -4,12 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { RESPOND_REQUEST_MUTATION, DELETE_REQUEST_MUTATION } from '../../graphql/Mutations';
 import { RECEIVED_REQUESTS_QUERY } from '../../graphql/Queries';
 import { useMutation, useQuery } from '@apollo/client';
-import { useState } from 'react';
-import { UserGlobalState } from '../../layout/UserState';
 
 const ViewInvitationsScreen = ({ navigation, route }) => {
-    const [invitations, setInvitations] = useState([]);
-    const { userData, setUserData } = UserGlobalState();
     const [respondRequest] = useMutation(RESPOND_REQUEST_MUTATION);
     const [deleteRequest] = useMutation(DELETE_REQUEST_MUTATION);
     const { data:requestsData, loading:requestsLoading, error:requestsError } = useQuery(RECEIVED_REQUESTS_QUERY, { fetchPolicy: 'network-only' });
