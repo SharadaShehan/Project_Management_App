@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Button, TextInput, FlatList, Image, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import DateTimePickerModal from "react-native-modal-datetime-picker";
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { CREATE_PHASE_MUTATION } from '../queries/Mutations';
 import { useMutation } from '@apollo/client';
 import { Alert } from 'react-native';
@@ -14,7 +14,7 @@ const CreatePhaseScreen = ({ navigation, route }) => {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [endTime, setEndTime] = useState('');
-    const [timezoneOffset, setTimezoneOffset] = useState(new Date().getTimezoneOffset());
+    const [timezoneOffset, setTimezoneOffset] = useState(0);
     const [isStartDatePickerVisible, setStartDatePickerVisibility] = useState(false);
     const [isEndDatePickerVisible, setEndDatePickerVisibility] = useState(false);
     const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
@@ -22,11 +22,18 @@ const CreatePhaseScreen = ({ navigation, route }) => {
     
     const createPhasehandler = async () => {
         try {
-            let variables = { processId: processId, title: title, description: description, startDate: startDate, endDate: endDate, endTime: endTime, timezoneOffset: timezoneOffset };
+            let variables = {};
+            if (title) variables.title = title;
+            if (description) variables.description = description;
+            if (startDate) variables.startDate = startDate;
+            if (endDate) variables.endDate = endDate;
+            if (endTime) variables.endTime = endTime;
+            if (timezoneOffset && !isNaN(timezoneOffset)) variables.timezoneOffset = parseInt(timezoneOffset);
+            if (processId) variables.processId = processId;
             const response = await createPhase({ variables: variables });
             if (response.data.createPhase.id) {
                 Alert.alert('Phase Created');
-                navigation.navigate('Phase', { id: response.data.createPhase.id, process: route.params.process });
+                navigation.navigate('Phase', { id: response.data.createPhase.id, process: route.params.process, project: route.params.project });
             } else {
                 Alert.alert('An error occurred, please try again');
             }
@@ -37,28 +44,6 @@ const CreatePhaseScreen = ({ navigation, route }) => {
             Alert.alert('Error', message);
         }
     }
-
-    const handleStartDateSelectionComplete = (date) => {
-        console.log("A date has been picked: ", date.toISOString().split('T')[0]);
-        setStartDate(date.toISOString().split('T')[0]);
-        setStartDatePickerVisibility(false);
-    };
-
-    const handleEndDateSelectionComplete = (date) => {
-        console.log("A date has been picked: ", date.toISOString().split('T')[0]);
-        setEndDate(date.toISOString().split('T')[0]);
-        setEndDatePickerVisibility(false);
-    };
-
-    const handleTimeSelectionComplete = (time) => {
-        console.log("A time has been picked: ", time.toTimeString().split(' ')[0]);
-        setEndTime(time.toTimeString().split(' ')[0]);
-        setTimePickerVisibility(false);
-    }
-
-    const hideStartDatePicker = () => { setStartDatePickerVisibility(false); };
-    const hideEndDatePicker = () => { setEndDatePickerVisibility(false); };
-    const hideTimePicker = () => { setTimePickerVisibility(false); };
 
     return (
         <SafeAreaView style={styles.createPhaseContainer}>
@@ -77,39 +62,42 @@ const CreatePhaseScreen = ({ navigation, route }) => {
                         value={description}
                         onChangeText={setDescription}
                     />
-                    {startDate && <Text>Start Date: {startDate}</Text>}
-                    {!startDate && <Text>Select Start Date</Text>}
+                    {startDate && <Text style={{ fontWeight: 'bold', fontSize: 16, marginTop: 6, alignSelf: 'center', marginBottom: 4 }}>Start Date: {startDate}</Text>}
+                    {!startDate && <Text style={{ fontWeight: 'bold', fontSize: 16, marginTop: 6, alignSelf: 'center', marginBottom: 4 }}>Select Start Date</Text>}
                     <Button title="Show Date Picker" onPress={() => setStartDatePickerVisibility(true)} />
-                    <DateTimePickerModal
-                        isVisible={isStartDatePickerVisible}
+                    {isStartDatePickerVisible && 
+                    <DateTimePicker
                         mode="date"
-                        onConfirm={handleStartDateSelectionComplete}
-                        onCancel={hideStartDatePicker}
-                    />
-                    {endDate && <Text>End Date: {endDate}</Text>}
-                    {!endDate && <Text>Select End Date</Text>}
+                        value={new Date()}
+                        onChange={(event, date) => {setStartDate(date.toISOString().split('T')[0]); setStartDatePickerVisibility(false);}}
+                    />}
+                    {endDate && <Text style={{ fontWeight: 'bold', fontSize: 16, marginTop: 6, alignSelf: 'center', marginBottom: 4 }}>End Date: {endDate}</Text>}
+                    {!endDate && <Text style={{ fontWeight: 'bold', fontSize: 16, marginTop: 6, alignSelf: 'center', marginBottom: 4 }}>Select End Date</Text>}
                     <Button title="Show Date Picker" onPress={() => setEndDatePickerVisibility(true)} />
-                    <DateTimePickerModal
-                        isVisible={isEndDatePickerVisible}
+                    {isEndDatePickerVisible &&
+                    <DateTimePicker
                         mode="date"
-                        onConfirm={handleEndDateSelectionComplete}
-                        onCancel={hideEndDatePicker}
-                    />
-                    {endTime && <Text>End Time: {endTime}</Text>}
-                    {!endTime && <Text>Select End Time</Text>}
+                        value={new Date()}
+                        onChange={(event, date) => {setEndDate(date.toISOString().split('T')[0]); setEndDatePickerVisibility(false);}}
+                    />}
+                    {endTime && <Text style={{ fontWeight: 'bold', fontSize: 16, marginTop: 6, alignSelf: 'center', marginBottom: 4 }}>End Time: {endTime}</Text>}
+                    {!endTime && <Text style={{ fontWeight: 'bold', fontSize: 16, marginTop: 6, alignSelf: 'center', marginBottom: 4 }}>Select End Time</Text>}
                     <Button title="Show Time Picker" onPress={() => setTimePickerVisibility(true)} />
-                    <DateTimePickerModal
-                        isVisible={isTimePickerVisible}
+                    {isTimePickerVisible &&
+                    <DateTimePicker
                         mode="time"
-                        onConfirm={handleTimeSelectionComplete}
-                        onCancel={hideTimePicker}
-                    />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Timezone Offset"
-                        value={timezoneOffset.toString()}
-                        onChangeText={setTimezoneOffset}
-                    />
+                        value={new Date()}
+                        onChange={(event, date) => { setEndTime(date.toISOString().split('T')[1].split('.')[0].slice(0, 5)); setTimePickerVisibility(false);}}
+                    />}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                        <Text style={{ fontWeight: 'bold', fontSize: 16, marginTop: 14, alignSelf: 'center', width: '65%' }}>Timezone Offset for Values</Text>
+                        <TextInput
+                            style={styles.timezoneInput}
+                            placeholder="Timezone Offset"
+                            value={timezoneOffset.toString()}
+                            onChangeText={setTimezoneOffset}
+                        />
+                    </View>
                 </View>
                 <View style={styles.rowButtonsContainer}>
                     <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
@@ -141,7 +129,6 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 24,
-        marginTop: '12%',
         textAlign: 'center',
         color: '#000',
         fontWeight: 'bold',
@@ -154,7 +141,7 @@ const styles = StyleSheet.create({
     },
     input: {
         width: '80%',
-        height: 35,
+        height: 30,
         borderColor: '#007BFF',
         borderWidth: 1,
         borderLeftWidth: 0,
@@ -162,6 +149,19 @@ const styles = StyleSheet.create({
         borderTopWidth: 0,
         // borderRadius: 10,
         marginBottom: '5%',
+        padding: 5,
+    },
+    timezoneInput: {
+        width: '15%',
+        height: 30,
+        borderColor: '#007BFF',
+        borderWidth: 1,
+        borderLeftWidth: 0,
+        borderRightWidth: 0,
+        borderTopWidth: 0,
+        // borderRadius: 10,
+        marginTop: '5%',
+        marginBottom: '3%',
         padding: 5,
     },
     removeBtn: {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Button, TextInput, FlatList, Image, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import DateTimePickerModal from "react-native-modal-datetime-picker";
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { CREATE_TASK_MUTATION } from '../queries/Mutations';
 import { useMutation } from '@apollo/client';
 import { Alert } from 'react-native';
@@ -13,18 +13,24 @@ const CreateTaskScreen = ({ navigation, route }) => {
     const [description, setDescription] = useState('');
     const [endDate, setEndDate] = useState('');
     const [endTime, setEndTime] = useState('');
-    const [timezoneOffset, setTimezoneOffset] = useState(new Date().getTimezoneOffset());
+    const [timezoneOffset, setTimezoneOffset] = useState(0);
     const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
     const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
     const [createTask] = useMutation(CREATE_TASK_MUTATION);
     
     const createTaskHandler = async () => {
         try {
-            const variables = { title: title, description: description, endDate: endDate, endTime: endTime, timezoneOffset: timezoneOffset };
+            let variables = {};
+            if (phaseId) variables.phaseId = phaseId;
+            if (title) variables.title = title;
+            if (description) variables.description = description;
+            if (endDate) variables.endDate = endDate;
+            if (endTime) variables.endTime = endTime;
+            if (timezoneOffset) variables.timezoneOffset = timezoneOffset;
             const response = await createTask({ variables: variables });
             if (response.data.createTask.id) {
                 Alert.alert('Task Created');
-                navigation.navigate('Task', { id: response.data.createTask.id, phase: route.params.phase });
+                navigation.navigate('Task', { task: response.data.createTask, phase: route.params.phase });
             } else {
                 Alert.alert('An error occurred, please try again');
             }
@@ -35,21 +41,6 @@ const CreateTaskScreen = ({ navigation, route }) => {
             Alert.alert('Error', message);
         }
     }
-    
-    const handleDateSelectionComplete = (date) => {
-        console.log("A date has been picked: ", date.toISOString().split('T')[0]);
-        setEndDate(date.toISOString().split('T')[0]);
-        setDatePickerVisibility(false);
-    };
-
-    const handleTimeSelectionComplete = (time) => {
-        console.log("A time has been picked: ", time.toTimeString().split(' ')[0]);
-        setEndTime(time.toTimeString().split(' ')[0]);
-        setTimePickerVisibility(false);
-    }
-
-    const hideDatePicker = () => { setDatePickerVisibility(false); };
-    const hideTimePicker = () => { setTimePickerVisibility(false); };
 
     return (
         <SafeAreaView style={styles.createTaskContainer}>
@@ -68,30 +59,33 @@ const CreateTaskScreen = ({ navigation, route }) => {
                         value={description}
                         onChangeText={setDescription}
                     />
-                    {endDate && <Text>End Date: {endDate}</Text>}
-                    {!endDate && <Text>Select End Date</Text>}
+                    {endDate && <Text style={{ fontWeight: 'bold', fontSize: 16, marginTop: 6, alignSelf: 'center', marginBottom: 4 }}>End Date: {endDate}</Text>}
+                    {!endDate && <Text style={{ fontWeight: 'bold', fontSize: 16, marginTop: 6, alignSelf: 'center', marginBottom: 4 }}>Select End Date</Text>}
                     <Button title="Show Date Picker" onPress={() => setDatePickerVisibility(true)} />
-                    <DateTimePickerModal
-                        isVisible={isDatePickerVisible}
+                    {isDatePickerVisible &&
+                    <DateTimePicker
                         mode="date"
-                        onConfirm={handleDateSelectionComplete}
-                        onCancel={hideDatePicker}
-                    />
-                    {endTime && <Text>End Time: {endTime}</Text>}
-                    {!endTime && <Text>Select End Time</Text>}
+                        value={new Date()}
+                        onChange={(event, date) => {setEndDate(date.toISOString().split('T')[0]); setDatePickerVisibility(false);}}
+                    />}
+                    {endTime && <Text style={{ fontWeight: 'bold', fontSize: 16, marginTop: 6, alignSelf: 'center', marginBottom: 4 }}>End Time: {endTime}</Text>}
+                    {!endTime && <Text style={{ fontWeight: 'bold', fontSize: 16, marginTop: 6, alignSelf: 'center', marginBottom: 4 }}>Select End Time</Text>}
                     <Button title="Show Time Picker" onPress={() => setTimePickerVisibility(true)} />
-                    <DateTimePickerModal
-                        isVisible={isTimePickerVisible}
+                    {isTimePickerVisible &&
+                    <DateTimePicker
                         mode="time"
-                        onConfirm={handleTimeSelectionComplete}
-                        onCancel={hideTimePicker}
-                    />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Timezone Offset"
-                        value={timezoneOffset.toString()}
-                        onChangeText={setTimezoneOffset}
-                    />
+                        value={new Date()}
+                        onChange={(event, date) => {setEndTime(date.toTimeString().split(' ')[0].slice(0, 5)); setTimePickerVisibility(false);}}
+                    />}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                        <Text style={{ fontWeight: 'bold', fontSize: 16, marginTop: 14, alignSelf: 'center', width: '65%' }}>Timezone Offset for Values</Text>
+                        <TextInput
+                            style={styles.timezoneInput}
+                            placeholder="Timezone Offset"
+                            value={timezoneOffset.toString()}
+                            onChangeText={setTimezoneOffset}
+                        />
+                    </View>
                 </View>
                 <View style={styles.rowButtonsContainer}>
                     <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
@@ -144,6 +138,19 @@ const styles = StyleSheet.create({
         borderTopWidth: 0,
         // borderRadius: 10,
         marginBottom: '5%',
+        padding: 5,
+    },
+    timezoneInput: {
+        width: '15%',
+        height: 30,
+        borderColor: '#007BFF',
+        borderWidth: 1,
+        borderLeftWidth: 0,
+        borderRightWidth: 0,
+        borderTopWidth: 0,
+        // borderRadius: 10,
+        marginTop: '5%',
+        marginBottom: '3%',
         padding: 5,
     },
     removeBtn: {
