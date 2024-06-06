@@ -45,10 +45,6 @@ export default {
       }
       args.phase = args.phaseId
       delete args.phaseId
-      args.description = args.description || ''
-      args.endDate = args.endDate || ''
-      args.endTime = args.endTime || ''
-      args.timezoneOffset = args.timezoneOffset || 0
       args.status = 'Active'
       args.taskAssignees = []
       await createTask.validateAsync(args, { abortEarly: false })
