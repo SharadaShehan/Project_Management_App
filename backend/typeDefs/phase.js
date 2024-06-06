@@ -23,10 +23,10 @@ export default gql`
         title: String!
         description: String
         order: Int!
-        startDate: String!
+        startDate: String
         endDate: String
         endTime: String
-        timezoneOffset: Int!
+        timezoneOffset: Int
         phaseAdmins: [UserShortened!]
         phaseMembers: [UserShortened!]
         status: String!
@@ -41,7 +41,7 @@ export default gql`
         order: Int!
         endDate: String
         endTime: String
-        timezoneOffset: Int!
+        timezoneOffset: Int
         status: String!
         phaseMembers: [UserShortened!]
     }
