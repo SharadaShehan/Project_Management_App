@@ -377,6 +377,49 @@ const POST_QUERY = gql`
     }
 `;
 
+// requests
+
+const SENT_REQUESTS_QUERY = gql`
+    query sentRequests($projectId: ID!) {
+        sentRequests(projectId: $projectId) {
+            id
+            project {
+                id
+                title
+            }
+            receiver {
+                id
+                username
+                firstName
+                lastName
+                imageURL
+            }
+            status
+        }
+    }
+`;
+
+const RECEIVED_REQUESTS_QUERY = gql`
+    query receivedRequests {
+        receivedRequests {
+            id
+            project {
+                id
+                title
+                owner {
+                    id
+                    username
+                    firstName
+                    lastName
+                    imageURL
+                }
+            }
+            status
+        }
+    }
+`;
+
 export { PROJECTS_QUERY, ONE_PROJECT_QUERY, PROCESS_QUERY, PHASE_QUERY, TASK_QUERY, LAST_PRIVATE_MESSAGES_QUERY, LAST_PROJECT_MESSAGES_QUERY, 
     LAST_PHASE_MESSAGES_QUERY, PRIVATE_MESSAGES_QUERY, PROJECT_MESSAGES_QUERY, PHASE_MESSAGES_QUERY,
-    POSTS_QUERY, POST_QUERY };
+    POSTS_QUERY, POST_QUERY,
+    SENT_REQUESTS_QUERY, RECEIVED_REQUESTS_QUERY };
