@@ -26,7 +26,11 @@ export default {
       if (!phase) {
         throw new Error('Phase not found')
       }
-      if (!phase.phaseMembers.includes(req.session.userId)) {
+      const process = await Process.findOne({ _id: phase.process })
+      if (!process) {
+        throw new Error('Process not found')
+      }
+      if (!phase.phaseMembers.includes(req.session.userId) && !process.managers.includes(req.session.userId)) {
         throw new Error('Unauthorized')
       }
       return phase
@@ -45,21 +49,9 @@ export default {
       }
       args.process = args.processId
       delete args.processId
-      args.description = args.description || ''
       const lastPhases = await Phase.find({ process: args.process }).sort({ order: -1 }).limit(1)
       const lastPhase = lastPhases[0]
       args.order = lastPhase ? lastPhase.order + 1 : 1
-      if (!args.startDate) {
-        const currentDate = new Date()
-        const year = currentDate.getFullYear()
-        const month = ('0' + (currentDate.getMonth() + 1)).slice(-2)
-        const day = ('0' + currentDate.getDate()).slice(-2)
-        const formattedDate = `${year}-${month}-${day}`
-        args.startDate = formattedDate
-      }
-      args.endDate = args.endDate || ''
-      args.endTime = args.endTime || ''
-      args.timezoneOffset = args.timezoneOffset || 0
       args.status = 'Active'
       args.phaseAdmins = []
       args.phaseMembers = []
