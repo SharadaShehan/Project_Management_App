@@ -42,7 +42,6 @@ export default {
       }
       args.project = args.projectId
       delete args.projectId
-      args.description = args.description || ''
       args.status = 'Active'
       args.phases = []
       args.managers = args.managers || []
@@ -167,6 +166,9 @@ export default {
   ProcessShortened: {
     project: async (process, args, context, info) => {
       return (await process.populate('project')).project
+    },
+    managers: async (process, args, context, info) => {
+      return (await process.populate('managers')).managers
     }
   }
 }
