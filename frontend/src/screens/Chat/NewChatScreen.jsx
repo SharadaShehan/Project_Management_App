@@ -1,15 +1,15 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Button, TextInput, FlatList, Image, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Alert } from 'react-native';
-import { PROJECTS_QUERY } from '../queries/Queries';
-import { SEARCH_USERS_MUTATION } from '../queries/Mutations';
+import { PROJECTS_QUERY } from '../../graphql/Queries';
+import { SEARCH_USERS_MUTATION } from '../../graphql/Mutations';
 import { useQuery, useMutation } from '@apollo/client';
 import { useState } from 'react';
 import { SearchBar } from "react-native-elements";
-import { UserGlobalState } from '../layout/UserState';
-import { logoImagesArray, getLogoImage } from '../logoImages';
-import { MessagesGlobalState } from '../layout/MessagesState';
+import { UserGlobalState } from '../../layout/UserState';
+import { getLogoImage } from '../../logoImages';
+import { MessagesGlobalState } from '../../layout/MessagesState';
 
 const NewChatScreen = ({ navigation }) => {
     const [searchText, setSearchText] = useState('');

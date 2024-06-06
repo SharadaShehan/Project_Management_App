@@ -1,54 +1,54 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Button, TextInput, FlatList, Image, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ADD_PHASE_ADMINS_MUTATION, REMOVE_PHASE_ADMINS_MUTATION } from '../queries/Mutations';
+import { ASSIGN_TASK_MUTATION, UNASSIGN_TASK_MUTATION } from '../../graphql/Mutations';
 import { useMutation } from '@apollo/client';
 import { Alert } from 'react-native';
 import { useState, useEffect } from 'react';
-import { UserGlobalState } from '../layout/UserState';
+import { UserGlobalState } from '../../layout/UserState';
 
-const UpdatePhaseAdmins = ({ navigation, route }) => {
-    const phaseId = route.params.phase.id;
-    const currenAdmins = route.params.phase.phaseAdmins || [];
+const UpdateTaskAssignees = ({ navigation, route }) => {
+    const taskId = route.params.task.id;
+    const currentAssignees = route.params.task.taskAssignees || [];
     const phaseMembers = route.params.phase.phaseMembers || [];
-    const [adminsToAdd, setAdminsToAdd] = useState([]);
-    const [adminsToRemove, setAdminsToRemove] = useState([]);
-    const [shownAdmins, setShownAdmins] = useState([]);
-    const [shownNonAdmins, setShownNonAdmins] = useState([]);
+    const [assigneesToAdd, setAssigneesToAdd] = useState([]);
+    const [assigneesToRemove, setAssigneesToRemove] = useState([]);
+    const [shownAssignees, setShownAssignees] = useState([]);
+    const [shownNonAssignees, setShownNonAssignees] = useState([]);
     const { userData, setUserData } = UserGlobalState();
-    const [addPhaseAdmins] = useMutation(ADD_PHASE_ADMINS_MUTATION);
-    const [removePhaseAdmins] = useMutation(REMOVE_PHASE_ADMINS_MUTATION);
+    const [assignTask] = useMutation(ASSIGN_TASK_MUTATION);
+    const [unassignTask] = useMutation(UNASSIGN_TASK_MUTATION);
 
     useEffect(() => {
-        setShownAdmins([...adminsToAdd, ...currenAdmins].filter(manager => !adminsToRemove.some(m => m.id === manager.id)));
-        const tempAdmins = [...adminsToAdd, ...currenAdmins].filter(manager => !adminsToRemove.some(m => m.id === manager.id));
-        setShownNonAdmins(phaseMembers.filter(member => !tempAdmins.some(manager => manager.id === member.id)));
-    }, [adminsToAdd, adminsToRemove]);
+        setShownAssignees([...assigneesToAdd, ...currentAssignees].filter(assignee => !assigneesToRemove.some(m => m.id === assignee.id)));
+        const tempManagers = [...assigneesToAdd, ...currentAssignees].filter(assignee => !assigneesToRemove.some(m => m.id === assignee.id));
+        setShownNonAssignees(phaseMembers.filter(member => !tempManagers.some(assignee => assignee.id === member.id)));
+    }, [assigneesToAdd, assigneesToRemove]);
     
-    const updatePhaseAdminsHandler = async () => {
+    const updateTaskAssigneesHandler = async () => {
         try {
-            if (!phaseId ) {
-                Alert.alert('Phase not found');
+            if (!taskId) {
+                Alert.alert('Task ID not found');
                 return;
-            } else if (adminsToAdd.length === 0 && adminsToRemove.length === 0) {
+            } else if (assigneesToAdd.length === 0 && assigneesToRemove.length === 0) {
                 Alert.alert('No changes made');
                 return;
             } else {
-                if (adminsToAdd.length > 0) {
-                    const response = await addPhaseAdmins({ variables: { id: phaseId, admins: adminsToAdd.map(admin => admin.id) } });
-                    if (!response.data.addPhaseAdmins.id) {
+                if (assigneesToAdd.length > 0) {
+                    const response = await assignTask({ variables: { id: taskId, assignees: assigneesToAdd.map(assignee => assignee.id) } });
+                    if (!response.data.assignTask.id) {
                         Alert.alert('An error occurred, please try again');
                         return;
                     }
                 }
-                if (adminsToRemove.length > 0) {
-                    const response = await removePhaseAdmins({ variables: { id: phaseId, admins: adminsToRemove.map(admin => admin.id) } });
-                    if (!response.data.removePhaseAdmins.id) {
+                if (assigneesToRemove.length > 0) {
+                    const response = await unassignTask({ variables: { id: taskId, assignees: assigneesToRemove.map(assignee => assignee.id) } });
+                    if (!response.data.unassignTask.id) {
                         Alert.alert('An error occurred, please try again');
                         return;
                     }
                 }
-                Alert.alert('Phase Admins Updated');
+                Alert.alert('Task Assignees Updated');
                 navigation.goBack();
             }
         } catch (err) {
@@ -70,13 +70,13 @@ const UpdatePhaseAdmins = ({ navigation, route }) => {
         );
     };
 
-    const renderAdminItem = ({ item }) => {
+    const renderAssigneeItem = ({ item }) => {
         return (
             <TouchableOpacity onPress={() => {
-                if (adminsToAdd.some(admin => admin.id === item.id)) {
-                    setAdminsToAdd(adminsToAdd.filter(admin => admin.id !== item.id));
+                if (assigneesToAdd.some(assignee => assignee.id === item.id)) {
+                    setAssigneesToAdd(assigneesToAdd.filter(assignee => assignee.id !== item.id));
                 } else {
-                    setAdminsToRemove([...adminsToRemove, item]);
+                    setAssigneesToRemove([...assigneesToRemove, item]);
                 }
             }} style={styles.userItemContainer} key={item.id}>
                 <RenderItem item={item} cross={true} />
@@ -87,10 +87,10 @@ const UpdatePhaseAdmins = ({ navigation, route }) => {
     const renderMemberItem = ({ item }) => {
         return (
             <TouchableOpacity onPress={() => {
-                if (adminsToRemove.some(admin => admin.id === item.id)) {
-                    setAdminsToRemove(adminsToRemove.filter(admin => admin.id !== item.id));
+                if (assigneesToRemove.some(assignee => assignee.id === item.id)) {
+                    setAssigneesToRemove(assigneesToRemove.filter(assignee => assignee.id !== item.id));
                 } else {
-                    setAdminsToAdd([...adminsToAdd, item]);
+                    setAssigneesToAdd([...assigneesToAdd, item]);
                 }
             }}  style={styles.userItemContainer} key={item.id}>
                 <RenderItem item={item} />
@@ -99,28 +99,28 @@ const UpdatePhaseAdmins = ({ navigation, route }) => {
     };
     
     return (
-        <SafeAreaView style={styles.updateAdminsContainer}>
+        <SafeAreaView style={styles.updateAssigneesContainer}>
             <View style={styles.innerContainer}>
-                <Text style={styles.title}>Update Phase Admins</Text>
+                <Text style={styles.title}>Update Task Assignees</Text>
                 <View style={styles.inputContainer}>
                     <FlatList
-                        data={shownAdmins}
-                        renderItem={renderAdminItem}
+                        data={shownAssignees}
+                        renderItem={renderAssigneeItem}
                         keyExtractor={(item) => item.id}
-                        ListHeaderComponent={() => (<Text style={{ fontWeight: 'bold', fontSize: 17, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}>Phase Admins</Text>)}
+                        ListHeaderComponent={() => (<Text style={{ fontWeight: 'bold', fontSize: 17, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}>Managers</Text>)}
                     />
                     <FlatList
-                        data={shownNonAdmins}
+                        data={shownNonAssignees}
                         renderItem={renderMemberItem}
                         keyExtractor={(item) => item.id}
-                        ListHeaderComponent={() => (<Text style={{ fontWeight: 'semi-bold', fontSize: 14, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}>Add Admins from Phase Members</Text>)}
+                        ListHeaderComponent={() => (<Text style={{ fontWeight: 'semi-bold', fontSize: 14, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}>Add Managers from Project Members</Text>)}
                     />
                 </View>
                 <View style={styles.rowButtonsContainer}>
                     <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
                         <Text style={styles.buttonText}>Cancel</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.button} onPress={updatePhaseAdminsHandler}>
+                    <TouchableOpacity style={styles.button} onPress={updateTaskAssigneesHandler}>
                         <Text style={styles.buttonText}>Update</Text>
                     </TouchableOpacity>
                 </View>
@@ -130,7 +130,7 @@ const UpdatePhaseAdmins = ({ navigation, route }) => {
 }
 
 const styles = StyleSheet.create({
-    updateAdminsContainer: {
+    updateAssigneesContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
@@ -216,4 +216,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default UpdatePhaseAdmins;
+export default UpdateTaskAssignees;

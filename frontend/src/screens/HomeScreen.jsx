@@ -1,14 +1,12 @@
 // DetailsScreen.js
 import React, { useEffect } from 'react';
-import { View, Text, Button } from 'react-native';
 import LogOutBtn from '../components/LogOutBtn';
 import { MessagesGlobalState } from '../layout/MessagesState';
 import { UserGlobalState } from '../layout/UserState';
 import { useQuery, useSubscription } from '@apollo/client';
-import { LAST_PHASE_MESSAGES_QUERY, LAST_PRIVATE_MESSAGES_QUERY, LAST_PROJECT_MESSAGES_QUERY } from '../queries/Queries';
-import { NEW_MESSAGE_SUBSCRIPTION } from '../queries/Subscriptions';
+import { LAST_PHASE_MESSAGES_QUERY, LAST_PRIVATE_MESSAGES_QUERY, LAST_PROJECT_MESSAGES_QUERY } from '../graphql/Queries';
+import { NEW_MESSAGE_SUBSCRIPTION } from '../graphql/Subscriptions';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { useNavigation } from '@react-navigation/native';
 import ProjectsScreen from './ProjectsScreen';
 import ForumScreen from './ForumScreen';
 import ProfileScreen from './ProfileScreen';
@@ -16,7 +14,6 @@ import MessagesScreen from './MessagesScreen';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import MIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import MatIcon from 'react-native-vector-icons/MaterialIcons';
-import { GetMessages } from '../customHooks/GetMessages';
 
 const Tab = createBottomTabNavigator();
 

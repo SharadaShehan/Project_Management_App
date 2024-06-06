@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, Text, Button, TouchableOpacity, ScrollView, FlatList, SafeAreaView, StyleSheet, Image } from 'react-native';
-import { MessagesGlobalState } from '../layout/MessagesState';
-import { UserGlobalState } from '../layout/UserState';
-import { getLogoImage } from '../logoImages';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, Image } from 'react-native';
+import { MessagesGlobalState } from '../../layout/MessagesState';
+import { UserGlobalState } from '../../layout/UserState';
+import { getLogoImage } from '../../logoImages';
 
 const MessagesScreen = ({ navigation }) => {
     const mLimit = 100;

@@ -1,7 +1,7 @@
 import { Button, Text } from 'react-native';
 import React from 'react';
 import { TouchableOpacity } from 'react-native';
-import { SIGNOUT_MUTATION } from '../queries/Mutations';
+import { SIGNOUT_MUTATION } from '../graphql/Mutations';
 import { useMutation } from '@apollo/client';
 import MIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import MatIcon from 'react-native-vector-icons/MaterialIcons';

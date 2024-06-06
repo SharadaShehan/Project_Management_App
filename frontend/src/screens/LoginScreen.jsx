@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Button } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { UserGlobalState } from '../layout/UserState';
-import { SIGNIN_MUTATION } from '../queries/Mutations';
+import { SIGNIN_MUTATION } from '../graphql/Mutations';
 import { useMutation } from '@apollo/client';
 import { useState } from 'react';
 

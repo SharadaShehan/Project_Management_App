@@ -1,11 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Button, TextInput, FlatList, Image, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { RESPOND_REQUEST_MUTATION, DELETE_REQUEST_MUTATION } from '../queries/Mutations';
-import { RECEIVED_REQUESTS_QUERY } from '../queries/Queries';
+import { RESPOND_REQUEST_MUTATION, DELETE_REQUEST_MUTATION } from '../../graphql/Mutations';
+import { RECEIVED_REQUESTS_QUERY } from '../../graphql/Queries';
 import { useMutation, useQuery } from '@apollo/client';
 import { useState } from 'react';
-import { UserGlobalState } from '../layout/UserState';
+import { UserGlobalState } from '../../layout/UserState';
 
 const ViewInvitationsScreen = ({ navigation, route }) => {
     const [invitations, setInvitations] = useState([]);

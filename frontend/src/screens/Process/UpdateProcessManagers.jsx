@@ -1,40 +1,55 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Button, TextInput, FlatList, Image, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { CREATE_PROCESS_MUTATION } from '../queries/Mutations';
+import { ADD_PROCESS_MANAGERS_MUTATION, REMOVE_PROCESS_MANAGERS_MUTATION } from '../../graphql/Mutations';
 import { useMutation } from '@apollo/client';
 import { Alert } from 'react-native';
-import { useState } from 'react';
-import { UserGlobalState } from '../layout/UserState';
-import { SelectList } from 'react-native-dropdown-select-list';
+import { useState, useEffect } from 'react';
+import { UserGlobalState } from '../../layout/UserState';
 
-const CreateProcessScreen = ({ navigation, route }) => {
-    const projectId = route.params.project.id;
-    const priorityLevels = ['Low', 'Normal', 'High'];
-    const projectMembers = route.params.project.members;
-    const [title, setTitle] = useState('');
-    const [description, setDescription] = useState('');
-    const [priority, setPriority] = useState('Normal');
-    const [managers, setManagers] = useState([]);
+const UpdateProcessManagers = ({ navigation, route }) => {
+    const processId = route.params.process.id;
+    const currentManagers = route.params.process.managers || [];
+    const projectMembers = route.params.projectMembers;
+    const [managersToAdd, setManagersToAdd] = useState([]);
+    const [managersToRemove, setManagersToRemove] = useState([]);
+    const [shownManagers, setShownManagers] = useState([]);
+    const [shownNonManagers, setShownNonManagers] = useState([]);
     const { userData, setUserData } = UserGlobalState();
-    const [createProcess] = useMutation(CREATE_PROCESS_MUTATION);
+    const [addProcessManagers] = useMutation(ADD_PROCESS_MANAGERS_MUTATION);
+    const [removeProcessManagers] = useMutation(REMOVE_PROCESS_MANAGERS_MUTATION);
+
+    useEffect(() => {
+        setShownManagers([...managersToAdd, ...currentManagers].filter(manager => !managersToRemove.some(m => m.id === manager.id)));
+        const tempManagers = [...managersToAdd, ...currentManagers].filter(manager => !managersToRemove.some(m => m.id === manager.id));
+        setShownNonManagers(projectMembers.filter(member => !tempManagers.some(manager => manager.id === member.id)));
+    }, [managersToAdd, managersToRemove]);
     
-    const createProcessHandler = async () => {
+    const updateProcessManagersHandler = async () => {
         try {
-            let variables = {};
-            if (projectId) variables.projectId = projectId;
-            if (title) variables.title = title;
-            if (description) variables.description = description;
-            if (priority) variables.priority = priority;
-            if (managers && managers.length > 0) {
-                variables.managers = managers.map((manager) => manager.id);
-            }
-            const response = await createProcess({ variables: variables });
-            if (response.data.createProcess.id) {
-                Alert.alert('Process Created');
-                navigation.navigate('Project', { id: projectId, defaultProcess: response.data.createProcess });
+            if (!processId ) {
+                Alert.alert('Process not found');
+                return;
+            } else if (managersToAdd.length === 0 && managersToRemove.length === 0) {
+                Alert.alert('No changes made');
+                return;
             } else {
-                Alert.alert('An error occurred, please try again');
+                if (managersToAdd.length > 0) {
+                    const response = await addProcessManagers({ variables: { id: processId, managers: managersToAdd.map(manager => manager.id) } });
+                    if (!response.data.addProcessManagers.id) {
+                        Alert.alert('An error occurred, please try again');
+                        return;
+                    }
+                }
+                if (managersToRemove.length > 0) {
+                    const response = await removeProcessManagers({ variables: { id: processId, managers: managersToRemove.map(manager => manager.id) } });
+                    if (!response.data.removeProcessManagers.id) {
+                        Alert.alert('An error occurred, please try again');
+                        return;
+                    }
+                }
+                Alert.alert('Process Managers Updated');
+                navigation.goBack();
             }
         } catch (err) {
             console.log(err);
@@ -58,7 +73,11 @@ const CreateProcessScreen = ({ navigation, route }) => {
     const renderManagerItem = ({ item }) => {
         return (
             <TouchableOpacity onPress={() => {
-                setManagers(managers.filter(manager => manager.id !== item.id));
+                if (managersToAdd.some(manager => manager.id === item.id)) {
+                    setManagersToAdd(managersToAdd.filter(manager => manager.id !== item.id));
+                } else {
+                    setManagersToRemove([...managersToRemove, item]);
+                }
             }} style={styles.userItemContainer} key={item.id}>
                 <RenderItem item={item} cross={true} />
             </TouchableOpacity>
@@ -66,53 +85,32 @@ const CreateProcessScreen = ({ navigation, route }) => {
     };
 
     const renderMemberItem = ({ item }) => {
-        if (managers.some(manager => manager.id === item.id)) return null;
-        if (item.id === userData.id) return null;
         return (
             <TouchableOpacity onPress={() => {
-                if (!managers.some(manager => manager.id === item.id)) {
-                    setManagers([...managers, item]);
+                if (managersToRemove.some(manager => manager.id === item.id)) {
+                    setManagersToRemove(managersToRemove.filter(manager => manager.id !== item.id));
+                } else {
+                    setManagersToAdd([...managersToAdd, item]);
                 }
             }}  style={styles.userItemContainer} key={item.id}>
                 <RenderItem item={item} />
             </TouchableOpacity>
         );
     };
-
+    
     return (
-        <SafeAreaView style={styles.createProcessContainer}>
+        <SafeAreaView style={styles.updateManagersContainer}>
             <View style={styles.innerContainer}>
-                <Text style={styles.title}>Create Process</Text>
+                <Text style={styles.title}>Update Process Managers</Text>
                 <View style={styles.inputContainer}>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Process Title"
-                        value={title}
-                        onChangeText={setTitle}
-                    />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Process Description"
-                        value={description}
-                        onChangeText={setDescription}
-                    />
-                    <Text style={{ fontWeight: 'bold', fontSize: 17, marginTop: 5, alignSelf: 'center', marginBottom: 5 }}>Priority Level</Text>
-                    <SelectList
-                        data={priorityLevels}
-                        label="Priority Level"
-                        value={priority}
-                        setSelected={setPriority}
-                        defaultOption={priorityLevels[2]}
-                        boxStyles={{ width: '80%', marginBottom: 6 }}
-                    />
                     <FlatList
-                        data={managers}
+                        data={shownManagers}
                         renderItem={renderManagerItem}
                         keyExtractor={(item) => item.id}
                         ListHeaderComponent={() => (<Text style={{ fontWeight: 'bold', fontSize: 17, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}>Managers</Text>)}
                     />
                     <FlatList
-                        data={projectMembers}
+                        data={shownNonManagers}
                         renderItem={renderMemberItem}
                         keyExtractor={(item) => item.id}
                         ListHeaderComponent={() => (<Text style={{ fontWeight: 'semi-bold', fontSize: 14, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}>Add Managers from Project Members</Text>)}
@@ -122,8 +120,8 @@ const CreateProcessScreen = ({ navigation, route }) => {
                     <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
                         <Text style={styles.buttonText}>Cancel</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.button} onPress={createProcessHandler}>
-                        <Text style={styles.buttonText}>Create</Text>
+                    <TouchableOpacity style={styles.button} onPress={updateProcessManagersHandler}>
+                        <Text style={styles.buttonText}>Update</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -132,7 +130,7 @@ const CreateProcessScreen = ({ navigation, route }) => {
 }
 
 const styles = StyleSheet.create({
-    createProcessContainer: {
+    updateManagersContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
@@ -218,4 +216,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default CreateProcessScreen;
+export default UpdateProcessManagers;

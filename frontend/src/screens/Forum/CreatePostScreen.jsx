@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Button, TextInput, FlatList, Image, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { CREATE_POST_MUTATION } from '../queries/Mutations';
+import { CREATE_POST_MUTATION } from '../../graphql/Mutations';
 import { useMutation } from '@apollo/client';
 import { Alert } from 'react-native';
 import { useState } from 'react';

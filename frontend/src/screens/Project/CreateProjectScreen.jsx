@@ -1,13 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Button, TextInput, FlatList, Image, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, FlatList, Image, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { CREATE_PROJECT_MUTATION, SEARCH_USERS_MUTATION } from '../queries/Mutations';
+import { CREATE_PROJECT_MUTATION, SEARCH_USERS_MUTATION } from '../../graphql/Mutations';
 import { useMutation } from '@apollo/client';
 import { Alert } from 'react-native';
 import { useState } from 'react';
 import { SearchBar } from "react-native-elements"; 
-import { UserGlobalState } from '../layout/UserState';
-import { logoImagesArray } from '../logoImages';
+import { UserGlobalState } from '../../layout/UserState';
+import { logoImagesArray } from '../../logoImages';
 
 const CreateProjectScreen = ({ navigation }) => {
     const [title, setTitle] = useState('');

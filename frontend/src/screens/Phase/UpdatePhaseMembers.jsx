@@ -1,11 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Button, TextInput, FlatList, Image, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ADD_PHASE_MEMBERS_MUTATION, REMOVE_PHASE_MEMBERS_MUTATION } from '../queries/Mutations';
+import { ADD_PHASE_MEMBERS_MUTATION, REMOVE_PHASE_MEMBERS_MUTATION } from '../../graphql/Mutations';
 import { useMutation } from '@apollo/client';
 import { Alert } from 'react-native';
 import { useState, useEffect } from 'react';
-import { UserGlobalState } from '../layout/UserState';
+import { UserGlobalState } from '../../layout/UserState';
 
 const UpdatePhaseMembers = ({ navigation, route }) => {
     const phaseId = route.params.phase.id;

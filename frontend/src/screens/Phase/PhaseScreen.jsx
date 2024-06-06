@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, Button, TouchableOpacity, FlatList, ScrollView, Image, Alert } from 'react-native';
+import React from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { PHASE_QUERY } from '../queries/Queries';
-import { DELETE_PHASE_MUTATION } from '../queries/Mutations';
+import { PHASE_QUERY } from '../../graphql/Queries';
+import { DELETE_PHASE_MUTATION } from '../../graphql/Mutations';
 import { useQuery, useMutation } from '@apollo/client';
-import { UserGlobalState } from '../layout/UserState';
+import { UserGlobalState } from '../../layout/UserState';
 
 const PhaseScreen = ({navigation, route}) => {
     const phaseId = route.params.id;

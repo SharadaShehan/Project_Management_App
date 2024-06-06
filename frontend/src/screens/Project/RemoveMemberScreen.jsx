@@ -1,11 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Button, TextInput, FlatList, Image, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { REMOVE_MEMBER_MUTATION } from '../queries/Mutations';
-import { ONE_PROJECT_QUERY } from '../queries/Queries';
+import { REMOVE_MEMBER_MUTATION } from '../../graphql/Mutations';
+import { ONE_PROJECT_QUERY } from '../../graphql/Queries';
 import { useMutation, useQuery } from '@apollo/client';
-import { useState } from 'react';
-import { UserGlobalState } from '../layout/UserState';
+import { UserGlobalState } from '../../layout/UserState';
 
 const RemoveMemberScreen = ({ navigation, route }) => {
     const { userData, setUserData } = UserGlobalState();

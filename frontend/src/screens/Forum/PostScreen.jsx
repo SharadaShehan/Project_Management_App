@@ -1,12 +1,11 @@
 import React , { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Button, FlatList, Image, TextInput, ScrollView, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { POST_QUERY } from '../queries/Queries';
-import { UPVOTE_POST_MUTATION, DOWNVOTE_POST_MUTATION, UPVOTE_REPLY_MUTATION, DOWNVOTE_REPLY_MUTATION, REPLY_POST_MUTATION, DELETE_POST_MUTATION, GET_GEMINI_RESPONSE_FOR_POST_MUTATION } from '../queries/Mutations';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, TextInput, ScrollView, Alert } from 'react-native';
+import { POST_QUERY } from '../../graphql/Queries';
+import { UPVOTE_POST_MUTATION, DOWNVOTE_POST_MUTATION, UPVOTE_REPLY_MUTATION, DOWNVOTE_REPLY_MUTATION, REPLY_POST_MUTATION, DELETE_POST_MUTATION, GET_GEMINI_RESPONSE_FOR_POST_MUTATION } from '../../graphql/Mutations';
 import { useQuery, useMutation } from '@apollo/client';
 import MatIcon from 'react-native-vector-icons/MaterialIcons';
 import MIcon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { UserGlobalState } from '../layout/UserState';
+import { UserGlobalState } from '../../layout/UserState';
 
 const PostScreen = ({ navigation, route }) => {
     const [ upvoted, setUpvoted ] = useState(false);

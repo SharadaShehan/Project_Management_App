@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, Button, Image, TouchableOpacity, TextInput, Alert } from 'react-native';
-import { CHANGE_PASSWORD_MUTATION } from '../queries/Mutations';
+import { View, Text, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { CHANGE_PASSWORD_MUTATION } from '../../graphql/Mutations';
 import { useMutation } from '@apollo/client';
 
 const ChangePasswordScreen = ({ navigation }) => {

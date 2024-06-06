@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Button } from 'react-native';
-import ProjectsList from '../components/ProjectsList';
+import { Text, StyleSheet, TouchableOpacity } from 'react-native';
+import ProjectsList from '../../components/ProjectsList';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 

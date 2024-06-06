@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, Button, Image, TouchableOpacity } from 'react-native';
-import { UserGlobalState } from '../layout/UserState';
+import { View, Text, Image, TouchableOpacity } from 'react-native';
+import { UserGlobalState } from '../../layout/UserState';
 
 const ProfileScreen = ({ navigation }) => {
     const { userData, setUserData } = UserGlobalState();

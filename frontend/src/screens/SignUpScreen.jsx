@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { SIGNUP_MUTATION, GET_PRESIGNED_URL_MUTATION } from '../queries/Mutations';
-import { useMutation, useQuery } from '@apollo/client';
+import { SIGNUP_MUTATION, GET_PRESIGNED_URL_MUTATION } from '../graphql/Mutations';
+import { useMutation } from '@apollo/client';
 import { UserGlobalState } from '../layout/UserState';
-import { Button, RadioButton } from 'react-native-paper';
+import { RadioButton } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker';
 
 const SignUpScreen = ({navigation}) => {

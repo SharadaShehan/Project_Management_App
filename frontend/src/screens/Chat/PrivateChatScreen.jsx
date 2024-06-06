@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet, TextInput } from 'react-native';
-import { PRIVATE_MESSAGES_QUERY } from '../queries/Queries';
-import { CREATE_PRIVATE_MESSAGE_MUTATION } from '../queries/Mutations';
+import { PRIVATE_MESSAGES_QUERY } from '../../graphql/Queries';
+import { CREATE_PRIVATE_MESSAGE_MUTATION } from '../../graphql/Mutations';
 import { useQuery, useMutation } from '@apollo/client';
-import { MessagesGlobalState } from '../layout/MessagesState';
-import { UserGlobalState } from '../layout/UserState';
+import { MessagesGlobalState } from '../../layout/MessagesState';
+import { UserGlobalState } from '../../layout/UserState';
 import MatIcon from 'react-native-vector-icons/MaterialIcons';
 
 const PrivateChatScreen = ({ navigation, route }) => {

@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Button, FlatList, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { POSTS_QUERY } from '../queries/Queries';
+import { POSTS_QUERY } from '../../graphql/Queries';
 import { useQuery } from '@apollo/client';
 
 const PostsScreen = ({ navigation, route }) => {

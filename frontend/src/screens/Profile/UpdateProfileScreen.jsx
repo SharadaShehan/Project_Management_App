@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image } from 'react-native';
-import { UPDATE_PROFILE_MUTATION, GET_PRESIGNED_URL_MUTATION } from '../queries/Mutations';
-import { useMutation, useQuery } from '@apollo/client';
-import { UserGlobalState } from '../layout/UserState';
-import { Button, RadioButton } from 'react-native-paper';
+import { UPDATE_PROFILE_MUTATION, GET_PRESIGNED_URL_MUTATION } from '../../graphql/Mutations';
+import { useMutation } from '@apollo/client';
+import { UserGlobalState } from '../../layout/UserState';
 import * as ImagePicker from 'expo-image-picker';
 
 const UpdateProfileScreen = ({navigation}) => {
