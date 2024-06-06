@@ -21,7 +21,7 @@ export default gql`
         description: String
         endDate: String
         endTime: String
-        timezoneOffset: Int!
+        timezoneOffset: Int
         taskAssignees: [UserShortened!]
         status: String!
     }
