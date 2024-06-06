@@ -9,6 +9,10 @@ const owner = Joi.string().external(async (value) => {
   const user = await mongoose.model('User').findById(value)
   if (!user) throw new Error('Invalid user')
 }).required().label('Owner')
+const member = Joi.string().external(async (value) => {
+  const user = await mongoose.model('User').findById(value)
+  if (!user) throw new Error('Invalid user')
+}).label('Member')
 const members = Joi.array().min(1).unique().items(Joi.string().external(async (value) => {
   const user = await mongoose.model('User').findById(value)
   if (!user) throw new Error('Invalid user')
@@ -41,4 +45,8 @@ export const updateProject = Joi.object().keys({
   description: updateDescription,
   status: updateStatus,
   defaultProcess
+})
+
+export const removeMember = Joi.object().keys({
+  memberId: member
 })

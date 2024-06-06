@@ -10,6 +10,7 @@ export default gql`
         createProject(title: String!, description: String!, members: [ID!], logo: String): Project
         updateProject(id: ID!, title: String, description: String, status: String, defaultProcess: ID): Project
         deleteProject(id: ID!): Boolean
+        removeMember(projectId: ID!, memberId: ID!): Boolean
     }
 
     type Project {

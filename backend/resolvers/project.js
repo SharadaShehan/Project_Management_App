@@ -1,6 +1,6 @@
-import { Project, User, Process, Phase, Task } from '../models/index.js'
+import { Project, User, Process, Phase, Task, Request } from '../models/index.js'
 import * as Auth from '../auth.js'
-import { createProject, updateProject } from '../schemas/index.js'
+import { createProject, updateProject, removeMember } from '../schemas/index.js'
 
 export default {
 
@@ -30,13 +30,12 @@ export default {
       args.members = args.members || []
       args.processes = []
       args.status = 'Active'
-      if (!args.members.includes(req.session.userId)) {
-        args.members.push(req.session.userId)
-      }
       const idsFound = await User.where('_id').in(args.members).countDocuments()
       if (idsFound !== args.members.length) {
         throw new Error('One or more members do not exist')
       }
+      const membersIds = args.members
+      args.members = [req.session.userId]
       await createProject.validateAsync(args, { abortEarly: false })
       const project = await Project.create(args)
       const defaultProcess = await Process.create({
@@ -51,7 +50,15 @@ export default {
       project.defaultProcess = defaultProcess.id
       project.processes.push(defaultProcess.id)
       await project.save()
-      await User.updateMany({ _id: { $in: args.members } }, { $push: { projects: project.id } })
+      for (const member of membersIds) {
+        if (member !== req.session.userId) {
+          await Request.create({
+            project: project.id,
+            receiver: member,
+            status: 'Pending'
+          })
+        }
+      }
       return project
     },
     updateProject: async (root, args, { req }, info) => {
@@ -93,6 +100,48 @@ export default {
       await Phase.deleteMany({ _id: { $in: phases } })
       await Task.deleteMany({ _id: { $in: tasks } })
       await Project.deleteOne({ _id: id })
+      return true
+    },
+    removeMember: async (root, args, { req }, info) => {
+      Auth.checkSignedIn(req)
+      await removeMember.validateAsync(args, { abortEarly: false })
+      const project = await Project.findOne({ _id: args.projectId })
+      if (!project) {
+        throw new Error('Project not found')
+      }
+      if (project.owner.toString() !== req.session.userId) {
+        throw new Error('Unauthorized')
+      }
+      if (project.owner.toString() === args.memberId) {
+        throw new Error('Owner cannot be removed')
+      }
+      if (!project.members.includes(args.memberId)) {
+        throw new Error('Member not found')
+      }
+      // Remove member from all processes, phases and tasks
+      for (const process of project.processes) {
+        const processObj = await Process.findOne({ _id: process })
+        if (processObj.managers.includes(args.memberId)) {
+          await processObj.updateOne({ $pull: { managers: args.memberId } })
+          for (const phase of processObj.phases) {
+            const phaseObj = await Phase.findOne({ _id: phase })
+            if (phaseObj.phaseAdmins.includes(args.memberId)) {
+              await phaseObj.updateOne({ $pull: { phaseAdmins: args.memberId } })
+            }
+            if (phaseObj.phaseMembers.includes(args.memberId)) {
+              await phaseObj.updateOne({ $pull: { phaseMembers: args.memberId } })
+            }
+            for (const task of phaseObj.tasks) {
+              const taskObj = await Task.findOne({ _id: task })
+              if (taskObj.taskAssignees.includes(args.memberId)) {
+                await taskObj.updateOne({ $pull: { taskAssignees: args.memberId } })
+              }
+            }
+          }
+        }
+      }
+      await project.updateOne({ $pull: { members: args.memberId } })
+      await User.updateOne({ _id: args.memberId }, { $pull: { projects: args.projectId } })
       return true
     }
   },
