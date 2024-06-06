@@ -21,8 +21,12 @@ const CreateProcessScreen = ({ navigation, route }) => {
     
     const createProcessHandler = async () => {
         try {
-            let variables = { projectId: projectId, title: title, description: description, priority: priority };
-            if (managers.length > 0) {
+            let variables = {};
+            if (projectId) variables.projectId = projectId;
+            if (title) variables.title = title;
+            if (description) variables.description = description;
+            if (priority) variables.priority = priority;
+            if (managers && managers.length > 0) {
                 variables.managers = managers.map((manager) => manager.id);
             }
             const response = await createProcess({ variables: variables });
@@ -54,7 +58,7 @@ const CreateProcessScreen = ({ navigation, route }) => {
     const renderManagerItem = ({ item }) => {
         return (
             <TouchableOpacity onPress={() => {
-                setMembers(managers.filter(manager => manager.id !== item.id));
+                setManagers(managers.filter(manager => manager.id !== item.id));
             }} style={styles.userItemContainer} key={item.id}>
                 <RenderItem item={item} cross={true} />
             </TouchableOpacity>
@@ -67,7 +71,7 @@ const CreateProcessScreen = ({ navigation, route }) => {
         return (
             <TouchableOpacity onPress={() => {
                 if (!managers.some(manager => manager.id === item.id)) {
-                    setMembers([...managers, item]);
+                    setManagers([...managers, item]);
                 }
             }}  style={styles.userItemContainer} key={item.id}>
                 <RenderItem item={item} />
@@ -92,11 +96,14 @@ const CreateProcessScreen = ({ navigation, route }) => {
                         value={description}
                         onChangeText={setDescription}
                     />
+                    <Text style={{ fontWeight: 'bold', fontSize: 17, marginTop: 5, alignSelf: 'center', marginBottom: 5 }}>Priority Level</Text>
                     <SelectList
                         data={priorityLevels}
                         label="Priority Level"
                         value={priority}
-                        onChange={setPriority}
+                        setSelected={setPriority}
+                        defaultOption={priorityLevels[2]}
+                        boxStyles={{ width: '80%', marginBottom: 6 }}
                     />
                     <FlatList
                         data={managers}
@@ -108,7 +115,7 @@ const CreateProcessScreen = ({ navigation, route }) => {
                         data={projectMembers}
                         renderItem={renderMemberItem}
                         keyExtractor={(item) => item.id}
-                        ListHeaderComponent={() => (<Text style={{ fontWeight: 'bold', fontSize: 17, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}>Members</Text>)}
+                        ListHeaderComponent={() => (<Text style={{ fontWeight: 'semi-bold', fontSize: 14, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}>Add Managers from Project Members</Text>)}
                     />
                 </View>
                 <View style={styles.rowButtonsContainer}>
@@ -133,7 +140,7 @@ const styles = StyleSheet.create({
     },
     innerContainer: {
         width: '90%',
-        height: '90%',
+        height: '95%',
         backgroundColor: '#fff',
         justifyContent: 'center',
         alignItems: 'center',
@@ -141,7 +148,7 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 24,
-        marginTop: '12%',
+        marginTop: '3%',
         textAlign: 'center',
         color: '#000',
         fontWeight: 'bold',
@@ -149,12 +156,12 @@ const styles = StyleSheet.create({
     inputContainer: {
         marginTop: '5%',
         alignItems: 'center',
-        marginBottom: '6%',
+        marginBottom: '4%',
         width: '100%',
     },
     input: {
         width: '80%',
-        height: 35,
+        height: 28,
         borderColor: '#007BFF',
         borderWidth: 1,
         borderLeftWidth: 0,
