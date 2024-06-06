@@ -7,7 +7,7 @@ export default gql`
   }
 
   extend type Mutation {
-    createRequest(projectId: ID!, receiverId: ID!): Request!
+    createRequests(projectId: ID!, receiverIds: [ID!]!): Boolean!
     respondRequest(id: ID!, status: String!): Request!
     deleteRequest(id: ID!): Boolean!
   }

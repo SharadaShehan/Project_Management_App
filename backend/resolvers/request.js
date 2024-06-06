@@ -1,6 +1,6 @@
 import { Project, Request } from '../models/index.js'
 import * as Auth from '../auth.js'
-import { createRequest, respondRequest, sentRequests } from '../schemas/request.js'
+import { createRequests, respondRequest, sentRequests } from '../schemas/request.js'
 
 export default {
   Query: {
@@ -18,7 +18,7 @@ export default {
   },
 
   Mutation: {
-    createRequest: async (root, args, { req }, info) => {
+    createRequests: async (root, args, { req }, info) => {
       Auth.checkSignedIn(req)
       const project = await Project.findOne({ _id: args.projectId })
       if (!project) throw new Error('Project not found')
@@ -26,15 +26,19 @@ export default {
       args.project = args.projectId
       delete args.projectId
       args.status = 'Pending'
-      args.receiver = args.receiverId
-      delete args.receiverId
-      const pendingRequest = await Request.findOne({ project: args.project, receiver: args.receiver })
-      if (pendingRequest) throw new Error('Request already sent')
-      if (req.session.userId === args.receiver) throw new Error('Cannot send request to yourself')
-      if (project.members.includes(args.receiver)) throw new Error('User already in project')
-      await createRequest.validateAsync(args, { abortEarly: false })
-      const request = await Request.create(args)
-      return request
+      args.receivers = args.receiverIds
+      delete args.receiverIds
+      for (const receiver of args.receivers) {
+        const pendingRequest = await Request.findOne({ project: args.project, receiver })
+        if (pendingRequest) throw new Error('Request already sent for one or more Users')
+        if (req.session.userId === receiver) throw new Error('Cannot send request to yourself')
+        if (project.members.includes(receiver)) throw new Error('One or more Users already in project')
+      }
+      await createRequests.validateAsync(args, { abortEarly: false })
+      for (const receiver of args.receivers) {
+        await Request.create({ project: args.project, receiver, status: 'Pending' })
+      }
+      return true
     },
     respondRequest: async (root, args, { req }, info) => {
       Auth.checkSignedIn(req)
