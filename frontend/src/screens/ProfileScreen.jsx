@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, Button, Image, TouchableOpacity } from 'react-native';
 import { UserGlobalState } from '../layout/UserState';
-import { color } from 'react-native-elements/dist/helpers';
 
 const ProfileScreen = ({ navigation }) => {
     const { userData, setUserData } = UserGlobalState();
@@ -45,6 +44,11 @@ const ProfileScreen = ({ navigation }) => {
                     </TouchableOpacity>
                 </View>
             </View>
+            <View style={styles.outerButtonContainer}>
+                <TouchableOpacity onPress={() => navigation.navigate('ViewInvitations')} style={styles.updateButton}>
+                    <Text style={styles.updateButtonText}>View Invitations</Text>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 }
@@ -58,13 +62,14 @@ const styles = {
     },
     innerContainer: {
         width: '90%',
-        height: '93%',
+        height: '88%',
+        marginTop: '5%',
         borderRadius: 40,
         backgroundColor: 'white',
         paddingHorizontal: '4%',
     },
     fullNameText: {
-        fontSize: 28,
+        fontSize: 26,
         marginTop: '5%',
         textAlign: 'center',
         // color: '#007BFF',
@@ -76,21 +81,21 @@ const styles = {
         marginTop: '3%',
     },
     topicText: {
-        fontSize: 18,
+        fontSize: 17,
         fontWeight: 'bold',
     },
     emailTopicText: {
-        fontSize: 18,
+        fontSize: 17,
         fontWeight: 'bold',
         marginTop: '5%',
     },
     valueText: {
-        fontSize: 18,
+        fontSize: 17,
         fontWeight: 'semi-bold',
         color: '#555',
     },
     valueNotSetText: {
-        fontSize: 18,
+        fontSize: 17,
         color: 'gray',
     },
     buttonsContainer: {
@@ -105,8 +110,12 @@ const styles = {
     updateButtonText: {
         color: 'white',
         textAlign: 'center',
-        fontSize: 16,
+        fontSize: 17,
         fontWeight: 'bold'
+    },
+    outerButtonContainer: {
+        width: '80%',
+        marginBottom: '5%',
     }
 }
 
