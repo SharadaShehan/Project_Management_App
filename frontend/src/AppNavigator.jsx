@@ -6,11 +6,17 @@ import HomeScreen from './screens/HomeScreen';
 import LoginScreen from './screens/LoginScreen';
 import ProjectScreen from './screens/ProjectScreen';
 import CreateProjectScreen from './screens/CreateProjectScreen';
-import CreateProcessScreen from './screens/CreatePhaseScreen';
+import InviteUsersScreen from './screens/InviteUsersScreen';
+import RemoveMemberScreen from './screens/RemoveMemberScreen';
+import CreateProcessScreen from './screens/CreateProcessScreen';
+import UpdateProcessManagers from './screens/UpdateProcessManagers';
 import PhaseScreen from './screens/PhaseScreen';
 import CreatePhaseScreen from './screens/CreatePhaseScreen';
+import UpdatePhaseMembers from './screens/UpdatePhaseMembers';
+import UpdatePhaseAdmins from './screens/UpdatePhaseAdmins';
 import TaskScreen from './screens/TaskScreen';
 import CreateTaskScreen from './screens/CreateTaskScreen';
+import UpdateTaskAssignees from './screens/UpdateTaskAssignees';
 import PhaseChatScreen from './screens/PhaseChatScreen';
 import ProjectChatScreen from './screens/ProjectChatScreen';
 import PrivateChatScreen from './screens/PrivateChatScreen';
@@ -19,6 +25,7 @@ import PostsScreen from './screens/PostsScreen';
 import PostScreen from './screens/PostScreen';
 import CreatePostScreen from './screens/CreatePostScreen';
 import SignUpScreen from './screens/SignUpScreen';
+import ViewInvitationsScreen from './screens/ViewInvitationsScreen';
 import UpdateProfileScreen from './screens/UpdateProfileScreen';
 import ChangePasswordScreen from './screens/ChangePasswordScreen';
 import { UserGlobalStateProvider } from './layout/UserState';
@@ -48,10 +55,39 @@ const AppNavigator = () => {
                         }}/>
           <Stack.Screen name="CreateProject" component={CreateProjectScreen}
                         options={{ headerShown: false }}/>
+          <Stack.Screen name="InviteUsers" component={InviteUsersScreen}
+                        options={{
+                          title: 'Invite Users',
+                          headerStyle: {
+                            backgroundColor: '#228B22',
+                            fontWeight: 'bold',
+                          },
+                          headerTintColor: '#fff'
+                        }}/>
+          <Stack.Screen name="RemoveMember" component={RemoveMemberScreen}
+                        options={{
+                          title: 'Remove Member',
+                          headerStyle: {
+                            backgroundColor: '#228B22',
+                            fontWeight: 'bold',
+                          },
+                          headerTintColor: '#fff'
+                        }}/>
           <Stack.Screen name="CreateProcess" component={CreateProcessScreen}
                         options={
                           ({ route }) => ({
                             title: route.params.project.title,
+                            headerStyle: {
+                              backgroundColor: '#228B22',
+                              fontWeight: 'bold',
+                            },
+                            headerTintColor: '#fff'
+                          })
+                        }/>
+          <Stack.Screen name="UpdateProcessManagers" component={UpdateProcessManagers}
+                        options={
+                          ({ route }) => ({
+                            title: route.params.process.title,
                             headerStyle: {
                               backgroundColor: '#228B22',
                               fontWeight: 'bold',
@@ -81,6 +117,28 @@ const AppNavigator = () => {
                             headerTintColor: '#fff'
                           })
                         }/>
+          <Stack.Screen name="UpdatePhaseMembers" component={UpdatePhaseMembers}
+                        options={
+                          ({ route }) => ({
+                            title: route.params.phase.title,
+                            headerStyle: {
+                              backgroundColor: '#228B22',
+                              fontWeight: 'bold',
+                            },
+                            headerTintColor: '#fff'
+                          })
+                        }/>
+          <Stack.Screen name="UpdatePhaseAdmins" component={UpdatePhaseAdmins}
+                        options={
+                          ({ route }) => ({
+                            title: route.params.phase.title,
+                            headerStyle: {
+                              backgroundColor: '#228B22',
+                              fontWeight: 'bold',
+                            },
+                            headerTintColor: '#fff'
+                          })
+                        }/>
           <Stack.Screen name="Task" component={TaskScreen}
                         options={
                           ({ route }) => ({
@@ -95,6 +153,18 @@ const AppNavigator = () => {
           <Stack.Screen name="CreateTask" component={CreateTaskScreen}
                         options={
                           ({ route }) => ({
+                            headerStyle: {
+                              title: route.params.phase.title,
+                              backgroundColor: '#228B22',
+                              fontWeight: 'bold',
+                            },
+                            headerTintColor: '#fff'
+                          })
+                        }/>
+          <Stack.Screen name="UpdateTaskAssignees" component={UpdateTaskAssignees}
+                        options={
+                          ({ route }) => ({
+                            title: route.params.task.title,
                             headerStyle: {
                               backgroundColor: '#228B22',
                               fontWeight: 'bold',
@@ -170,6 +240,17 @@ const AppNavigator = () => {
                         options={
                           ({ route }) => ({
                             title: route.params.projectTitle,
+                            headerStyle: {
+                              backgroundColor: '#228B22',
+                              fontWeight: 'bold',
+                            },
+                            headerTintColor: '#fff'
+                          })}
+                        />
+          <Stack.Screen name="ViewInvitations" component={ViewInvitationsScreen}
+                        options={
+                          ({ route }) => ({
+                            title: 'Invitations',
                             headerStyle: {
                               backgroundColor: '#228B22',
                               fontWeight: 'bold',
