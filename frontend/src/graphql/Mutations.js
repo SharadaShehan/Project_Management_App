@@ -280,6 +280,17 @@ const REMOVE_MEMBER_MUTATION = gql`
     }
 `;
 
+const UPDATE_PROJECT_MUTATION = gql`
+    mutation updateProject($id: ID!, $title: String, $description: String, $status: String, $defaultProcess: ID) {
+        updateProject(id: $id, title: $title, description: $description, status: $status, defaultProcess: $defaultProcess) {
+            id
+            defaultProcess {
+                id
+            }
+        }
+    }
+`;
+
 const DELETE_PROJECT_MUTATION = gql`
     mutation deleteProject($id: ID!) {
         deleteProject(id: $id)
@@ -335,6 +346,14 @@ const ADD_PROCESS_MANAGERS_MUTATION = gql`
 const REMOVE_PROCESS_MANAGERS_MUTATION = gql`
     mutation removeProcessManagers($id: ID!, $managers: [ID!]!) {
         removeProcessManagers(id: $id, managers: $managers) {
+            id
+        }
+    }
+`;
+
+const UPDATE_PROCESS_MUTATION = gql`
+    mutation updateProcess($id: ID!, $title: String, $description: String, $status: String, $priority: String) {
+        updateProcess(id: $id, title: $title, description: $description, status: $status, priority: $priority) {
             id
         }
     }
@@ -431,6 +450,14 @@ const REMOVE_PHASE_ADMINS_MUTATION = gql`
     }
 `;
 
+const UPDATE_PHASE_MUTATION = gql`
+    mutation updatePhase($id: ID!, $title: String, $description: String, $status: String, $startDate: String, $endDate: String, $endTime: String, $timezoneOffset: Int) {
+        updatePhase(id: $id, title: $title, description: $description, status: $status, startDate: $startDate, endDate: $endDate, endTime: $endTime, timezoneOffset: $timezoneOffset) {
+            id
+        }
+    }
+`;
+
 const DELETE_PHASE_MUTATION = gql`
     mutation deletePhase($id: ID!) {
         deletePhase(id: $id)
@@ -472,6 +499,14 @@ const ASSIGN_TASK_MUTATION = gql`
 const UNASSIGN_TASK_MUTATION = gql`
     mutation unassignTask($id: ID!, $assignees: [ID!]!) {
         unassignTask(id: $id, assignees: $assignees) {
+            id
+        }
+    }
+`;
+
+const UPDATE_TASK_MUTATION = gql`
+    mutation updateTask($id: ID!, $title: String, $description: String, $status: String, $endDate: String, $endTime: String, $timezoneOffset: Int) {
+        updateTask(id: $id, title: $title, description: $description, status: $status, endDate: $endDate, endTime: $endTime, timezoneOffset: $timezoneOffset) {
             id
         }
     }
@@ -519,9 +554,9 @@ const DELETE_REQUEST_MUTATION = gql`
 
 export { SIGNIN_MUTATION, SIGNOUT_MUTATION, SIGNUP_MUTATION, SEARCH_USERS_MUTATION, UPDATE_PROFILE_MUTATION, CHANGE_PASSWORD_MUTATION, GET_PRESIGNED_URL_MUTATION, CREATE_PHASE_MESSAGE_MUTATION, CREATE_PROJECT_MESSAGE_MUTATION, CREATE_PRIVATE_MESSAGE_MUTATION,
     CREATE_POST_MUTATION, DELETE_POST_MUTATION, UPVOTE_POST_MUTATION, DOWNVOTE_POST_MUTATION, UPVOTE_REPLY_MUTATION, DOWNVOTE_REPLY_MUTATION, REPLY_POST_MUTATION, GET_GEMINI_RESPONSE_FOR_POST_MUTATION,
-    CREATE_PROJECT_MUTATION, REMOVE_MEMBER_MUTATION, DELETE_PROJECT_MUTATION,
-    CREATE_PROCESS_MUTATION, ADD_PROCESS_MANAGERS_MUTATION, REMOVE_PROCESS_MANAGERS_MUTATION, DELETE_PROCESS_MUTATION,
-    CREATE_PHASE_MUTATION, ADD_PHASE_MEMBERS_MUTATION, REMOVE_PHASE_MEMBERS_MUTATION, ADD_PHASE_ADMINS_MUTATION, REMOVE_PHASE_ADMINS_MUTATION, DELETE_PHASE_MUTATION,
-    CREATE_TASK_MUTATION, ASSIGN_TASK_MUTATION, UNASSIGN_TASK_MUTATION, DELETE_TASK_MUTATION,
+    CREATE_PROJECT_MUTATION, REMOVE_MEMBER_MUTATION, DELETE_PROJECT_MUTATION, UPDATE_PROJECT_MUTATION,
+    CREATE_PROCESS_MUTATION, ADD_PROCESS_MANAGERS_MUTATION, REMOVE_PROCESS_MANAGERS_MUTATION, DELETE_PROCESS_MUTATION, UPDATE_PROCESS_MUTATION,
+    CREATE_PHASE_MUTATION, ADD_PHASE_MEMBERS_MUTATION, REMOVE_PHASE_MEMBERS_MUTATION, ADD_PHASE_ADMINS_MUTATION, REMOVE_PHASE_ADMINS_MUTATION, DELETE_PHASE_MUTATION, UPDATE_PHASE_MUTATION,
+    CREATE_TASK_MUTATION, ASSIGN_TASK_MUTATION, UNASSIGN_TASK_MUTATION, DELETE_TASK_MUTATION, UPDATE_TASK_MUTATION,
     CREATE_REQUESTS_MUTATION, RESPOND_REQUEST_MUTATION, DELETE_REQUEST_MUTATION };
 
