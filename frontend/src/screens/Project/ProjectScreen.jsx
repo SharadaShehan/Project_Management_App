@@ -134,7 +134,7 @@ const ProjectScreen = ({navigation, route}) => {
                     </View>
                 )}
                 {projectData && processData && (userData.id === projectData.project.owner.id || processData.process.managers.map((manager) => manager.id).includes(userData.id)) && (
-                    <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#007BFF', borderRadius: 8, marginTop: 8 }]} onPress={() => { console.log('Edit Process') }}>
+                    <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#007BFF', borderRadius: 8, marginTop: 8 }]} onPress={() => navigation.navigate('EditProcess', { project: projectData.project, process: processData.process })}>
                         <Text style={styles.addProcessText}>Edit Process</Text>
                     </TouchableOpacity>
                 )}
@@ -166,7 +166,7 @@ const ProjectScreen = ({navigation, route}) => {
                     </TouchableOpacity>
                 )}
                 {projectData && userData.id === projectData.project.owner.id && (
-                    <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#007BFF', borderRadius: 8, marginTop: 8 }]} onPress={() => { console.log('Edit Project') }}>
+                    <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#007BFF', borderRadius: 8, marginTop: 8 }]} onPress={() => navigation.navigate('EditProject', { project: projectData.project })}>
                         <Text style={styles.addProcessText}>Edit Project</Text>
                     </TouchableOpacity>
                 )}
@@ -219,6 +219,7 @@ const styles = {
         backgroundColor: '#fff',
         paddingHorizontal: '4%',
         paddingBottom: 10,
+        marginBottom: 20
     },
     projectTitle: {
         fontSize: 22,

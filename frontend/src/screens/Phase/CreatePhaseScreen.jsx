@@ -126,6 +126,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         borderRadius: 10,
+        marginBottom: 20
     },
     title: {
         fontSize: 24,

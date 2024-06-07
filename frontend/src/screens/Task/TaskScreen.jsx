@@ -46,7 +46,7 @@ const TaskScreen = ({navigation, route}) => {
                             </TouchableOpacity>
                         </View>
                     )}
-                    <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#007BFF', borderRadius: 8, marginTop: 8 }]} onPress={() => { console.log('Edit Task') }}>
+                    <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#007BFF', borderRadius: 8, marginTop: 8 }]} onPress={() => navigation.navigate('EditTask', { task: taskData.task, phase: route.params.phase })}>
                         <Text style={styles.lowerButtonText}>Edit Task</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#dd0000', borderRadius: 8, marginTop: 8 }]} onPress={() => {
@@ -97,6 +97,7 @@ const styles = {
         backgroundColor: '#fff',
         paddingHorizontal: '4%',
         paddingBottom: 10,
+        marginBottom: 20
     },
     taskTitle: {
         fontSize: 22,

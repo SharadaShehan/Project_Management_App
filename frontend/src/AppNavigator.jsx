@@ -9,15 +9,19 @@ import ProjectScreen from './screens/Project/ProjectScreen';
 import CreateProjectScreen from './screens/Project/CreateProjectScreen';
 import InviteUsersScreen from './screens/Project/InviteUsersScreen';
 import RemoveMemberScreen from './screens/Project/RemoveMemberScreen';
+import EditProjectScreen from './screens/Project/EditProjectScreen';
 import CreateProcessScreen from './screens/Process/CreateProcessScreen';
 import UpdateProcessManagers from './screens/Process/UpdateProcessManagers';
+import EditProcessScreen from './screens/Process/EditProcessScreen';
 import PhaseScreen from './screens/Phase/PhaseScreen';
 import CreatePhaseScreen from './screens/Phase/CreatePhaseScreen';
 import UpdatePhaseMembers from './screens/Phase/UpdatePhaseMembers';
 import UpdatePhaseAdmins from './screens/Phase/UpdatePhaseAdmins';
+import EditPhaseScreen from './screens/Phase/EditPhaseScreen';
 import TaskScreen from './screens/Task/TaskScreen';
 import CreateTaskScreen from './screens/Task/CreateTaskScreen';
 import UpdateTaskAssignees from './screens/Task/UpdateTaskAssignees';
+import EditTaskScreen from './screens/Task/EditTaskScreen';
 import PhaseChatScreen from './screens/Chat/PhaseChatScreen';
 import ProjectChatScreen from './screens/Chat/ProjectChatScreen';
 import PrivateChatScreen from './screens/Chat/PrivateChatScreen';
@@ -73,6 +77,15 @@ const AppNavigator = () => {
                           },
                           headerTintColor: '#fff'
                         }}/>
+          <Stack.Screen name="EditProject" component={EditProjectScreen}
+                        options={{
+                          title: 'Edit Project',
+                          headerStyle: {
+                            backgroundColor: '#228B22',
+                            fontWeight: 'bold',
+                          },
+                          headerTintColor: '#fff'
+                        }}/>
           <Stack.Screen name="CreateProcess" component={CreateProcessScreen}
                         options={
                           ({ route }) => ({
@@ -85,6 +98,17 @@ const AppNavigator = () => {
                           })
                         }/>
           <Stack.Screen name="UpdateProcessManagers" component={UpdateProcessManagers}
+                        options={
+                          ({ route }) => ({
+                            title: route.params.process.title,
+                            headerStyle: {
+                              backgroundColor: '#228B22',
+                              fontWeight: 'bold',
+                            },
+                            headerTintColor: '#fff'
+                          })
+                        }/>
+          <Stack.Screen name="EditProcess" component={EditProcessScreen}
                         options={
                           ({ route }) => ({
                             title: route.params.process.title,
@@ -139,6 +163,17 @@ const AppNavigator = () => {
                             headerTintColor: '#fff'
                           })
                         }/>
+          <Stack.Screen name="EditPhase" component={EditPhaseScreen}
+                        options={
+                          ({ route }) => ({
+                            title: route.params.phase.title,
+                            headerStyle: {
+                              backgroundColor: '#228B22',
+                              fontWeight: 'bold',
+                            },
+                            headerTintColor: '#fff'
+                          })
+                        }/>
           <Stack.Screen name="Task" component={TaskScreen}
                         options={
                           ({ route }) => ({
@@ -162,6 +197,17 @@ const AppNavigator = () => {
                           })
                         }/>
           <Stack.Screen name="UpdateTaskAssignees" component={UpdateTaskAssignees}
+                        options={
+                          ({ route }) => ({
+                            title: route.params.task.title,
+                            headerStyle: {
+                              backgroundColor: '#228B22',
+                              fontWeight: 'bold',
+                            },
+                            headerTintColor: '#fff'
+                          })
+                        }/>
+          <Stack.Screen name="EditTask" component={EditTaskScreen}
                         options={
                           ({ route }) => ({
                             title: route.params.task.title,

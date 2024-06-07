@@ -95,7 +95,7 @@ const PhaseScreen = ({navigation, route}) => {
                     </View>
                 )}
                 {phaseData && (phaseData.phase.process.managers.map((manager) => manager.id).includes(userData.id) || phaseData.phase.phaseAdmins.map((admin) => admin.id).includes(userData.id)) && (
-                    <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#007BFF', borderRadius: 8, marginTop: 8 }]} onPress={() => { console.log('Edit Phase') }}>
+                    <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#007BFF', borderRadius: 8, marginTop: 8 }]} onPress={() => navigation.navigate('EditPhase', { phase: phaseData.phase, project: project, process: process })}>
                         <Text style={styles.lowerButtonText}>Edit Phase</Text>
                     </TouchableOpacity>
                 )}
@@ -149,6 +149,7 @@ const styles = {
         backgroundColor: '#fff',
         paddingHorizontal: '4%',
         paddingBottom: 10,
+        marginBottom: 20
     },
     phaseTitle: {
         fontSize: 22,
