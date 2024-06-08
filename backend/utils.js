@@ -1,33 +1,35 @@
 import { PubSub } from 'graphql-subscriptions'
-import { SESS_NAME, SESS_SECRET, SESS_LIFETIME, IN_PROD, GEMINI_API_KEY } from './config.js'
+import { GEMINI_API_KEY, REDIS_HOST } from './config.js'
 import session from 'express-session'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import redis from 'redis'
+import RedisStore from 'connect-redis'
 
 const pubSub = new PubSub()
 
-// const sessionMiddleware = session({
-//   name: SESS_NAME,
-//   secret: SESS_SECRET,
-//   resave: true,
-//   rolling: true,
-//   saveUninitialized: false,
-//   cookie: {
-//     maxAge: parseInt(SESS_LIFETIME),
-//     sameSite: true,
-//     secure: IN_PROD
-//   }
-// })
+let redisClient
+try {
+  redisClient = redis.createClient({
+    url: `redis://${REDIS_HOST}:6379`
+  })
+  if (!redisClient) throw new Error('Failed to connect to Redis')
+  await redisClient.connect()
+  console.log('Redis connected successfully')
+} catch (err) {
+  console.error(err)
+}
 
 const sessionMiddleware = session({
-  name: SESS_NAME,
-  secret: SESS_SECRET,
+  store: new RedisStore({ client: redisClient }),
+  name: 'apollo-session',
+  secret: 'secret-key',
   resave: true,
   rolling: true,
   saveUninitialized: false,
   cookie: {
-    maxAge: parseInt(SESS_LIFETIME),
+    maxAge: 3600000,
     sameSite: true,
-    secure: IN_PROD
+    secure: false
   }
 })
 

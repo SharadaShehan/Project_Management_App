@@ -9,15 +9,11 @@ import { WebSocketServer } from 'ws'
 import { useServer } from 'graphql-ws/lib/use/ws'
 import typeDefs from './typeDefs/index.js'
 import resolvers from './resolvers/index.js'
-// import { APP_PORT, DB_STRING } from './config.js'
-import { APP_PORT, DB_HOST, DB_PORT, DB_NAME } from './config.js'
+import { APP_PORT, DB_HOST, DB_ROOT_USER, DB_ROOT_USER_PASSWORD, DB_NAME } from './config.js'
 import mongoose from 'mongoose'
-// import { MongoClient, ObjectId } from 'mongodb'
 import { pubSub, sessionMiddleware } from './utils.js'
 
-const port = APP_PORT
-const DB_STRING = `mongodb://${DB_HOST}:${DB_PORT}/${DB_NAME}`
-
+const DB_STRING = `mongodb://${DB_ROOT_USER}:${DB_ROOT_USER_PASSWORD}@${DB_HOST}:27017/${DB_NAME}?authSource=admin`
 await mongoose.connect(DB_STRING)
   .then(() => console.log('MongoDB connected successfully'))
   .catch(err => console.log(err))
@@ -59,7 +55,7 @@ app.use('/graphql', bodyParser.json(), expressMiddleware(apolloServer, {
   context: ({ req, res }) => ({ req, res, pubSub })
 }))
 
-httpServer.listen(port, () => {
-  console.log(`🚀 Query endpoint ready at http://localhost:${port}/graphql`)
-  console.log(`🚀 Subscription endpoint ready at ws://localhost:${port}/graphql`)
+httpServer.listen(APP_PORT, () => {
+  console.log(`🚀 Query endpoint ready at http://localhost:${APP_PORT}/graphql`)
+  console.log(`🚀 Subscription endpoint ready at ws://localhost:${APP_PORT}/graphql`)
 })

@@ -4,17 +4,13 @@ dotenv.config()
 
 export const {
   APP_PORT,
-  NODE_ENV,
-  DB_USERNAME,
-  DB_PASSWORD,
   DB_HOST,
-  DB_PORT,
+  DB_ROOT_USER,
+  DB_ROOT_USER_PASSWORD,
   DB_NAME,
-  DB_STRING,
-  SESS_NAME,
-  SESS_SECRET,
-  SESS_LIFETIME,
-  REDIS_URL,
+  REDIS_HOST,
+  SESSION_NAME,
+  SESSION_SECRET,
   AWS_IAM_ROLE_ACCESS_KEY_ID,
   AWS_IAM_ROLE_SECRET_ACCESS_KEY,
   AWS_IAM_ROLE_REGION,
@@ -23,4 +19,4 @@ export const {
   GEMINI_API_KEY
 } = process.env
 
-export const IN_PROD = NODE_ENV === 'production'
+export const IN_PROD = true
