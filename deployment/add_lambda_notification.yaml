@@ -1,0 +1,464 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: AWS CloudFormation template to deploy Project Management App
+
+Parameters:
+  ConfigBucket:
+    Type: String
+    Description: 'The name of the S3 bucket where the configuration files are stored'
+  ECRRepository:
+    Description: "The ECR repository URI for the backend app"
+    Type: String
+  GeminiAPIKey:
+    Description: "The API key to access Google Gemini API"
+    Type: String
+  PrivateBucketName:
+    Description: "The name of the private S3 bucket for mobile app uploads"
+    Type: String
+    Default: "pma-resources-stack-upload-bucket"
+  PublicBucketName:
+    Description: "The name of the public S3 bucket"
+    Type: String
+    Default: "pma-resources-stack-public-bucket"
+  MongoDBUsername:
+    Description: "The MongoDB root username"
+    Type: String
+    Default: "root"
+  MongoDBPassword:
+    Description: "The MongoDB root password"
+    Type: String
+    Default: "password"
+  DatabaseName:
+    Description: "The name of the database"
+    Type: String
+    Default: "pma_app_db"
+  AppPort:
+    Description: "The port on which the backend app will run"
+    Type: Number
+    Default: 4000
+
+Resources:
+  # IAM user for Backend App to access S3
+  MyIAMUser:
+    Type: 'AWS::IAM::User'
+    Properties: 
+      UserName: !Sub "${AWS::StackName}-S3AdminUser"
+
+  # Attaching AmazonS3FullAccess policy to the user
+  MyS3FullAccessPolicy:
+    Type: 'AWS::IAM::ManagedPolicy'
+    DependsOn: MyIAMUser
+    Properties:
+      ManagedPolicyName: !Sub "${AWS::StackName}-S3FullAccessPolicy"
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Action: 
+              - 's3:*'
+              - 's3-object-lambda:*'
+            Resource: '*'
+      Users:
+        - !Ref MyIAMUser
+
+  # Access key for the IAM user
+  MyAccessKey:
+    Type: 'AWS::IAM::AccessKey'
+    Properties: 
+      UserName: !Ref MyIAMUser
+
+  # S3 bucket(private) for mobile app uploads
+  FirstBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Ref PrivateBucketName
+      AccessControl: Private
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: 's3:ObjectCreated:*'
+            Function: !GetAtt ResizeImageLambdaFunction.Arn
+  
+  # Permission for First Bucket to invoke Lambda function
+  LambdaInvokePermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      FunctionName: !GetAtt ResizeImageLambdaFunction.Arn
+      Action: 'lambda:InvokeFunction'
+      Principal: s3.amazonaws.com
+      SourceAccount: !Ref 'AWS::AccountId'
+      SourceArn: !Sub 'arn:aws:s3:::${FirstBucket}'
+  
+  # S3 bucket for public access
+  SecondBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Ref PublicBucketName
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: ObjectWriter
+
+  # Bucket policy for Second Bucket to allow public read
+  PublicReadBucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      Bucket: !Ref SecondBucket
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action: 's3:GetObject'
+            Resource: !Sub 'arn:aws:s3:::${SecondBucket}/*'
+
+  # Role for Lambda function to read from First Bucket and write to Second Bucket
+  ResizeImageLambdaExecutionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: !Sub "${AWS::StackName}-LambdaRole"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: !Sub "${AWS::StackName}-LambdaPolicy"
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: 'arn:aws:logs:*:*:*'
+              - Effect: Allow
+                Action:
+                  - 's3:GetObject'
+                Resource: 'arn:aws:s3:::*/*'
+              - Effect: Allow
+                Action:
+                  - 's3:PutObject'
+                Resource: !Sub 'arn:aws:s3:::${SecondBucket}/*'
+
+  # Lambda layer with libraries required for the function
+  LambdaLayerForFunction:
+    Type: AWS::Lambda::LayerVersion
+    Properties:
+      Description: "This layer contains libraries required to run the Lambda function"
+      CompatibleRuntimes:
+        - nodejs18.x
+      Content:
+        S3Bucket: !Ref ConfigBucket
+        S3Key: 'lambda-layer.zip'
+      LayerName: !Sub "${AWS::StackName}-LambdaLayer"
+      LicenseInfo: 'MIT'
+
+  # Lambda function to resize images
+  ResizeImageLambdaFunction:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Role: !GetAtt ResizeImageLambdaExecutionRole.Arn
+      FunctionName: !Sub "${AWS::StackName}-LambdaFunction"
+      Layers:
+        - !Ref LambdaLayerForFunction
+      Code:
+        ZipFile: |
+          const AWS = require('aws-sdk');
+          const S3 = new AWS.S3();
+          const Jimp = require('jimp');
+
+          exports.handler = async (event, context, callback) => {
+            const bucket = event.Records[0].s3.bucket.name;
+            const key = event.Records[0].s3.object.key;
+            console.log('file uploaded', bucket, key);
+
+            const params = {
+              Bucket: bucket,
+              Key: key
+            };
+
+            try {
+              const s3Object = await S3.getObject(params).promise();
+              const image = await Jimp.read(s3Object.Body);
+              image.resize(200, 200);
+
+              const resizedImageBuffer = await image.getBufferAsync(Jimp.MIME_PNG);
+
+              await S3.putObject({
+                Body: resizedImageBuffer,
+                Bucket: process.env.SECOND_BUCKET_NAME,
+                Key: key
+              }).promise();
+
+              callback(null, 'Image resized successfully');
+              console.log('Image resized successfully');
+            } catch (error) {
+              console.error(error);
+              callback(error);
+            }
+          };
+      Timeout: 60
+      Environment:
+        Variables:
+          SECOND_BUCKET_NAME: !Ref SecondBucket
+      TracingConfig:
+        Mode: Active
+
+  # VPC
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-VPC"
+
+  # Internet Gateway
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-IGW"
+
+  # Attaching Gateway to VPC
+  AttachGateway:
+    Type: "AWS::EC2::VPCGatewayAttachment"
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+  
+  # Public Subnet
+  PublicSubnet:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: "10.0.1.0/24"
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [ 0, !GetAZs ]
+      Tags:
+        - Key: "Name"
+          Value: !Sub "${AWS::StackName}-PublicSubnet"
+
+  # Private Subnet
+  PrivateSubnet:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: "10.0.2.0/24"
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [ 1, !GetAZs ]
+      Tags:
+        - Key: "Name"
+          Value: !Sub "${AWS::StackName}-PrivateSubnet"
+  
+  # Public Route Table
+  PublicRouteTable:
+    Type: "AWS::EC2::RouteTable"
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: "Name"
+          Value: !Sub "${AWS::StackName}-PublicRouteTable"
+    
+  # Public Route
+  Route:
+    Type: "AWS::EC2::Route"
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: "0.0.0.0/0"
+      GatewayId: !Ref InternetGateway
+
+  # Associating Route Table with Public Subnet
+  PublicSubnetRouteTableAssociation:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref PublicRouteTable
+
+  # Private Route Table
+  PrivateRouteTable:
+    Type: "AWS::EC2::RouteTable"
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: "Name"
+          Value: !Sub "${AWS::StackName}-PrivateRouteTable"
+
+  # Private Route
+  PrivateRoute:
+    Type: "AWS::EC2::Route"
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: "0.0.0.0/0"
+      GatewayId: !Ref InternetGateway
+
+  # Associating Route Table with Private Subnet
+  PrivateSubnetRouteTableAssociation:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      SubnetId: !Ref PrivateSubnet
+      RouteTableId: !Ref PrivateRouteTable
+  
+  # Security Group for Backend App
+  PublicSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: "Security Group for Project Management App Backend"
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: "tcp"
+          FromPort: 4000
+          ToPort: 4000
+          CidrIp: "0.0.0.0/0"
+        - IpProtocol: "tcp"   # Can be removed if SSH is not required
+          FromPort: 22
+          ToPort: 22
+          CidrIp: "0.0.0.0/0"
+    
+  # Security Group for MongoDB on EC2
+  PrivateSecurityGroupForMongoDB:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: "Security Group for MongoDB on EC2"
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: "tcp"
+          FromPort: 27017
+          ToPort: 27017
+          SourceSecurityGroupId: !GetAtt PublicSecurityGroup.GroupId
+
+  # Security Group for Redis on ElastiCache
+  PrivateSecurityGroupForRedis:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: "Security Group for Redis on ElastiCache"
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: "tcp"
+          FromPort: 6379
+          ToPort: 6379
+          SourceSecurityGroupId: !GetAtt PublicSecurityGroup.GroupId
+    
+  # ElastiCache Subnet Group
+  ElastiCacheSubnetGroup:
+    Type: "AWS::ElastiCache::SubnetGroup"
+    Properties:
+      Description: "Subnets for ElastiCache"
+      SubnetIds:
+        - !Ref PrivateSubnet
+  
+  # ElastiCache Cluster
+  ElastiCacheCluster:
+    Type: "AWS::ElastiCache::CacheCluster"
+    Properties:
+      CacheNodeType: "cache.t3.micro"
+      Engine: "redis"
+      NumCacheNodes: 1
+      VpcSecurityGroupIds: 
+        - !Ref PrivateSecurityGroupForRedis
+      CacheSubnetGroupName: !Ref ElastiCacheSubnetGroup
+      EngineVersion: "6.x"
+
+  # MongoDB EC2 Instance
+  MongoDBInstance:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      InstanceType: "t2.micro"
+      ImageId: "ami-04b70fa74e45c3917"
+      SubnetId: !Ref PrivateSubnet
+      SecurityGroupIds:
+        - !Ref PrivateSecurityGroupForMongoDB
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          apt-get update -y
+          sudo apt-get install -y docker.io
+          sudo docker run --name mongodb -d -p 27017:27017 \
+              -e MONGO_INITDB_ROOT_USERNAME=${MongoDBUsername} \
+              -e MONGO_INITDB_ROOT_PASSWORD=${MongoDBPassword} \
+              mongo
+
+  # IAM role for EC2 instance to access ECR
+  EC2InstanceRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "ec2.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Policies:
+        - PolicyName: !Sub "${AWS::StackName}-ECRPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "ecr:GetAuthorizationToken"
+                  - "ecr:BatchCheckLayerAvailability"
+                  - "ecr:GetDownloadUrlForLayer"
+                  - "ecr:GetRepositoryPolicy"
+                  - "ecr:DescribeRepositories"
+                  - "ecr:ListImages"
+                  - "ecr:BatchGetImage"
+                Resource: "*"
+
+  # Instance Profile for EC2 instance
+  EC2InstanceProfile:
+    Type: "AWS::IAM::InstanceProfile"
+    Properties:
+      Roles:
+        - !Ref EC2InstanceRole
+
+  # create a ec2 instance for backend app
+  BackendAppInstance:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      InstanceType: "t2.micro"
+      ImageId: "ami-04b70fa74e45c3917"
+      SubnetId: !Ref PublicSubnet
+      SecurityGroupIds:
+        - !Ref PublicSecurityGroup
+      IamInstanceProfile: !Ref EC2InstanceProfile
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          sudo apt-get update -y
+          sudo apt-get install -y docker.io
+          sudo apt install unzip curl -y
+          sudo curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          sudo unzip awscliv2.zip
+          sudo ./aws/install
+          sudo docker login -u AWS -p $(aws ecr get-login-password --region ${AWS::Region}) ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com
+          sudo docker run --name backend-app -d -p ${AppPort}:${AppPort} \
+              -e APP_PORT=${AppPort} \
+              -e DB_HOST=${MongoDBInstance.PrivateIp} \
+              -e DB_ROOT_USER=${MongoDBUsername} \
+              -e DB_ROOT_USER_PASSWORD=${MongoDBPassword} \
+              -e DB_NAME=${DatabaseName} \
+              -e REDIS_HOST=${ElastiCacheCluster.RedisEndpoint.Address} \
+              -e SESSION_NAME=pma_session \
+              -e SESSION_SECRET=pma_secret \
+              -e AWS_IAM_ROLE_ACCESS_KEY_ID=${MyAccessKey} \
+              -e AWS_IAM_ROLE_SECRET_ACCESS_KEY=${MyAccessKey.SecretAccessKey} \
+              -e AWS_IAM_ROLE_REGION=${AWS::Region} \
+              -e IMAGE_UPLOAD_S3_BUCKET_NAME=${PrivateBucketName} \
+              -e PUBLIC_READ_S3_BUCKET_NAME=${PublicBucketName} \
+              -e GEMINI_API_KEY=${GeminiAPIKey} \
+              ${ECRRepository}
+
+Outputs:
+  BackendAppInstancePublicIp:
+    Description: "Public IP Address of the Backend App Instance"
+    Value: !GetAtt BackendAppInstance.PublicIp
+    Export:
+      Name: "Backend-App-Instance-Public-Ip"
