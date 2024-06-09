@@ -2,7 +2,6 @@
 
 <h2 align="center">🏢 Backend Architecture 🛠️</h2>
 
-
 ![sysArchi](resources/Backend_Architecture.png)
 
 <h2 align="center">📚 Project Description 📚</h2>
@@ -75,3 +74,6 @@ When a user selects an image to upload, the mobile application sends a request t
 
 <h3 align="center">🔒 Deployment Security Measures 🔒</h3>
 Internet Gateway traffic is restricted to the backend server's security group, ensuring exclusive communication between the backend server and the Internet Gateway. Database and Elasticache instances are deployed in private subnets, preventing direct Internet access. The security groups for the database and Elasticache instances are configured to permit traffic solely from the backend server's security group on specific ports. The private S3 bucket is configured with bucket policies that allow only the Lambda function to retrieve objects. Similarly, the public S3 bucket is configured with bucket policies that permit only the Lambda function to upload objects, while allowing public read access to objects.
+
+<br>
+Refer `dev` branch for the Deployment Guide.
