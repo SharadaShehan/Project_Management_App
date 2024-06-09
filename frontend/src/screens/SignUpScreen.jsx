@@ -200,6 +200,7 @@ const styles = StyleSheet.create({
         borderRadius: 40,
         backgroundColor: 'white',
         paddingHorizontal: '4%',
+        marginTop: 20,
     },
     title: {
         fontSize: 24,

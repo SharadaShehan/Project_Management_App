@@ -67,7 +67,8 @@ const styles = StyleSheet.create({
     projectDescription: {
         maxWidth: '87%',
         fontSize: 14,
-        color: '#434343'
+        color: '#434343',
+        marginBottom: 5
     },
     projectStatus: {
         fontSize: 15,

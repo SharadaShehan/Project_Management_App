@@ -62,7 +62,7 @@ const MessagesScreen = ({ navigation }) => {
                             >{convertedDate}</Text>
                         </View>
                     </View>
-                    <View style={{ flexDirection: 'row', width: '90%', marginBottom: firstItem.content.length > 30 ? 15 : 0 }}>
+                    <View style={{ flexDirection: 'row', width: '84%', marginBottom: firstItem.content.length > 30 ? 15 : 0 }}>
                         {firstItem.sender && (firstItem.phase || firstItem.project) && <Text style={styles.contentText}>{firstItem.sender.firstName} {firstItem.sender.lastName} : {firstItem.content}</Text>}
                         {firstItem.receiver &&<Text style={styles.contentText}>{firstItem.content}</Text>}
                     </View>

@@ -6,7 +6,7 @@ import { useQuery } from '@apollo/client';
 
 const PostsScreen = ({ navigation, route }) => {
     const { data, loading, error } = useQuery(POSTS_QUERY, {
-        variables: { projectId: route.params.projectId }
+        variables: { projectId: route.params.projectId }, fetchPolicy: 'network-only'
     });
 
     const RenderItem = ({ item }) => {

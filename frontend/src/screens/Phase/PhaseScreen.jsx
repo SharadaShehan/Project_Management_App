@@ -20,7 +20,7 @@ const PhaseScreen = ({navigation, route}) => {
             <Text style={{ fontWeight: 'bold', fontSize: 15, alignSelf:'center' }}>{item.title}</Text>
             <Text style={{ fontSize: 12, alignSelf:'center', color: item.status === 'Active' ? '#009900' : '#FF0000' }}>{item.status}</Text>
             {item.description && <Text style={{ fontSize: 14, alignSelf:'center' }}>{item.description}</Text>}
-            {item.taskAssignees.length === 0 && <Text style={{ fontSize: 14, alignSelf:'center' }}>Task Unassigned</Text>}
+            {item.taskAssignees.length === 0 && <Text style={{ fontSize: 14, alignSelf:'center' }}>- - Task Unassigned - -</Text>}
             {item.taskAssignees.length > 0 && (
                 <View>
                     <Text style={{ fontWeight: 'bold', marginTop: 8, alignSelf:'center' }}>Task Assigned To</Text>
