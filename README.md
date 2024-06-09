@@ -1,34 +1,57 @@
-<h1 align="center">Project Management App</h2>
+# Project Management App
 
-The application was engineered to facilitate real-time project planning and enhance team coordination efficiency. 
+## Backend Deployment Guide
 
-Project management functionalities have been implemented at various hierarchical levels, including processes, phases, and tasks.
-The implementation enforces the principle of least privilege permissions, ensuring that administrators and members at each level possess only the necessary permissions to modify the project's state.
+1) Create an account in Google AI Studio and get an API key to access Gemini API.
 
-<p float="left" align="center">
-<img src="resources/projects.jpg"  width="30%">
-<img src="resources/process1.jpg"  width="30%">
-<img src="resources/process2.jpg"  width="30%">
-</p>
+2) Install AWS CLI. Then configure it with your AWS credentials using below command:
+    ```
+    aws configure
+    ```
 
-The platform incorporates forums where project members can post queries related to encountered issues, receiving responses from experts within the project community. Members can utilize upvoting mechanisms to elevate the visibility of significant questions and highlight superior answers.
+3) Navigate to the `backend` directory. Run below command to Login to AWS ECR. Replace `<your-aws-account-id>` with your AWS account ID and `<region>` with the region. Throughout this guide, use same region that you used in AWS CLI configuration.
+    ```
+    aws ecr get-login-password --region <region> | docker login --username AWS --password-stdin <your-aws-account-id>.dkr.ecr.<region>.amazonaws.com
+    ```
 
-<p float="left" align="center">
-<img src="resources/question1.jpg"  width="40%">
-<img src="resources/question3.jpg"  width="40%">
-</p>
+4) Create a repository in AWS ECR. Replace `<repository-name>` with the repository name you want to use.
+    ```
+    aws ecr create-repository --repository-name <repository-name>
+    ```
 
-Integration with the Google Gemini API, coupled with prompt engineering techniques, enables the generation of context-aware responses for forum questions.
+5) Run below command to build the Docker image. Replace `<image-name>` with the image name you want to use.
+    ```
+    docker build -t <image-name> .
+    ```
 
-<p float="left" align="center">
-<img src="resources/AI1.jpg"  width="40%">
-<img src="resources/AI2.jpg"  width="40%">
-</p>
+6) Run below command to tag the Docker image. Replace `<your-aws-account-id>`, `<region>` and `<repository-name>` with your AWS account ID, region and repository name respectively.
+    ```
+    docker tag <image-name>:latest <your-aws-account-id>.dkr.ecr.<region>.amazonaws.com/<repository-name>:latest
+    ```
 
-Private chats for person-to-person interactions and group chats at both project and phase levels have been provided for streamlined team management. The integration of GraphQL subscriptions ensures real-time communication in these chats, minimizing any communication delays.
+7) Run below command to push the Docker image to AWS ECR. Replace `<your-aws-account-id>`, `<region>` and `<repository-name>` with your AWS account ID, region and repository name respectively.
+    ```
+    docker push <your-aws-account-id>.dkr.ecr.<region>.amazonaws.com/<repository-name>:latest
+    ```
 
-<p float="left" align="center">
-<img src="resources/Messages.jpg"  width="30%">
-<img src="resources/projectChat.jpg"  width="30%">
-<img src="resources/real-time-chat.gif"  width="30%">
-</p>
+8) Navigate to the `deployment` directory. and run below command to create a S3 bucket for storing deployment artifacts. Replace `<your-bucket-name>` with your bucket name.
+    ```
+    aws s3 mb s3://<your-bucket-name>
+    ```
+
+9) Run below command to upload the deployment artifacts to the S3 bucket. Replace `<your-bucket-name>` with your bucket name.
+    ```
+    aws s3 cp lambda-layer.zip s3://<your-bucket-name>/
+    ```
+
+10) Run below command to create a CloudFormation stack for deploying the backend. Replace `<your-stack-name>`, `<your-config-bucket-name>`, `<your-aws-account-id>`, `<region>`, `<repository-name>` and `<gemini-api-key>` with your stack name, config bucket name, AWS account ID, region, repository name and Gemini API key respectively.
+    ```
+    aws cloudformation create-stack --stack-name <your-stack-name> --template-body file://deploy_resources.yaml  --capabilities CAPABILITY_NAMED_IAM --profile default --parameters ParameterKey=ECRRepository,ParameterValue="<your-aws-account-id>.dkr.ecr.<region>.amazonaws.com/<repository-name>" ParameterKey=GeminiAPIKey,ParameterValue="<gemini-api-key>" ParameterKey=ConfigBucket,ParameterValue="<your-config-bucket-name>" 
+    ```
+
+11) Update the stack (adding lambda triggering notification) by running below command. Replace `<your-stack-name>`, `<your-config-bucket-name>`, `<your-aws-account-id>`, `<region>`, `<repository-name>` and `<gemini-api-key>` with your stack name, config bucket name, AWS account ID, region, repository name and Gemini API key respectively.
+    ```
+    aws cloudformation update-stack --stack-name <your-stack-name> --template-body file://add_lambda_notification.yaml  --capabilities CAPABILITY_NAMED_IAM --profile default --parameters ParameterKey=ECRRepository,ParameterValue="<your-aws-account-id>.dkr.ecr.<region>.amazonaws.com/<repository-name>" ParameterKey=GeminiAPIKey,ParameterValue="<gemini-api-key>" ParameterKey=ConfigBucket,ParameterValue="<your-config-bucket-name>" 
+    ```
+
+12) Go to AWS CloudFormation console and check the status of the stack. Once the stack status is `CREATE_COMPLETE`, the backend is deployed successfully. You can get the backend IP address from the stack outputs.

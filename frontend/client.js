@@ -5,7 +5,7 @@ import { getMainDefinition } from '@apollo/client/utilities';
 import { createClient } from 'graphql-ws';
 import { SERVER_IP_ADDR, SERVER_PORT } from '@env';
 
-SERVER_IP_ADDR = '192.168.1.4';
+// SERVER_IP_ADDR = '44.210.93.80';
 
 console.log(`SERVER_IP_ADDR: ${SERVER_IP_ADDR}`);
 console.log(`SERVER_PORT: ${SERVER_PORT}`);
@@ -30,7 +30,7 @@ const splitLink = split(
     );
   },
   wsLink,
-  httpLink,
+  httpLink
 );
 
 const client = new ApolloClient({
