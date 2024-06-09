@@ -1,9 +1,9 @@
 <h1 align="center">🧑‍💻 Project Management App 🧑‍💻</h1>
 
-<h2 align="center">🏢 System Architecture 🛠️</h2>
+<h2 align="center">🏢 Backend Architecture 🛠️</h2>
 
 
-![sysArchi](images/System_Architecture.jpg)
+![sysArchi](resources/Backend_Architecture.png)
 
 <h2 align="center">📚 Project Description 📚</h2>
 
@@ -21,4 +21,5 @@ This project encompasses a mobile application designed to assist users in managi
 - Upvoting and downvoting of questions/answers in forums
 - Access to AI-generated answers for forum questions
 - Real-time chat messaging with other users, available in both private and group settings
+
 
