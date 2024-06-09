@@ -23,3 +23,33 @@ This project encompasses a mobile application designed to assist users in managi
 - Real-time chat messaging with other users, available in both private and group settings
 
 
+
+<p float="left" align="center">
+<img src="resources/login.jpg"  width="30%" height="50%">
+<img src="resources/signup.jpg"  width="30%" height="50%">
+<img src="resources/profile.jpg"  width="30%" height="50%">
+</p>
+
+<p float="left" align="center">
+<img src="resources/projects-list.jpg"  width="30%" height="50%">
+<img src="resources/project1.jpg"  width="30%" height="50%">
+<img src="resources/project2.jpg"  width="30%" height="50%">
+</p>
+
+<p float="left" align="center">
+<img src="resources/create-process.jpg"  width="30%" height="50%">
+<img src="resources/phase.jpg"  width="30%" height="50%">
+<img src="resources/task.jpg"  width="30%" height="50%">
+</p>
+
+<p float="left" align="center">
+<img src="resources/forum-post1.jpg"  width="30%" height="50%">
+<img src="resources/forum-post2.jpg"  width="30%" height="50%">
+<img src="resources/forum-post-ai-generated-answer.jpg"  width="30%" height="50%">
+</p>
+
+<p float="left" align="center">
+<img src="resources/messages.jpg"  width="30%" height="50%">
+<img src="resources/private-chat.jpg"  width="30%" height="50%">
+<img src="resources/project-chat.jpg"  width="30%" height="50%">
+</p>
