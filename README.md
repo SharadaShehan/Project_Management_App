@@ -59,4 +59,13 @@ This project encompasses a mobile application designed to assist users in managi
 <img src="resources/forum-post-ai-generated-answer.jpg"  width="30%" height="50%">
 </p>
 
+<h2 align="center">🔧 Technical Implementations 🔧</h2>
 
+<h3 align="center">📡 Real-time Communication 📡</h3>
+The application leverages GraphQL subscriptions to facilitate real-time communication between users. Chat messages are categorized into private, phase, and project chats. When a user sends a message from the mobile app, it is transmitted to the backend server via a GraphQL mutation. The server then determines the chat type and publishes the message to the appropriate subscribers. Subscriber applications receive the message, ascertain its type, and update the chat stack accordingly.
+
+<h3 align="center">📚 AI-generated Answers 📚</h3>
+When a user seeks an answer to a question in the forum, the mobile application notifies the backend server. The server retrieves relevant data from the database to construct a prompt containing the question and its context. This prompt is then sent to the Gemini API to generate a response. The generated answer is post-processed and subsequently sent back to the mobile application, where it is displayed to the user.
+
+<h3 align="center">🖼️ Image Upload Mechanism 🖼️</h3>
+When a user selects an image to upload, the mobile application sends a request to the backend server for a signed URL. The backend server generates a pre-signed URL for the image and returns it to the mobile application. The mobile application uses this signed URL to upload the image to a private S3 bucket. The creation of a new object in the private S3 bucket triggers a Lambda function, which processes the image and transfers it to a public S3 bucket. Upon completion of the upload, the mobile application notifies the backend server, which then updates the pre-signed URL to point to the image object in the public S3 bucket. This modified URL is stored in the database and sent back to the mobile application, which uses it to display the image with public access.
