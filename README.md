@@ -61,6 +61,9 @@ This project encompasses a mobile application designed to assist users in managi
 
 <h2 align="center">🔧 Technical Implementations 🔧</h2>
 
+<h3 align="center">🖥️ Backend Architecture 🖥️</h3>
+The backend server is developed using Express.js and Apollo Server. It interacts with a MongoDB database to store user, project, chat, and forum data. The application uses session authentication, with session management facilitated by Elasticache for Redis. Apollo Server supports both HTTP and WebSocket connections, enabling the use of GraphQL queries, mutations, and subscriptions. For deployment, an EC2 instance pulls the Docker image of the backend server from AWS ECR. The EC2 instance is pre-configured with an IAM role that grants it permissions to access the necessary AWS services.
+
 <h3 align="center">📡 Real-time Communication 📡</h3>
 The application leverages GraphQL subscriptions to facilitate real-time communication between users. Chat messages are categorized into private, phase, and project chats. When a user sends a message from the mobile app, it is transmitted to the backend server via a GraphQL mutation. The server then determines the chat type and publishes the message to the appropriate subscribers. Subscriber applications receive the message, ascertain its type, and update the chat stack accordingly.
 
@@ -69,3 +72,6 @@ When a user seeks an answer to a question in the forum, the mobile application n
 
 <h3 align="center">🖼️ Image Upload Mechanism 🖼️</h3>
 When a user selects an image to upload, the mobile application sends a request to the backend server for a signed URL. The backend server generates a pre-signed URL for the image and returns it to the mobile application. The mobile application uses this signed URL to upload the image to a private S3 bucket. The creation of a new object in the private S3 bucket triggers a Lambda function, which processes the image and transfers it to a public S3 bucket. Upon completion of the upload, the mobile application notifies the backend server, which then updates the pre-signed URL to point to the image object in the public S3 bucket. This modified URL is stored in the database and sent back to the mobile application, which uses it to display the image with public access.
+
+<h3 align="center">🔒 Deployment Security Measures 🔒</h3>
+Internet Gateway traffic is restricted to the backend server's security group, ensuring exclusive communication between the backend server and the Internet Gateway. Database and Elasticache instances are deployed in private subnets, preventing direct Internet access. The security groups for the database and Elasticache instances are configured to permit traffic solely from the backend server's security group on specific ports. The private S3 bucket is configured with bucket policies that allow only the Lambda function to retrieve objects. Similarly, the public S3 bucket is configured with bucket policies that permit only the Lambda function to upload objects, while allowing public read access to objects.
