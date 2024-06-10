@@ -2,7 +2,7 @@
 
 <h2 align="center">🏢 Backend Architecture 🛠️</h2>
 
-![sysArchi](resources/Backend_Architecture.png)
+![sysArchi](resources/Backend_Architecture_diagram.png)
 
 <h2 align="center">📚 Project Description 📚</h2>
 
