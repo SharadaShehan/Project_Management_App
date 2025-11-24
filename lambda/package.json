@@ -1,0 +1,40 @@
+{
+  "name": "project-management-lambda",
+  "version": "1.0.0",
+  "description": "Lambda functions for Project Management App",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "build": "npm run clean && npm run build:layer && npm run build:functions",
+    "build:layer": "mkdir -p layers/nodejs && cp package.json layers/nodejs/ && cd layers/nodejs && npm install --production --no-package-lock && cd .. && zip -r dependencies.zip nodejs -x '*.md' '.git/*'",
+    "build:functions": "mkdir -p dist && zip -r dist/lambda.zip . -x 'node_modules/*' 'layers/*' 'dist/*' '*.md' 'package-lock.json' '.git/*' '.DS_Store'",
+    "clean": "rm -rf dist layers/nodejs layers/dependencies.zip node_modules",
+    "test": "echo 'Tests not yet implemented' && exit 0",
+    "lint": "echo 'Linting not yet implemented' && exit 0"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.450.0",
+    "@aws-sdk/lib-dynamodb": "^3.450.0",
+    "@aws-sdk/client-s3": "^3.450.0",
+    "@aws-sdk/s3-request-presigner": "^3.450.0",
+    "@aws-sdk/client-cognito-identity-provider": "^3.450.0",
+    "@aws-sdk/client-ssm": "^3.450.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.55.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": [
+    "aws",
+    "lambda",
+    "serverless",
+    "project-management",
+    "appsync",
+    "dynamodb"
+  ],
+  "author": "SharadaShehan",
+  "license": "MIT"
+}

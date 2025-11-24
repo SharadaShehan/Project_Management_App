@@ -1,0 +1,288 @@
+# GraphQL Schema for Project Management App
+
+# Directives
+directive @aws_cognito_user_pools on FIELD_DEFINITION | OBJECT
+
+# Scalars
+scalar AWSDateTime
+
+# Root Types
+type Query {
+  # User queries
+  me: User @aws_cognito_user_pools
+  searchUsers(searchText: String!): [UserShortened!]! @aws_cognito_user_pools
+  
+  # Project queries
+  projects: [ProjectShortened!] @aws_cognito_user_pools
+  project(id: ID!): Project @aws_cognito_user_pools
+  
+  # Process queries
+  processes(projectId: ID!): [ProcessShortened!] @aws_cognito_user_pools
+  process(id: ID!): Process @aws_cognito_user_pools
+  
+  # Phase queries
+  phases(processId: ID!): [PhaseShortened!] @aws_cognito_user_pools
+  phase(id: ID!): Phase @aws_cognito_user_pools
+  
+  # Task queries
+  tasks(phaseId: ID!): [Task!] @aws_cognito_user_pools
+  task(id: ID!): Task @aws_cognito_user_pools
+  
+  # Forum queries
+  posts(projectId: ID!): [PostShortened!]! @aws_cognito_user_pools
+  post(id: ID!): Post! @aws_cognito_user_pools
+  
+  # Message queries
+  lastPrivateMessages: [PrivateMessage!] @aws_cognito_user_pools
+  lastProjectMessages: [ProjectMessage!] @aws_cognito_user_pools
+  lastPhaseMessages: [PhaseMessage!] @aws_cognito_user_pools
+  privateMessages(userId: ID!, lastMessageIndex: Int!, limit: Int!): [PrivateMessage!] @aws_cognito_user_pools
+  projectMessages(projectId: ID!, lastMessageIndex: Int!, limit: Int!): [ProjectMessage!] @aws_cognito_user_pools
+  phaseMessages(phaseId: ID!, lastMessageIndex: Int!, limit: Int!): [PhaseMessage!] @aws_cognito_user_pools
+  
+  # Request queries
+  sentRequests(projectId: ID!): [Request!]! @aws_cognito_user_pools
+  receivedRequests: [Request!]! @aws_cognito_user_pools
+}
+
+type Mutation {
+  # User mutations
+  signUp(username: String!, password: String!, firstName: String!, lastName: String!, gender: String, country: String, primaryEmail: String!, secondaryEmail: String, imageURL: String): User
+  signIn(username: String!, password: String!): User
+  signOut: Boolean @aws_cognito_user_pools
+  updateProfile(firstName: String!, lastName: String!, gender: String, country: String, primaryEmail: String!, secondaryEmail: String, imageURL: String): User @aws_cognito_user_pools
+  changePassword(currentPassword: String!, newPassword: String!): Boolean @aws_cognito_user_pools
+  getPresignedURL(filetype: String!): String @aws_cognito_user_pools
+  
+  # Project mutations
+  createProject(title: String!, description: String!, members: [ID!], logo: String): Project @aws_cognito_user_pools
+  updateProject(id: ID!, title: String, description: String, status: String, defaultProcess: ID): Project @aws_cognito_user_pools
+  deleteProject(id: ID!): Boolean @aws_cognito_user_pools
+  removeMember(projectId: ID!, memberId: ID!): Boolean @aws_cognito_user_pools
+  
+  # Process mutations
+  createProcess(projectId: ID!, name: String!, description: String!): Process @aws_cognito_user_pools
+  updateProcess(id: ID!, name: String, description: String): Process @aws_cognito_user_pools
+  deleteProcess(id: ID!): Boolean @aws_cognito_user_pools
+  
+  # Phase mutations
+  createPhase(processId: ID!, name: String!, description: String!, order: Int!): Phase @aws_cognito_user_pools
+  updatePhase(id: ID!, name: String, description: String, order: Int): Phase @aws_cognito_user_pools
+  deletePhase(id: ID!): Boolean @aws_cognito_user_pools
+  
+  # Task mutations
+  createTask(phaseId: ID!, title: String!, description: String!, assignee: ID!, deadline: String, priority: String): Task @aws_cognito_user_pools
+  updateTask(id: ID!, title: String, description: String, assignee: ID, deadline: String, priority: String, status: String): Task @aws_cognito_user_pools
+  deleteTask(id: ID!): Boolean @aws_cognito_user_pools
+  updateTaskStatus(id: ID!, status: String!): Task @aws_cognito_user_pools
+  
+  # Forum mutations
+  createPost(projectId: ID!, title: String!, content: String!): Post! @aws_cognito_user_pools
+  updatePost(id: ID!, title: String, content: String): Post! @aws_cognito_user_pools
+  deletePost(id: ID!): Boolean! @aws_cognito_user_pools
+  upvotePost(id: ID!): Post! @aws_cognito_user_pools
+  downvotePost(id: ID!): Post! @aws_cognito_user_pools
+  replyPost(postId: ID!, content: String!): Post! @aws_cognito_user_pools
+  upvoteReply(id: ID!): Post! @aws_cognito_user_pools
+  downvoteReply(id: ID!): Post! @aws_cognito_user_pools
+  deleteReply(id: ID!): Boolean! @aws_cognito_user_pools
+  getGeminiResponseForPost(postId: ID!): String! @aws_cognito_user_pools
+  
+  # Message mutations
+  createPrivateMessage(receiverId: ID!, content: String!): PrivateMessage @aws_cognito_user_pools
+  createProjectMessage(projectId: ID!, content: String!): ProjectMessage @aws_cognito_user_pools
+  createPhaseMessage(phaseId: ID!, content: String!): PhaseMessage @aws_cognito_user_pools
+  
+  # Request mutations
+  createRequests(projectId: ID!, receiverIds: [ID!]!): Boolean! @aws_cognito_user_pools
+  respondRequest(id: ID!, status: String!): Request! @aws_cognito_user_pools
+  deleteRequest(id: ID!): Boolean! @aws_cognito_user_pools
+}
+
+type Subscription {
+  newMessage(wsToken: String!): Message @aws_subscribe(mutations: ["createPrivateMessage", "createProjectMessage", "createPhaseMessage"])
+}
+
+# User Types
+type User {
+  id: ID!
+  username: String!
+  firstName: String!
+  lastName: String!
+  gender: String
+  country: String
+  primaryEmail: String!
+  secondaryEmail: String
+  projects: [Project!]
+  wsToken: String!
+  imageURL: String
+}
+
+type UserShortened {
+  id: ID!
+  username: String!
+  firstName: String!
+  lastName: String!
+  gender: String
+  imageURL: String
+}
+
+# Project Types
+type Project {
+  id: ID!
+  title: String!
+  description: String!
+  owner: UserShortened!
+  members: [UserShortened!]
+  status: String!
+  processes: [ProcessShortened!]
+  defaultProcess: ProcessShortened
+  logo: String
+}
+
+type ProjectShortened {
+  id: ID!
+  title: String!
+  description: String!
+  status: String!
+  defaultProcess: ProcessShortened
+  logo: String
+}
+
+# Process Types
+type Process {
+  id: ID!
+  name: String!
+  description: String!
+  project: ProjectShortened!
+  phases: [PhaseShortened!]
+  createdAt: AWSDateTime!
+}
+
+type ProcessShortened {
+  id: ID!
+  name: String!
+  description: String!
+}
+
+# Phase Types
+type Phase {
+  id: ID!
+  name: String!
+  description: String!
+  order: Int!
+  process: ProcessShortened!
+  tasks: [Task!]
+  createdAt: AWSDateTime!
+}
+
+type PhaseShortened {
+  id: ID!
+  name: String!
+  description: String!
+  order: Int!
+}
+
+# Task Types
+type Task {
+  id: ID!
+  title: String!
+  description: String!
+  phase: PhaseShortened!
+  assignee: UserShortened!
+  status: String!
+  priority: String
+  deadline: AWSDateTime
+  createdAt: AWSDateTime!
+  updatedAt: AWSDateTime!
+}
+
+# Forum Types
+type Post {
+  id: ID!
+  project: Project!
+  title: String!
+  content: String!
+  upvotes: Int!
+  upvotedUsers: [UserShortened!]
+  owner: UserShortened!
+  createdAt: AWSDateTime!
+  replies: [Reply]
+}
+
+type Reply {
+  id: ID!
+  post: Post!
+  content: String!
+  upvotes: Int!
+  upvotedUsers: [UserShortened!]
+  owner: UserShortened!
+  createdAt: AWSDateTime!
+}
+
+type PostShortened {
+  id: ID!
+  title: String!
+  content: String!
+  project: Project!
+  upvotes: Int!
+  owner: UserShortened!
+  createdAt: AWSDateTime!
+}
+
+# Message Types
+interface Message {
+  id: ID!
+  project: ProjectShortened
+  phase: PhaseShortened
+  sender: UserShortened!
+  receiver: UserShortened
+  content: String!
+  index: Int!
+  createdAt: AWSDateTime!
+  read: Boolean
+}
+
+type PrivateMessage implements Message {
+  id: ID!
+  project: ProjectShortened
+  phase: PhaseShortened
+  sender: UserShortened!
+  receiver: UserShortened!
+  content: String!
+  index: Int!
+  createdAt: AWSDateTime!
+  read: Boolean!
+}
+
+type ProjectMessage implements Message {
+  id: ID!
+  project: ProjectShortened!
+  phase: PhaseShortened
+  sender: UserShortened!
+  receiver: UserShortened
+  content: String!
+  index: Int!
+  createdAt: AWSDateTime!
+  read: Boolean
+}
+
+type PhaseMessage implements Message {
+  id: ID!
+  project: ProjectShortened!
+  phase: PhaseShortened!
+  sender: UserShortened!
+  receiver: UserShortened
+  content: String!
+  index: Int!
+  createdAt: AWSDateTime!
+  read: Boolean
+}
+
+# Request Types
+type Request {
+  id: ID!
+  project: Project!
+  receiver: UserShortened!
+  status: String!
+}
