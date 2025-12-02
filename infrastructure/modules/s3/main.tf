@@ -46,6 +46,8 @@ resource "aws_s3_bucket_lifecycle_configuration" "private" {
   rule {
     id     = "delete-old-versions"
     status = "Enabled"
+    
+    filter {}
 
     noncurrent_version_expiration {
       noncurrent_days = 30
@@ -130,6 +132,8 @@ resource "aws_s3_bucket_lifecycle_configuration" "public" {
   rule {
     id     = "delete-old-versions"
     status = "Enabled"
+    
+    filter {}
 
     noncurrent_version_expiration {
       noncurrent_days = 30

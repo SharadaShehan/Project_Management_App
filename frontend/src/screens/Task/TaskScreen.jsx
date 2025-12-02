@@ -1,164 +1,276 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, Alert } from 'react-native';
+import { View, Text, ScrollView, Alert, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@expo/vector-icons';
 import { TASK_QUERY } from '../../graphql/Queries';
 import { DELETE_TASK_MUTATION } from '../../graphql/Mutations';
 import { useQuery, useMutation } from '@apollo/client';
 import { UserGlobalState } from '../../layout/UserState';
+import { Button, Card, Badge, Avatar, LoadingSpinner } from '../../components';
+import { colors } from '../../theme/colors';
+import { typography } from '../../theme/typography';
+import { spacing, borderRadius } from '../../theme/spacing';
 
-const TaskScreen = ({navigation, route}) => {
-    const taskId = route.params.task.id;
-    const phase = route.params.phase;
+const TaskScreen = ({ navigation, route }) => {
+    const taskId = route.params?.task?.id;
+    
+    if (!taskId) {
+        Alert.alert('Error', 'Invalid task');
+        navigation.goBack();
+        return null;
+    }
+    const phase = route.params?.phase;
     const { userData } = UserGlobalState();
     const { data:taskData, loading:taskLoading, error:taskError } = useQuery(TASK_QUERY, { variables: { id: taskId }, fetchPolicy: 'network-only' });
-    const [deleteTask] = useMutation(DELETE_TASK_MUTATION);
+    const [deleteTask] = useMutation(DELETE_TASK_MUTATION, {
+        onCompleted: () => {
+            console.log('Task deleted successfully');
+            navigation.goBack();
+        },
+        onError: (error) => {
+            console.log('Delete task error:', error);
+            Alert.alert('Error', error.message);
+        }
+    });
+
+    if (taskLoading) {
+        return <LoadingSpinner fullScreen />;
+    }
+
+    if (taskError) {
+        return (
+            <View style={styles.errorContainer}>
+                <MaterialIcons name="error-outline" size={64} color={colors.status.error} />
+                <Text style={styles.errorText}>Failed to load task</Text>
+                <Button variant="primary" onPress={() => navigation.goBack()}>Go Back</Button>
+            </View>
+        );
+    }
 
     return (
         <SafeAreaView style={styles.container}>
-            <View style={styles.innerContainer}>
-                <ScrollView showsVerticalScrollIndicator={false}>
-                    {taskLoading && <Text>task Loading ...</Text>}
-                    {taskError && ( taskError.status === 401 ? navigation.navigate('Login') : console.log(taskError.message))}
-                    {taskData && (
-                        <View>
-                            <Text style={styles.taskTitle}>{taskData.task.title}</Text>
-                            <Text style={[styles.taskStatus, { color: taskData.task.status === 'Active' ? '#009900' : '#FF0000' }]}>{taskData.task.status}</Text>
-                            {taskData.task.description && <Text style={styles.taskDescription}>{taskData.task.description}</Text>}
-                            {taskData.task.endDate && !taskData.task.endTime && <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 5, alignSelf: 'center' }}>Due :- {taskData.task.endDate}</Text>}
-                            {taskData.task.endDate && taskData.task.endTime && <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 5, alignSelf: 'center' }}>Due :- {taskData.task.endDate} at {taskData.task.endTime}</Text>}
-                            <Text style={{ fontWeight: 'bold', fontSize: 17, marginTop: 10, alignSelf: 'center' }}>Assignees</Text>
-                            {taskData.task.taskAssignees.length === 0 && <Text style={{ fontWeight: 'bold', color: '#aaa', fontSize: 17, marginTop: 10, alignSelf: 'center', marginBottom: 8 }}>No Assignees For This Task</Text>}
-                            {taskData.task.taskAssignees.length > 0 && (
-                                <View>
+            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+                {taskData?.task && (
+                    <View>
+                        <Card style={styles.taskCard}>
+                            <View style={styles.header}>
+                                <Text style={styles.taskTitle}>{taskData.task.title}</Text>
+                                <Badge 
+                                    variant={taskData.task.status === 'Active' ? 'success' : 'error'}
+                                    size="md"
+                                >
+                                    {taskData.task.status}
+                                </Badge>
+                            </View>
+
+                            {taskData.task.description && (
+                                <Text style={styles.taskDescription}>{taskData.task.description}</Text>
+                            )}
+
+                            {taskData.task.endDate && (
+                                <View style={styles.dueDate}>
+                                    <MaterialIcons name="schedule" size={20} color={colors.text.secondary} />
+                                    <Text style={styles.dueDateText}>
+                                        Due: {taskData.task.endDate.split('T')[0]}
+                                        {taskData.task.endTime ? ` at ${taskData.task.endTime.substring(0, 5)}` : ''}
+                                    </Text>
+                                </View>
+                            )}
+                        </Card>
+
+                        <Card style={styles.assigneesCard}>
+                            <View style={styles.sectionHeader}>
+                                <MaterialIcons name="people" size={24} color={colors.primary.main} />
+                                <Text style={styles.sectionTitle}>Assignees</Text>
+                            </View>
+
+                            {taskData.task.taskAssignees?.length === 0 ? (
+                                <Text style={styles.noAssigneesText}>No assignees for this task</Text>
+                            ) : (
+                                <View style={styles.assigneesList}>
                                     {taskData.task.taskAssignees.map((assignee) => (
-                                        <View style={[styles.memberContainer,{ flexDirection: 'row', alignItems: 'center' }]} key={assignee.username+'0'}>
-                                            <Image source={assignee.imageURL ? { uri: assignee.imageURL } : require('../../../images/profile.webp')} style={{ width: 25, height: 25, borderRadius: 25, marginLeft: 5 }} />
-                                            <View style={{ marginLeft: 15 }} key={assignee.username+'2'}>
-                                                <Text style={{ fontWeight: 'bold' }} key={assignee.username+'1'}>{assignee.firstName} {assignee.lastName}</Text>
-                                                <Text style={{ fontSize: 12, color: '#434343' }} key={assignee.username+'3'}>{assignee.username}</Text>
+                                        <View style={styles.assigneeItem} key={assignee.id}>
+                                            <Avatar 
+                                                source={assignee.imageURL ? { uri: assignee.imageURL } : require('../../../images/profile.webp')}
+                                                name={`${assignee.firstName} ${assignee.lastName}`}
+                                                size="sm"
+                                            />
+                                            <View style={styles.assigneeInfo}>
+                                                <Text style={styles.assigneeName}>
+                                                    {assignee.firstName} {assignee.lastName}
+                                                </Text>
+                                                <Text style={styles.assigneeUsername}>@{assignee.username}</Text>
                                             </View>
                                         </View>
                                     ))}
                                 </View>
                             )}
-                            <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#007BFF', borderRadius: 8 }]} onPress={() => navigation.navigate('UpdateTaskAssignees', { task: taskData.task, phase: route.params.phase })}>
-                                <Text style={styles.lowerButtonText}>Assign/Unassign Task</Text>
-                            </TouchableOpacity>
+                        </Card>
+
+                        <View style={styles.actionsContainer}>
+                            <Button
+                                variant="primary"
+                                size="lg"
+                                fullWidth
+                                onPress={() => navigation.navigate('UpdateTaskAssignees', { task: taskData.task, phase: route.params.phase })}
+                                icon={<MaterialIcons name="person-add" size={20} color={colors.text.inverse} />}
+                            >
+                                Manage Assignees
+                            </Button>
+
+                            <Button
+                                variant="outline"
+                                size="lg"
+                                fullWidth
+                                onPress={() => navigation.navigate('EditTask', { task: taskData.task, phase: route.params.phase })}
+                                icon={<MaterialIcons name="edit" size={20} color={colors.primary.main} />}
+                                style={styles.actionButton}
+                            >
+                                Edit Task
+                            </Button>
+
+                            <Button
+                                variant="danger"
+                                size="lg"
+                                fullWidth
+                                onPress={() => {
+                                    Alert.alert(
+                                        'Delete Task',
+                                        'Are you sure you want to delete this task?',
+                                        [
+                                            { text: 'Cancel', style: 'cancel' },
+                                            { 
+                                                text: 'Delete', 
+                                                style: 'destructive',
+                                                onPress: () => deleteTask({ variables: { id: taskId } })
+                                            }
+                                        ]
+                                    );
+                                }}
+                                icon={<MaterialIcons name="delete" size={20} color={colors.text.inverse} />}
+                                style={styles.actionButton}
+                            >
+                                Delete Task
+                            </Button>
                         </View>
-                    )}
-                    <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#007BFF', borderRadius: 8, marginTop: 8 }]} onPress={() => navigation.navigate('EditTask', { task: taskData.task, phase: route.params.phase })}>
-                        <Text style={styles.lowerButtonText}>Edit Task</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={[styles.lowerButton, { backgroundColor: '#dd0000', borderRadius: 8, marginTop: 8 }]} onPress={() => {
-                        // prompt user to confirm deletion
-                        Alert.alert(
-                            'Delete Task',
-                            'Are you sure you want to delete this task?',
-                            [
-                                {
-                                    text: 'Cancel',
-                                    onPress: () => console.log('Cancelled'),
-                                    style: 'cancel'
-                                },
-                                {
-                                    text: 'Delete', onPress: async () => {
-                                        try {
-                                            await deleteTask({ variables: { id: taskId } });
-                                            navigation.goBack();
-                                        } catch (error) {
-                                            Alert.alert('Error', error.message);
-                                        }
-                                    }
-                                }
-                            ]
-                        );
-                    }}>
-                        <Text style={styles.lowerButtonText}>Delete Task</Text>
-                    </TouchableOpacity>
-                </ScrollView>
-            </View>
+                    </View>
+                )}
+            </ScrollView>
         </SafeAreaView>
     );
 }
 
-const styles = {
+const styles = StyleSheet.create({
     container: {
+        flex: 1,
+        backgroundColor: colors.background.default,
+    },
+    scrollContent: {
+        padding: spacing.lg,
+    },
+    errorContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        paddingHorizontal: 2,
-        paddingBottom: 10,
-        backgroundColor: '#4CBB17'
+        padding: spacing.xl,
+        backgroundColor: colors.background.default,
     },
-    innerContainer: {
-        width: '95%',
-        height: '100%',
-        borderRadius: 10,
-        backgroundColor: '#fff',
-        paddingHorizontal: '4%',
-        paddingBottom: 10,
-        marginBottom: 20
+    errorText: {
+        fontSize: typography.fontSize.lg,
+        color: colors.text.secondary,
+        marginTop: spacing.md,
+        marginBottom: spacing.lg,
+    },
+    taskCard: {
+        marginBottom: spacing.md,
+        borderWidth: 0,
+    },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: spacing.md,
+        gap: spacing.md,
     },
     taskTitle: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        marginBottom: 0,
-        marginTop: 20,
-        color: '#434343',
-        textAlign: 'center'
-    },
-    taskStatus: {
-        fontSize: 14,
-        marginBottom: 5,
-        color: '#434343',
-        textAlign: 'center'
+        fontSize: typography.fontSize.xl,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.text.primary,
+        flex: 1,
+        lineHeight: typography.lineHeight.tight * typography.fontSize.xl,
     },
     taskDescription: {
-        fontSize: 16,
-        marginBottom: 10,
-        color: '#434343',
-        textAlign: 'center'
+        fontSize: typography.fontSize.base,
+        color: colors.text.secondary,
+        lineHeight: typography.lineHeight.relaxed * typography.fontSize.base,
+        marginBottom: spacing.md,
+        textAlign: 'left',
     },
-    item: {
-        backgroundColor: '#eee',
-        padding: 10,
-        margin: 5,
-        borderRadius: 5,
-      },
-      selectedItem: {
-        backgroundColor: '#6BB64a',
-      },
-      itemText: {
-        color: '#000',
-      },
-        selectedItemText: {
-            color: '#fff',
-        },
-    taskContainer: {
-        backgroundColor: '#eee',
-        padding: 10,
-        margin: 5,
-        marginHorizontal: 0,
-        borderRadius: 5,
-    },
-    memberContainer: {
-        backgroundColor: '#eee',
-        padding: 10,
-        margin: 5,
-        borderRadius: 5,
-    },
-    lowerButton: {
-        padding: 10,
-        margin: 5,
-        borderRadius: 5,
-        // width: '100%',
+    dueDate: {
+        flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
+        gap: spacing.xs,
+        marginTop: spacing.sm,
     },
-    lowerButtonText: {
-        color: '#fff',
-        fontSize: 16,
+    dueDateText: {
+        fontSize: typography.fontSize.sm,
+        color: colors.text.secondary,
+        fontWeight: typography.fontWeight.medium,
     },
-}
+    assigneesCard: {
+        marginBottom: spacing.lg,
+        borderWidth: 0,
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+        marginBottom: spacing.md,
+    },
+    sectionTitle: {
+        fontSize: typography.fontSize.lg,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.text.primary,
+    },
+    noAssigneesText: {
+        fontSize: typography.fontSize.base,
+        color: colors.text.secondary,
+        fontStyle: 'italic',
+        textAlign: 'center',
+        paddingVertical: spacing.lg,
+    },
+    assigneesList: {
+        gap: spacing.sm,
+    },
+    assigneeItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: spacing.md,
+        backgroundColor: colors.neutral[50],
+        borderRadius: borderRadius.lg,
+        gap: spacing.md,
+    },
+    assigneeInfo: {
+        flex: 1,
+    },
+    assigneeName: {
+        fontSize: typography.fontSize.base,
+        fontWeight: typography.fontWeight.medium,
+        color: colors.text.primary,
+        marginBottom: spacing.xs / 2,
+        lineHeight: typography.lineHeight.normal * typography.fontSize.base,
+    },
+    assigneeUsername: {
+        fontSize: typography.fontSize.sm,
+        color: colors.text.secondary,
+        lineHeight: typography.lineHeight.normal * typography.fontSize.sm,
+    },
+    actionsContainer: {
+        gap: spacing.md,
+    },
+    actionButton: {
+        marginTop: 0,
+    },
+})
 
 export default TaskScreen;

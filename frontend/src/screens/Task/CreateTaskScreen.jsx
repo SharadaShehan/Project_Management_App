@@ -1,14 +1,24 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Button, TextInput } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { CREATE_TASK_MUTATION } from '../../graphql/Mutations';
 import { useMutation } from '@apollo/client';
-import { Alert } from 'react-native';
-import { useState } from 'react';
+import { parseErrorMessage } from '../../utils/errorHandler';
+import { Button, TextInput as ThemedTextInput, Card } from '../../components';
+import { colors } from '../../theme/colors';
+import { typography } from '../../theme/typography';
+import { spacing, borderRadius } from '../../theme/spacing';
 
 const CreateTaskScreen = ({ navigation, route }) => {
-    const phaseId = route.params.phase.id;
+    const phaseId = route.params?.phase?.id;
+    
+    if (!phaseId) {
+        Alert.alert('Error', 'Invalid phase');
+        navigation.goBack();
+        return null;
+    }
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [endDate, setEndDate] = useState('');
@@ -20,183 +30,217 @@ const CreateTaskScreen = ({ navigation, route }) => {
     
     const createTaskHandler = async () => {
         try {
-            let variables = {};
-            if (phaseId) variables.phaseId = phaseId;
-            if (title) variables.title = title;
-            if (description) variables.description = description;
+            // Validate required fields
+            if (!title || !title.trim()) {
+                Alert.alert('Error', 'Title is required');
+                return;
+            }
+            if (!description || !description.trim()) {
+                Alert.alert('Error', 'Description is required');
+                return;
+            }
+            
+            let variables = {
+                phaseId,
+                title: title.trim(),
+                description: description.trim()
+            };
+            
             if (endDate) variables.endDate = endDate;
             if (endTime) variables.endTime = endTime;
             if (timezoneOffset) variables.timezoneOffset = timezoneOffset;
+            
+            console.log('Creating task with variables:', variables);
             const response = await createTask({ variables: variables });
-            if (response.data.createTask.id) {
+            console.log('Response:', JSON.stringify(response, null, 2));
+            if (response?.data?.createTask?.id) {
                 Alert.alert('Task Created');
                 navigation.navigate('Task', { task: response.data.createTask, phase: route.params.phase });
             } else {
-                Alert.alert('An error occurred, please try again');
+                // Check if there are errors in the response
+                console.log('Response errors:', response?.errors);
+                if (response?.errors && response.errors.length > 0) {
+                    const errorMsg = parseErrorMessage({ graphQLErrors: response.errors });
+                    console.log('Parsed error message:', errorMsg);
+                    Alert.alert('Error', errorMsg);
+                } else {
+                    console.log('No response data and no errors');
+                    Alert.alert('Error', 'An error occurred, please try again');
+                }
             }
         } catch (err) {
-            console.log(err);
-            // separate each sentence into new line in err.message
-            const message = err.message.split('.').join('.\n');
-            Alert.alert('Error', message);
+            console.log('Caught error:', err);
+            console.log('Error message:', err.message);
+            const errorMsg = parseErrorMessage(err);
+            console.log('Parsed error message:', errorMsg);
+            Alert.alert('Error', errorMsg);
         }
     }
 
     return (
-        <SafeAreaView style={styles.createTaskContainer}>
-            <View style={styles.innerContainer}>
-                <Text style={styles.title}>Create Task</Text>
-                <View style={styles.inputContainer}>
-                    <TextInput
-                        style={styles.input}
+        <SafeAreaView style={styles.container}>
+            <ScrollView contentContainerStyle={styles.scrollContent}>
+                <Card style={styles.formCard}>
+                    <Text style={styles.title}>Create Task</Text>
+                    
+                    <ThemedTextInput
                         placeholder="Task Title"
                         value={title}
                         onChangeText={setTitle}
-                    />
-                    <TextInput
+                        icon={<MaterialIcons name="title" size={20} color={colors.neutral[400]} />}
                         style={styles.input}
+                    />
+                    
+                    <ThemedTextInput
                         placeholder="Task Description"
                         value={description}
                         onChangeText={setDescription}
+                        icon={<MaterialIcons name="description" size={20} color={colors.neutral[400]} />}
+                        multiline
+                        numberOfLines={4}
+                        style={styles.textArea}
                     />
-                    {endDate && <Text style={{ fontWeight: 'bold', fontSize: 16, marginTop: 6, alignSelf: 'center', marginBottom: 4 }}>End Date: {endDate}</Text>}
-                    {!endDate && <Text style={{ fontWeight: 'bold', fontSize: 16, marginTop: 6, alignSelf: 'center', marginBottom: 4 }}>Select End Date</Text>}
-                    <Button title="Show Date Picker" onPress={() => setDatePickerVisibility(true)} />
-                    {isDatePickerVisible &&
-                    <DateTimePicker
-                        mode="date"
-                        value={new Date()}
-                        onChange={(event, date) => {setEndDate(date.toISOString().split('T')[0]); setDatePickerVisibility(false);}}
-                    />}
-                    {endTime && <Text style={{ fontWeight: 'bold', fontSize: 16, marginTop: 6, alignSelf: 'center', marginBottom: 4 }}>End Time: {endTime}</Text>}
-                    {!endTime && <Text style={{ fontWeight: 'bold', fontSize: 16, marginTop: 6, alignSelf: 'center', marginBottom: 4 }}>Select End Time</Text>}
-                    <Button title="Show Time Picker" onPress={() => setTimePickerVisibility(true)} />
-                    {isTimePickerVisible &&
-                    <DateTimePicker
-                        mode="time"
-                        value={new Date()}
-                        onChange={(event, date) => {setEndTime(date.toTimeString().split(' ')[0].slice(0, 5)); setTimePickerVisibility(false);}}
-                    />}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                        <Text style={{ fontWeight: 'bold', fontSize: 16, marginTop: 14, alignSelf: 'center', width: '65%' }}>Timezone Offset for Values</Text>
-                        <TextInput
-                            style={styles.timezoneInput}
+                    
+                    <View style={styles.dateSection}>
+                        <Text style={styles.sectionLabel}>End Date & Time</Text>
+                        <TouchableOpacity 
+                            style={styles.dateButton}
+                            onPress={() => setDatePickerVisibility(true)}
+                        >
+                            <MaterialIcons name="event" size={20} color={colors.primary.main} />
+                            <Text style={styles.dateButtonText}>
+                                {endDate ? `Date: ${endDate}` : 'Select End Date'}
+                            </Text>
+                        </TouchableOpacity>
+                        
+                        <TouchableOpacity 
+                            style={styles.dateButton}
+                            onPress={() => setTimePickerVisibility(true)}
+                        >
+                            <MaterialIcons name="access-time" size={20} color={colors.primary.main} />
+                            <Text style={styles.dateButtonText}>
+                                {endTime ? `Time: ${endTime}` : 'Select End Time'}
+                            </Text>
+                        </TouchableOpacity>
+                        
+                        <ThemedTextInput
                             placeholder="Timezone Offset"
                             value={timezoneOffset.toString()}
                             onChangeText={setTimezoneOffset}
+                            icon={<MaterialIcons name="public" size={20} color={colors.neutral[400]} />}
+                            keyboardType="numeric"
+                            style={styles.input}
                         />
                     </View>
+                    
+                    {isDatePickerVisible &&
+                        <DateTimePicker
+                            mode="date"
+                            value={new Date()}
+                            onChange={(event, date) => {
+                                setEndDate(date.toISOString().split('T')[0]);
+                                setDatePickerVisibility(false);
+                            }}
+                        />
+                    }
+                    {isTimePickerVisible &&
+                        <DateTimePicker
+                            mode="time"
+                            value={new Date()}
+                            onChange={(event, date) => {
+                                setEndTime(date.toTimeString().split(' ')[0].slice(0, 5));
+                                setTimePickerVisibility(false);
+                            }}
+                        />
+                    }
+                </Card>
+                
+                <View style={styles.buttonContainer}>
+                    <Button
+                        variant="outline"
+                        size="lg"
+                        onPress={() => navigation.goBack()}
+                        style={styles.buttonHalf}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="primary"
+                        size="lg"
+                        onPress={createTaskHandler}
+                        icon={<MaterialIcons name="add" size={20} color={colors.text.inverse} />}
+                        style={styles.buttonHalf}
+                    >
+                        Create
+                    </Button>
                 </View>
-                <View style={styles.rowButtonsContainer}>
-                    <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
-                        <Text style={styles.buttonText}>Cancel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.button} onPress={createTaskHandler}>
-                        <Text style={styles.buttonText}>Create</Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
+            </ScrollView>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    createTaskContainer: {
+    container: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#4CBB17',
+        backgroundColor: colors.background.default,
     },
-    innerContainer: {
-        width: '90%',
-        height: '90%',
-        backgroundColor: '#fff',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: 10,
+    scrollContent: {
+        padding: spacing.lg,
+    },
+    formCard: {
+        marginBottom: spacing.lg,
+        borderWidth: 0,
     },
     title: {
-        fontSize: 24,
-        marginTop: '12%',
+        fontSize: typography.fontSize['2xl'],
+        fontWeight: typography.fontWeight.bold,
+        color: colors.text.primary,
+        marginBottom: spacing.xl,
         textAlign: 'center',
-        color: '#000',
-        fontWeight: 'bold',
-    },
-    inputContainer: {
-        marginTop: '5%',
-        alignItems: 'center',
-        marginBottom: '6%',
-        width: '100%',
     },
     input: {
-        width: '80%',
-        height: 35,
-        borderColor: '#007BFF',
-        borderWidth: 1,
-        borderLeftWidth: 0,
-        borderRightWidth: 0,
-        borderTopWidth: 0,
-        // borderRadius: 10,
-        marginBottom: '5%',
-        padding: 5,
+        marginBottom: spacing.lg,
     },
-    timezoneInput: {
-        width: '15%',
-        height: 30,
-        borderColor: '#007BFF',
-        borderWidth: 1,
-        borderLeftWidth: 0,
-        borderRightWidth: 0,
-        borderTopWidth: 0,
-        // borderRadius: 10,
-        marginTop: '5%',
-        marginBottom: '3%',
-        padding: 5,
+    textArea: {
+        marginBottom: spacing.lg,
+        minHeight: 100,
+        textAlignVertical: 'top',
     },
-    removeBtn: {
-        color: 'white',
-        backgroundColor: 'red',
-        padding: 3,
-        width: '80%',
-        borderRadius: 5,
-        fontSize: 14,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        marginLeft: 5,
+    dateSection: {
+        marginTop: spacing.lg,
+        paddingTop: spacing.lg,
+        borderTopWidth: 1,
+        borderTopColor: colors.neutral[100],
     },
-    userItemContainer: {
-        padding: 10,
-        backgroundColor: '#eee',
-        marginVertical: 2,
-        borderRadius: 15,
-        width: '100%',
+    sectionLabel: {
+        fontSize: typography.fontSize.base,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.text.primary,
+        marginBottom: spacing.md,
     },
-    fullName: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#434343',
-        paddingLeft: 8,
-    },
-    username: {
-        fontSize: 12,
-        color: '#434343',
-        paddingRight: 8,
-    },
-    rowButtonsContainer: {
-        marginTop: '2%',
+    dateButton: {
         flexDirection: 'row',
+        alignItems: 'center',
+        padding: spacing.md,
+        backgroundColor: colors.neutral[50],
+        borderRadius: borderRadius.lg,
+        marginBottom: spacing.md,
+        gap: spacing.sm,
+        borderWidth: 1,
+        borderColor: colors.border.light,
     },
-    button: {
-        backgroundColor: '#007BFF',
-        padding: 10,
-        borderRadius: 5,
-        width: '44%',
-        alignSelf: 'center',
-        marginHorizontal: '3%',
+    dateButtonText: {
+        fontSize: typography.fontSize.base,
+        color: colors.text.primary,
+        flex: 1,
     },
-    buttonText: {
-        color: 'white',
-        textAlign: 'center',
+    buttonContainer: {
+        flexDirection: 'row',
+        gap: spacing.md,
+        marginTop: spacing.md,
+    },
+    buttonHalf: {
+        flex: 1,
     },
 });
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { SIGNUP_MUTATION, GET_PRESIGNED_URL_MUTATION } from '../queries/Mutations';
+import { SIGNUP_MUTATION, GET_PRESIGNED_URL_MUTATION } from '../graphql/Mutations';
 import { useMutation, useQuery } from '@apollo/client';
 import { UserGlobalState } from '../layout/UserState';
 import { RadioButton } from 'react-native-paper';
@@ -144,7 +144,7 @@ const SignUp = ({navigation}) => {
                                 imageURL,
                             }
                         });
-                        if (response.data.signUp.firstName) {
+                        if (response?.data?.signUp?.firstName) {
                             setUserData({
                                 id: response.data.signUp.id,
                                 firstName: response.data.signUp.firstName,

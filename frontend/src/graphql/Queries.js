@@ -1,5 +1,22 @@
 import { gql } from '@apollo/client';
 
+const GET_USER_PROFILE_QUERY = gql`
+    query getMe {
+        me {
+            id
+            username
+            firstName
+            lastName
+            gender
+            country
+            primaryEmail
+            secondaryEmail
+            imageURL
+            wsToken
+        }
+    }
+`;
+
 const PROJECTS_QUERY = gql`
     query projects {
         projects {
@@ -34,7 +51,7 @@ const ONE_PROJECT_QUERY = gql`
             status
             processes {
                 id
-                title
+                name
             }
             defaultProcess {
                 id
@@ -50,34 +67,20 @@ const PROCESS_QUERY = gql`
             id
             project {
                 id
-            }
-            title
-            description
-            status
-            priority
-            managers {
-                id
-                username
-                firstName
-                lastName
-                imageURL
-            }
-            phases {
-                id
-                process {
-                    id
-                }
                 title
                 description
-                order
-                endDate
-                endTime
-                timezoneOffset
                 status
-                phaseMembers {
-                    id
-                }
+                logo
             }
+            name
+            description
+            phases {
+                id
+                name
+                description
+                order
+            }
+            createdAt
         }
     }
 `;
@@ -419,7 +422,7 @@ const RECEIVED_REQUESTS_QUERY = gql`
     }
 `;
 
-export { PROJECTS_QUERY, ONE_PROJECT_QUERY, PROCESS_QUERY, PHASE_QUERY, TASK_QUERY, LAST_PRIVATE_MESSAGES_QUERY, LAST_PROJECT_MESSAGES_QUERY, 
+export { GET_USER_PROFILE_QUERY, PROJECTS_QUERY, ONE_PROJECT_QUERY, PROCESS_QUERY, PHASE_QUERY, TASK_QUERY, LAST_PRIVATE_MESSAGES_QUERY, LAST_PROJECT_MESSAGES_QUERY, 
     LAST_PHASE_MESSAGES_QUERY, PRIVATE_MESSAGES_QUERY, PROJECT_MESSAGES_QUERY, PHASE_MESSAGES_QUERY,
     POSTS_QUERY, POST_QUERY,
     SENT_REQUESTS_QUERY, RECEIVED_REQUESTS_QUERY };

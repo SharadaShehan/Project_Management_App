@@ -115,6 +115,8 @@ async function generateAIAnswerHandler(event) {
     replyId,
     authorId: 'AI_ASSISTANT', // Special ID for AI-generated content
     content: aiContent,
+    upvotes: 0,
+    upvotedUserIds: [],
     isAIGenerated: true,
     createdAt: timestamp,
     updatedAt: timestamp
@@ -152,22 +154,8 @@ async function generateAIAnswerHandler(event) {
     }
   );
   
-  // Return AI-generated reply
-  return {
-    id: replyId,
-    content: aiContent,
-    author: {
-      id: 'AI_ASSISTANT',
-      username: 'AI Assistant',
-      firstName: 'AI',
-      lastName: 'Assistant',
-      gender: null,
-      imageURL: null
-    },
-    isAIGenerated: true,
-    createdAt: timestamp,
-    updatedAt: timestamp
-  };
+  // Return AI-generated content as String
+  return aiContent;
 }
 
 export const handler = lambdaHandler(generateAIAnswerHandler);

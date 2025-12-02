@@ -7,17 +7,25 @@ import { useMutation, useQuery } from '@apollo/client';
 import { UserGlobalState } from '../../layout/UserState';
 
 const RemoveMemberScreen = ({ navigation, route }) => {
+    const projectId = route.params?.project?.id;
+    
+    if (!projectId) {
+        Alert.alert('Error', 'Invalid project');
+        navigation.goBack();
+        return null;
+    }
+    
     const { userData, setUserData } = UserGlobalState();
     const [removeMember] = useMutation(REMOVE_MEMBER_MUTATION);
-    const { data:projectData, loading:projectLoading, error:projectError } = useQuery(ONE_PROJECT_QUERY, { variables: { id: route.params.project.id }, fetchPolicy: 'network-only' });
+    const { data:projectData, loading:projectLoading, error:projectError } = useQuery(ONE_PROJECT_QUERY, { variables: { id: projectId }, fetchPolicy: 'network-only' });
 
     const removeMemberHandler = async (memberId) => {
         try {
-            if (!memberId || !route.params.project.id) {
+            if (!memberId || !projectId) {
                 Alert.alert('An error occurred, please try again');
                 return;
             }
-            const variables = { memberId: memberId, projectId: route.params.project.id };
+            const variables = { memberId: memberId, projectId: projectId };
             const response = await removeMember({ variables: variables });
             if (response.data.removeMember) {
                 Alert.alert('Member removed');
@@ -28,7 +36,7 @@ const RemoveMemberScreen = ({ navigation, route }) => {
         } catch (err) {
             console.log(err);
             // separate each sentence into new line in err.message
-            const message = err.message.split('.').join('.\n');
+            const message = err.message ? err.message.split('.').join('.\n') : 'An unexpected error occurred';
             Alert.alert('Error', message);
         }
     }
@@ -73,15 +81,15 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#4CBB17',
+        backgroundColor: '#F9FAFB',
     },
     innerContainer: {
         width: '90%',
         height: '90%',
-        backgroundColor: '#fff',
+        backgroundColor: '#FFFFFF',
         justifyContent: 'center',
         alignItems: 'center',
-        borderRadius: 10,
+        borderRadius: 12,
     },
     title: {
         fontSize: 24,
@@ -99,14 +107,11 @@ const styles = StyleSheet.create({
     input: {
         width: '80%',
         height: 35,
-        borderColor: '#007BFF',
+        borderColor: '#E5E7EB',
         borderWidth: 1,
-        borderLeftWidth: 0,
-        borderRightWidth: 0,
-        borderTopWidth: 0,
-        // borderRadius: 10,
-        marginBottom: '5%',
-        padding: 5,
+        borderRadius: 8,
+        marginBottom: 16,
+        padding: 8,
     },
     removeBtn: {
         color: 'white',
@@ -120,10 +125,10 @@ const styles = StyleSheet.create({
         marginLeft: 5,
     },
     userItemContainer: {
-        padding: 10,
-        backgroundColor: '#eee',
-        marginVertical: 2,
-        borderRadius: 15,
+        padding: 12,
+        backgroundColor: '#F9FAFB',
+        marginVertical: 4,
+        borderRadius: 8,
         width: '100%',
     },
     fullName: {
@@ -142,9 +147,9 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
     },
     button: {
-        backgroundColor: '#007BFF',
+        backgroundColor: '#2563EB',
         padding: 10,
-        borderRadius: 5,
+        borderRadius: 8,
         width: '44%',
         alignSelf: 'center',
         marginHorizontal: '3%',

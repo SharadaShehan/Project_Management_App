@@ -1,38 +1,32 @@
-import { Button, Text } from 'react-native';
+import { Button, Text, Alert } from 'react-native';
 import React from 'react';
 import { TouchableOpacity } from 'react-native';
-import { SIGNOUT_MUTATION } from '../graphql/Mutations';
-import { useMutation } from '@apollo/client';
-import MIcon from 'react-native-vector-icons/MaterialCommunityIcons';
-import MatIcon from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { UserGlobalState } from '../layout/UserState';
+import { signOut } from 'aws-amplify/auth';
 
 const LogOutBtn = ({ navigation }) => {
     const { userData, setUserData } = UserGlobalState();
-    const [signOut, { data, loading, error }] = useMutation(SIGNOUT_MUTATION);
 
     return (
         <TouchableOpacity onPress={
             async () => {
                 try {
-                    const response = await signOut();
-                    if (response.data.signOut) {
-                        setUserData({
-                            id: null,
-                            firstName: null,
-                            lastName: null,
-                            username: null
-                        });
-                        navigation.navigate('Login');
-                    } else {
-                        alert('failed to logout');
-                    }
+                    await signOut();
+                    setUserData({
+                        id: null,
+                        firstName: null,
+                        lastName: null,
+                        username: null
+                    });
+                    navigation.navigate('Login');
                 } catch (err) {
-                    console.log(err);
+                    console.log('Sign out error:', err);
+                    Alert.alert('Error', 'Failed to sign out');
                 }
             }
         }>
-        <MatIcon name="logout" size={30} color="#fff"
+        <MaterialIcons name="logout" size={30} color="#fff"
         style={{
             marginRight: 12, 
         }}/>

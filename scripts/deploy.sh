@@ -2,11 +2,17 @@
 
 # Complete Deployment Script for Project Management App
 # This script deploys the entire serverless infrastructure
+# Usage: ./scripts/deploy.sh [environment]
+# Example: ./scripts/deploy.sh production
 
 set -e
 
+# Get environment from argument or default to development
+ENVIRONMENT=${1:-development}
+
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "🚀 Project Management App - AWS Deployment"
+echo "   Environment: $ENVIRONMENT"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
@@ -14,6 +20,7 @@ echo ""
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Function to print colored output
@@ -27,6 +34,10 @@ print_error() {
 
 print_warning() {
     echo -e "${YELLOW}⚠${NC} $1"
+}
+
+print_info() {
+    echo -e "${BLUE}ℹ${NC} $1"
 }
 
 # Check prerequisites
@@ -90,25 +101,21 @@ npm run build:functions
 cd ..
 print_status "Lambda functions built successfully"
 
-# Upload Lambda layer to S3 (if using remote deployment)
+# Verify Lambda artifacts exist
 echo ""
-echo "☁️  Preparing Lambda deployment..."
-LAMBDA_BUCKET="project-mgmt-lambda-deploy-${AWS_ACCOUNT}"
+echo "☁️  Verifying Lambda artifacts..."
 
-# Check if bucket exists, create if not
-if ! aws s3 ls "s3://${LAMBDA_BUCKET}" 2>&1 | grep -q 'NoSuchBucket'; then
-    print_status "Using existing S3 bucket: ${LAMBDA_BUCKET}"
-else
-    print_status "Creating S3 bucket: ${LAMBDA_BUCKET}"
-    aws s3 mb "s3://${LAMBDA_BUCKET}" --region "${AWS_REGION}"
+if [ ! -f "lambda/layers/dependencies.zip" ]; then
+    print_error "Lambda layer not found. Build may have failed."
+    exit 1
 fi
 
-# Upload Lambda artifacts
-print_status "Uploading Lambda layer..."
-aws s3 cp lambda/layers/dependencies.zip "s3://${LAMBDA_BUCKET}/lambda-layer.zip"
+if [ ! -f "lambda/dist/lambda.zip" ]; then
+    print_error "Lambda functions package not found. Build may have failed."
+    exit 1
+fi
 
-print_status "Uploading Lambda functions..."
-aws s3 cp lambda/dist/lambda.zip "s3://${LAMBDA_BUCKET}/lambda-functions.zip"
+print_status "Lambda artifacts verified"
 
 # Deploy Terraform infrastructure
 echo ""
@@ -127,22 +134,38 @@ terraform fmt -recursive
 print_status "Validating Terraform configuration..."
 terraform validate
 
+# Check if terraform.tfvars exists
+if [ ! -f "terraform.tfvars" ]; then
+    print_warning "terraform.tfvars not found. Creating from example..."
+    if [ -f "terraform.tfvars.example" ]; then
+        cp terraform.tfvars.example terraform.tfvars
+        print_info "Please edit infrastructure/terraform.tfvars with your configuration"
+        print_info "Required: gemini_api_key, alert_email"
+        read -p "Press Enter after updating terraform.tfvars..."
+    else
+        print_error "terraform.tfvars.example not found"
+        exit 1
+    fi
+fi
+
 # Plan deployment
 echo ""
-echo "📊 Terraform plan:"
-terraform plan -out=tfplan
+echo "📊 Generating Terraform plan..."
+terraform plan -var="environment=${ENVIRONMENT}" -out=tfplan
 
 # Ask for confirmation
 echo ""
 read -p "Do you want to apply this plan? (yes/no): " CONFIRM
 if [ "$CONFIRM" != "yes" ]; then
-    print_warning "Deployment cancelled"
+    print_warning "Deployment cancelled by user"
+    rm -f tfplan
     exit 0
 fi
 
 # Apply Terraform
 print_status "Applying Terraform configuration..."
-terraform apply tfplan
+terraform apply -auto-approve tfplan
+rm -f tfplan
 
 cd ..
 print_status "Infrastructure deployed successfully"
@@ -153,34 +176,54 @@ echo "⚙️  Generating frontend configuration..."
 chmod +x scripts/generate-config.sh
 ./scripts/generate-config.sh
 
+# Get deployment outputs
+echo ""
+echo "📋 Retrieving deployment information..."
+cd infrastructure
+APPSYNC_ENDPOINT=$(terraform output -raw graphql_url 2>/dev/null || echo "Not available")
+COGNITO_USER_POOL=$(terraform output -raw cognito_user_pool_id 2>/dev/null || echo "Not available")
+COGNITO_CLIENT_ID=$(terraform output -raw cognito_app_client_id 2>/dev/null || echo "Not available")
+cd ..
+
 # Display next steps
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "✅ Deployment Complete!"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo "📱 To run the frontend:"
-echo "   cd frontend"
-echo "   npm install  # Install AWS Amplify dependencies"
-echo "   npm start"
+echo "🎯 Deployment Summary:"
+echo "   Environment:     ${ENVIRONMENT}"
+echo "   AWS Region:      ${AWS_REGION}"
+echo "   AWS Account:     ${AWS_ACCOUNT}"
+echo "   AppSync URL:     ${APPSYNC_ENDPOINT}"
+echo "   User Pool ID:    ${COGNITO_USER_POOL}"
 echo ""
-echo "🔧 Useful commands:"
-echo "   - View AppSync API: aws appsync list-graphql-apis"
-echo "   - View Cognito pools: aws cognito-idp list-user-pools --max-results 10"
-echo "   - View Lambda functions: aws lambda list-functions"
-echo "   - View CloudWatch logs: aws logs tail /aws/lambda/<function-name> --follow"
+echo "📱 Next Steps - Frontend Setup:"
+echo "   1. cd frontend"
+echo "   2. npm install"
+echo "   3. npm start"
 echo ""
-echo "📚 Resources created:"
-echo "   - DynamoDB table"
-echo "   - Cognito User Pool & Identity Pool"
-echo "   - AppSync GraphQL API (43 resolvers)"
-echo "   - 43 Lambda functions"
-echo "   - S3 buckets (private & public)"
-echo "   - CloudWatch logs & monitoring"
+echo "🔧 Useful AWS CLI Commands:"
+echo "   • View all resources:       aws resourcegroupstaggingapi get-resources"
+echo "   • List Lambda functions:    aws lambda list-functions --query 'Functions[?starts_with(FunctionName, \`project-mgmt-\`)].FunctionName'"
+echo "   • View AppSync APIs:        aws appsync list-graphql-apis"
+echo "   • Check CloudWatch logs:    aws logs tail /aws/lambda/project-mgmt-user-login --follow"
+echo "   • Test DynamoDB:            aws dynamodb list-tables"
 echo ""
-echo "🔐 Important: Set the Gemini API key in Parameter Store:"
-echo "   aws ssm put-parameter --name '/project-management/gemini-api-key' \\"
-echo "       --value 'your-gemini-api-key' \\"
-echo "       --type 'SecureString' \\"
-echo "       --overwrite"
+echo "📚 Deployed AWS Resources:"
+echo "   ✓ DynamoDB Table (with 3 GSIs)"
+echo "   ✓ Cognito User Pool & App Client"
+echo "   ✓ AppSync GraphQL API"
+echo "   ✓ 43 Lambda Functions"
+echo "   ✓ Lambda Layer (dependencies)"
+echo "   ✓ S3 Buckets (private & public)"
+echo "   ✓ IAM Roles & Policies"
+echo "   ✓ CloudWatch Logs & Alarms"
+echo "   ✓ SSM Parameters"
+echo ""
+echo "🧪 To test the deployment:"
+echo "   ./scripts/test-deployment.sh"
+echo ""
+echo "🗑️  To destroy all resources:"
+echo "   ./scripts/destroy.sh"
 echo ""

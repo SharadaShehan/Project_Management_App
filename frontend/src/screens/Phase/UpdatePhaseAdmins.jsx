@@ -1,13 +1,26 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, FlatList, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ADD_PHASE_ADMINS_MUTATION, REMOVE_PHASE_ADMINS_MUTATION } from '../../graphql/Mutations';
 import { useMutation } from '@apollo/client';
 import { Alert } from 'react-native';
 import { useState, useEffect } from 'react';
+import { MaterialIcons } from '@expo/vector-icons';
+import Button from '../../components/Button';
+import Card from '../../components/Card';
+import Avatar from '../../components/Avatar';
+import { colors } from '../../theme/colors';
+import { typography } from '../../theme/typography';
+import { spacing, borderRadius } from '../../theme/spacing';
 
 const UpdatePhaseAdmins = ({ navigation, route }) => {
-    const phaseId = route.params.phase.id;
+    const phaseId = route.params?.phase?.id;
+    
+    if (!phaseId) {
+        Alert.alert('Error', 'Invalid phase');
+        navigation.goBack();
+        return null;
+    }
     const currenAdmins = route.params.phase.phaseAdmins || [];
     const phaseMembers = route.params.phase.phaseMembers || [];
     const [adminsToAdd, setAdminsToAdd] = useState([]);
@@ -34,14 +47,14 @@ const UpdatePhaseAdmins = ({ navigation, route }) => {
             } else {
                 if (adminsToAdd.length > 0) {
                     const response = await addPhaseAdmins({ variables: { id: phaseId, admins: adminsToAdd.map(admin => admin.id) } });
-                    if (!response.data.addPhaseAdmins.id) {
+                    if (!response?.data?.addPhaseAdmins?.id) {
                         Alert.alert('An error occurred, please try again');
                         return;
                     }
                 }
                 if (adminsToRemove.length > 0) {
                     const response = await removePhaseAdmins({ variables: { id: phaseId, admins: adminsToRemove.map(admin => admin.id) } });
-                    if (!response.data.removePhaseAdmins.id) {
+                    if (!response?.data?.removePhaseAdmins?.id) {
                         Alert.alert('An error occurred, please try again');
                         return;
                     }
@@ -52,18 +65,24 @@ const UpdatePhaseAdmins = ({ navigation, route }) => {
         } catch (err) {
             console.log(err);
             // separate each sentence into new line in err.message
-            const message = err.message.split('.').join('.\n');
+            const message = err.message ? err.message.split('.').join('.\n') : 'An unexpected error occurred';
             Alert.alert('Error', message);
         }
     }
 
     const RenderItem = ({ item, cross }) => {
         return (
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Image source={item.imageURL ? { uri: item.imageURL } : require('../../../images/profile.webp')} style={{ width: 20, height: 20, borderRadius: 25 }} />
-                <Text style={styles.fullName}>{item.firstName} {item.lastName}</Text>
-                <Text style={styles.username}> ({item.username})</Text>
-                {cross && <Text style={{ color: 'red', fontSize: 20, marginLeft: 'auto' }}>X</Text>}
+            <View style={styles.memberItemContent}>
+                <Avatar
+                    imageUrl={item.imageURL}
+                    name={`${item.firstName} ${item.lastName}`}
+                    size={32}
+                />
+                <View style={styles.memberTextContainer}>
+                    <Text style={styles.memberName}>{item.firstName} {item.lastName}</Text>
+                    <Text style={styles.memberUsername}>@{item.username}</Text>
+                </View>
+                {cross && <MaterialIcons name="close" size={20} color={colors.status.error} style={styles.removeIcon} />}
             </View>
         );
     };
@@ -97,121 +116,133 @@ const UpdatePhaseAdmins = ({ navigation, route }) => {
     };
     
     return (
-        <SafeAreaView style={styles.updateAdminsContainer}>
-            <View style={styles.innerContainer}>
-                <Text style={styles.title}>Update Phase Admins</Text>
-                <View style={styles.inputContainer}>
-                    <FlatList
-                        data={shownAdmins}
-                        renderItem={renderAdminItem}
-                        keyExtractor={(item) => item.id}
-                        ListHeaderComponent={() => (<Text style={{ fontWeight: 'bold', fontSize: 17, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}>Phase Admins</Text>)}
-                    />
-                    <FlatList
-                        data={shownNonAdmins}
-                        renderItem={renderMemberItem}
-                        keyExtractor={(item) => item.id}
-                        ListHeaderComponent={() => (<Text style={{ fontWeight: 'semi-bold', fontSize: 14, marginTop: 10, alignSelf: 'center', marginBottom: 3 }}>Add Admins from Phase Members</Text>)}
-                    />
-                </View>
-                <View style={styles.rowButtonsContainer}>
-                    <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
-                        <Text style={styles.buttonText}>Cancel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.button} onPress={updatePhaseAdminsHandler}>
-                        <Text style={styles.buttonText}>Update</Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
+        <SafeAreaView style={styles.container}>
+            <ScrollView contentContainerStyle={styles.scrollContent}>
+                <Card style={styles.formCard}>
+                    <Text style={styles.title}>Update Phase Admins</Text>
+                    
+                    <View style={styles.adminsSection}>
+                        <Text style={styles.sectionTitle}>Current Phase Admins</Text>
+                        {shownAdmins.length === 0 ? (
+                            <Text style={styles.emptyText}>No admins yet</Text>
+                        ) : (
+                            <FlatList
+                                data={shownAdmins}
+                                renderItem={renderAdminItem}
+                                keyExtractor={(item) => item.id}
+                                scrollEnabled={false}
+                            />
+                        )}
+                    </View>
+                    
+                    <View style={styles.availableSection}>
+                        <Text style={styles.sectionTitle}>Add from Phase Members</Text>
+                        <FlatList
+                            data={shownNonAdmins}
+                            renderItem={renderMemberItem}
+                            keyExtractor={(item) => item.id}
+                            scrollEnabled={false}
+                        />
+                    </View>
+                    
+                    <View style={styles.buttonRow}>
+                        <Button
+                            variant="outline"
+                            onPress={() => navigation.goBack()}
+                            style={styles.actionButton}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onPress={updatePhaseAdminsHandler}
+                            style={styles.actionButton}
+                        >
+                            Update
+                        </Button>
+                    </View>
+                </Card>
+            </ScrollView>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    updateAdminsContainer: {
+    container: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#4CBB17',
+        backgroundColor: colors.background.secondary,
     },
-    innerContainer: {
-        width: '90%',
-        height: '95%',
-        backgroundColor: '#fff',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: 10,
-        marginBottom: 20
+    scrollContent: {
+        padding: spacing.md,
+    },
+    formCard: {
+        padding: spacing.lg,
     },
     title: {
-        fontSize: 24,
-        marginTop: '3%',
+        fontSize: typography.fontSize['2xl'],
+        fontWeight: typography.fontWeight.bold,
+        color: colors.text.primary,
         textAlign: 'center',
-        color: '#000',
-        fontWeight: 'bold',
+        marginBottom: spacing.xl,
+        lineHeight: typography.lineHeight.tight * typography.fontSize['2xl'],
     },
-    inputContainer: {
-        marginTop: '5%',
-        alignItems: 'center',
-        marginBottom: '4%',
-        width: '100%',
+    adminsSection: {
+        marginBottom: spacing.lg,
     },
-    input: {
-        width: '80%',
-        height: 28,
-        borderColor: '#007BFF',
-        borderWidth: 1,
-        borderLeftWidth: 0,
-        borderRightWidth: 0,
-        borderTopWidth: 0,
-        // borderRadius: 10,
-        marginBottom: '5%',
-        padding: 5,
+    availableSection: {
+        marginTop: spacing.lg,
+        paddingTop: spacing.lg,
+        borderTopWidth: 1,
+        borderTopColor: colors.neutral[100],
     },
-    removeBtn: {
-        color: 'white',
-        backgroundColor: 'red',
-        padding: 3,
-        width: '80%',
-        borderRadius: 5,
-        fontSize: 14,
-        fontWeight: 'bold',
+    sectionTitle: {
+        fontSize: typography.fontSize.lg,
+        fontWeight: typography.fontWeight.semibold,
+        color: colors.text.primary,
+        marginBottom: spacing.md,
+        lineHeight: typography.lineHeight.normal * typography.fontSize.lg,
+    },
+    emptyText: {
+        fontSize: typography.fontSize.sm,
+        color: colors.text.secondary,
+        fontStyle: 'italic',
         textAlign: 'center',
-        marginLeft: 5,
+        padding: spacing.md,
     },
     userItemContainer: {
-        padding: 10,
-        backgroundColor: '#eee',
-        marginVertical: 2,
-        borderRadius: 15,
-        width: '100%',
+        padding: spacing.md,
+        backgroundColor: colors.neutral[50],
+        marginBottom: spacing.sm,
+        borderRadius: borderRadius.md,
     },
-    fullName: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#434343',
-        paddingLeft: 8,
-    },
-    username: {
-        fontSize: 12,
-        color: '#434343',
-        paddingRight: 8,
-    },
-    rowButtonsContainer: {
-        marginTop: '2%',
+    memberItemContent: {
         flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
     },
-    button: {
-        backgroundColor: '#007BFF',
-        padding: 10,
-        borderRadius: 5,
-        width: '44%',
-        alignSelf: 'center',
-        marginHorizontal: '3%',
+    memberTextContainer: {
+        flex: 1,
     },
-    buttonText: {
-        color: 'white',
-        textAlign: 'center',
+    memberName: {
+        fontSize: typography.fontSize.base,
+        fontWeight: typography.fontWeight.medium,
+        color: colors.text.primary,
+        lineHeight: typography.lineHeight.normal * typography.fontSize.base,
+    },
+    memberUsername: {
+        fontSize: typography.fontSize.sm,
+        color: colors.text.secondary,
+        lineHeight: typography.lineHeight.normal * typography.fontSize.sm,
+    },
+    removeIcon: {
+        marginLeft: 'auto',
+    },
+    buttonRow: {
+        flexDirection: 'row',
+        gap: spacing.md,
+        marginTop: spacing.xl,
+    },
+    actionButton: {
+        flex: 1,
     },
 });
 

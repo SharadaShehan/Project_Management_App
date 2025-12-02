@@ -1,123 +1,194 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { UserGlobalState } from '../../layout/UserState';
+import { Button, Card, Avatar } from '../../components';
+import { colors } from '../../theme/colors';
+import { typography } from '../../theme/typography';
+import { spacing, borderRadius } from '../../theme/spacing';
 
 const ProfileScreen = ({ navigation }) => {
     const { userData, setUserData } = UserGlobalState();
 
     return (
-        <View style={styles.container}>
-            <View style={styles.innerContainer}>
-                <View style={{ alignItems: 'center', marginTop: '10%' }}>
-                    <Image source={userData.imageURL ? { uri: userData.imageURL } : require('../../../images/profile.webp')} style={{ width: 150, height: 150, borderRadius: 75 }} />
+        <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+            <Card style={styles.profileCard}>
+                <View style={styles.avatarSection}>
+                    <Avatar 
+                        source={userData.imageURL ? { uri: userData.imageURL } : require('../../../images/profile.webp')}
+                        name={`${userData.firstName} ${userData.lastName}`}
+                        size="2xl"
+                    />
                     <Text style={styles.fullNameText}>{userData.firstName} {userData.lastName}</Text>
-                    <View style={styles.topicValueContainer}>
-                        <Text style={styles.topicText}>Username : </Text>
-                        <Text style={userData.username ? styles.valueText : styles.valueNotSetText}>{userData.username ? userData.username : 'Not set'}</Text>
-                    </View>
-                    <View style={styles.topicValueContainer}>
-                        <Text style={styles.topicText}>Gender : </Text>
-                        <Text style={userData.gender ? styles.valueText : styles.valueNotSetText}>{userData.gender ? userData.gender : 'Not set'}</Text>
-                    </View>
-                    <View style={styles.topicValueContainer}>
-                        <Text style={styles.topicText}>Country : </Text>
-                        <Text style={userData.country ? styles.valueText : styles.valueNotSetText}>{userData.country ? userData.country : 'Not set'}</Text>
-                    </View>
-                    { (userData.primaryEmail || userData.secondaryEmail) && <Text style={styles.emailTopicText}>Email Addresses</Text>}
-                    { userData.primaryEmail &&
-                        <View style={styles.topicValueContainer}>
-                            <Text style={userData.primaryEmail ? styles.valueText : styles.valueNotSetText}>{userData.primaryEmail ? userData.primaryEmail : 'Not set'}</Text>
-                        </View>
-                    }
-                    { userData.secondaryEmail &&
-                        <View style={styles.topicValueContainer}>
-                            <Text style={userData.secondaryEmail ? styles.valueText : styles.valueNotSetText}>{userData.secondaryEmail ? userData.secondaryEmail : 'Not set'}</Text>
-                        </View>
-                    }
                 </View>
+
+                <View style={styles.infoSection}>
+                    <View style={styles.infoRow}>
+                        <View style={styles.infoLabelContainer}>
+                            <MaterialIcons name="person" size={20} color={colors.primary.main} />
+                            <Text style={styles.infoLabel}>Gender</Text>
+                        </View>
+                        <Text style={userData.gender ? styles.infoValue : styles.infoValueNotSet}>
+                            {userData.gender || 'Not set'}
+                        </Text>
+                    </View>
+
+                    <View style={styles.infoRow}>
+                        <View style={styles.infoLabelContainer}>
+                            <MaterialIcons name="public" size={20} color={colors.primary.main} />
+                            <Text style={styles.infoLabel}>Country</Text>
+                        </View>
+                        <Text style={userData.country ? styles.infoValue : styles.infoValueNotSet}>
+                            {userData.country || 'Not set'}
+                        </Text>
+                    </View>
+
+                    {(userData.primaryEmail || userData.secondaryEmail) && (
+                        <View style={styles.emailSection}>
+                            <View style={styles.emailHeader}>
+                                <MaterialIcons name="email" size={20} color={colors.primary.main} />
+                                <Text style={styles.emailTitle}>Email Addresses</Text>
+                            </View>
+                            {userData.primaryEmail && (
+                                <Text style={styles.emailValue}>{userData.primaryEmail}</Text>
+                            )}
+                            {userData.secondaryEmail && (
+                                <Text style={styles.emailValue}>{userData.secondaryEmail}</Text>
+                            )}
+                        </View>
+                    )}
+                </View>
+
                 <View style={styles.buttonsContainer}>
-                    <TouchableOpacity title='update profile' onPress={() => navigation.navigate('UpdateProfile')} style={styles.updateButton}>
-                        <Text style={styles.updateButtonText}>Update Profile</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity title='change password' onPress={() => navigation.navigate('ChangePassword')} style={styles.updateButton}>
-                        <Text style={styles.updateButtonText}>Change Password</Text>
-                    </TouchableOpacity>
+                    <Button
+                        variant="primary"
+                        size="lg"
+                        fullWidth
+                        onPress={() => navigation.navigate('UpdateProfile')}
+                        icon={<MaterialIcons name="edit" size={20} color={colors.text.inverse} />}
+                        style={styles.actionButton}
+                    >
+                        Update Profile
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="lg"
+                        fullWidth
+                        onPress={() => navigation.navigate('ChangePassword')}
+                        icon={<MaterialIcons name="lock" size={20} color={colors.primary.main} />}
+                        style={styles.actionButton}
+                    >
+                        Change Password
+                    </Button>
                 </View>
-            </View>
-            <View style={styles.outerButtonContainer}>
-                <TouchableOpacity onPress={() => navigation.navigate('ViewInvitations')} style={styles.updateButton}>
-                    <Text style={styles.updateButtonText}>View Invitations</Text>
-                </TouchableOpacity>
-            </View>
-        </View>
+            </Card>
+
+            <Button
+                variant="secondary"
+                size="lg"
+                fullWidth
+                onPress={() => navigation.navigate('ViewInvitations')}
+                icon={<MaterialIcons name="mail" size={20} color={colors.text.inverse} />}
+                style={styles.invitationButton}
+            >
+                View Invitations
+            </Button>
+        </ScrollView>
     );
 }
 
-const styles = {
+const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#4CBB17',
+        backgroundColor: colors.background.default,
     },
-    innerContainer: {
-        width: '90%',
-        height: '88%',
-        marginTop: '5%',
-        borderRadius: 40,
-        backgroundColor: 'white',
-        paddingHorizontal: '4%',
+    scrollContent: {
+        padding: spacing.lg,
+    },
+    profileCard: {
+        width: '100%',
+        maxWidth: 500,
+        alignSelf: 'center',
+        borderWidth: 0,
+        marginBottom: spacing.md,
+    },
+    avatarSection: {
+        alignItems: 'center',
+        marginBottom: spacing.xs,
     },
     fullNameText: {
-        fontSize: 26,
-        marginTop: '5%',
+        fontSize: typography.fontSize['2xl'],
+        fontWeight: typography.fontWeight.bold,
+        color: colors.text.primary,
+        marginTop: spacing.xs,
         textAlign: 'center',
-        // color: '#007BFF',
-        fontWeight: 'bold',
     },
-    topicValueContainer: {
+    infoSection: {
+        marginBottom: spacing.md,
+    },
+    infoRow: {
         flexDirection: 'row',
+        alignItems: 'center',
         justifyContent: 'space-between',
-        marginTop: '3%',
+        paddingVertical: spacing.sm,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.neutral[100],
     },
-    topicText: {
-        fontSize: 17,
-        fontWeight: 'bold',
+    infoLabelContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+        flex: 1,
     },
-    emailTopicText: {
-        fontSize: 17,
-        fontWeight: 'bold',
-        marginTop: '5%',
+    infoLabel: {
+        fontSize: typography.fontSize.base,
+        fontWeight: typography.fontWeight.medium,
+        color: colors.text.primary,
     },
-    valueText: {
-        fontSize: 17,
-        fontWeight: 'semi-bold',
-        color: '#555',
+    infoValue: {
+        fontSize: typography.fontSize.base,
+        color: colors.text.secondary,
+        textAlign: 'right',
     },
-    valueNotSetText: {
-        fontSize: 17,
-        color: 'gray',
+    infoValueNotSet: {
+        fontSize: typography.fontSize.base,
+        color: colors.neutral[400],
+        fontStyle: 'italic',
+        textAlign: 'right',
+    },
+    emailSection: {
+        marginTop: spacing.sm,
+        paddingTop: spacing.sm,
+        borderTopWidth: 1,
+        borderTopColor: colors.neutral[100],
+    },
+    emailHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+        marginBottom: spacing.sm,
+    },
+    emailTitle: {
+        fontSize: typography.fontSize.base,
+        fontWeight: typography.fontWeight.medium,
+        color: colors.text.primary,
+    },
+    emailValue: {
+        fontSize: typography.fontSize.sm,
+        color: colors.text.secondary,
+        marginLeft: spacing.lg + spacing.sm,
+        marginTop: spacing.xs,
     },
     buttonsContainer: {
-        marginTop: '3%',
+        gap: spacing.sm,
     },
-    updateButton: {
-        backgroundColor: '#007BFF',
-        marginTop: '4%',
-        borderRadius: 8,
-        padding: 8
+    actionButton: {
     },
-    updateButtonText: {
-        color: 'white',
-        textAlign: 'center',
-        fontSize: 17,
-        fontWeight: 'bold'
+    invitationButton: {
+        maxWidth: 500,
+        alignSelf: 'center',
     },
-    outerButtonContainer: {
-        width: '80%',
-        marginBottom: '5%',
-    }
-}
+})
 
 
 export default ProfileScreen;

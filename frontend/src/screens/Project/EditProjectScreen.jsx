@@ -1,179 +1,212 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@expo/vector-icons';
 import { UPDATE_PROJECT_MUTATION } from '../../graphql/Mutations';
 import { useMutation } from '@apollo/client';
-import { Alert } from 'react-native';
-import { useState } from 'react';
 import { UserGlobalState } from '../../layout/UserState';
 import { SelectList } from 'react-native-dropdown-select-list';
+import { Button, TextInput as ThemedTextInput, Card } from '../../components';
+import { colors } from '../../theme/colors';
+import { typography } from '../../theme/typography';
+import { spacing, borderRadius } from '../../theme/spacing';
 
 const EditProjectScreen = ({ navigation, route }) => {
-    const projectId = route.params.project.id;
+    const projectId = route.params?.project?.id;
+    
+    if (!projectId) {
+        Alert.alert('Error', 'Invalid project');
+        navigation.goBack();
+        return null;
+    }
     const [title, setTitle] = useState(route.params.project.title);
     const [description, setDescription] = useState(route.params.project.description);
     const [status, setStatus] = useState(route.params.project.status);
-    const statusArray = ['Active', 'Inactive', 'Completed', 'Aborted'];
-    const [defaultProcess, setDefaultProcess] = useState(route.params.project.defaultProcess.id);
+    const statusArray = ['ACTIVE', 'COMPLETED', 'ARCHIVED', 'ON_HOLD'];
+    const [defaultProcess, setDefaultProcess] = useState(route.params.project.defaultProcess?.id || '');
     const processes = route.params.project.processes;
     const { userData, setUserData } = UserGlobalState();
     const [updateProject] = useMutation(UPDATE_PROJECT_MUTATION);
 
     const updateProjectHandler = async () => {
         try {
-            let variables = {};
-            variables.id = projectId;
-            if (title !== route.params.project.title) variables.title = title;
-            if (description !== route.params.project.description) variables.description = description;
-            if (status !== route.params.project.status) variables.status = status;
-            if (defaultProcess !== route.params.project.defaultProcess) variables.defaultProcess = defaultProcess;
+            // Validate required fields
+            if (!title || title.trim().length === 0) {
+                Alert.alert('Error', 'Title is required');
+                return;
+            }
+            if (title.trim().length > 100) {
+                Alert.alert('Error', 'Title must be 1-100 characters');
+                return;
+            }
+            if (description && description.trim().length > 500) {
+                Alert.alert('Error', 'Description must be 1-500 characters');
+                return;
+            }
+            
+            let variables = { id: projectId };
+            
+            const trimmedTitle = title.trim();
+            const trimmedDescription = description ? description.trim() : '';
+            
+            // Only include changed fields
+            if (trimmedTitle !== route.params.project.title) {
+                variables.title = trimmedTitle;
+            }
+            if (trimmedDescription !== route.params.project.description) {
+                variables.description = trimmedDescription;
+            }
+            if (status !== route.params.project.status) {
+                variables.status = status;
+            }
+            if (defaultProcess !== (route.params.project.defaultProcess?.id || '')) {
+                variables.defaultProcess = defaultProcess || null;
+            }
+            
+            console.log('Update variables:', JSON.stringify(variables));
             const response = await updateProject({ variables });
-            if (response.data.updateProject.id) {
+            if (response?.data?.updateProject?.id) {
                 Alert.alert('Project updated successfully');
-                navigation.navigate('Project', { id: response.data.updateProject.id, defaultProcess: response.data.updateProject.defaultProcess });
+                navigation.navigate('Project', { 
+                    id: response.data.updateProject.id, 
+                    defaultProcess: response.data.updateProject.defaultProcess || null 
+                });
             } else {
                 Alert.alert('An error occurred, please try again');
             }
         } catch (err) {
             console.log(err);
             // separate each sentence into new line in err.message
-            const message = err.message.split('.').join('.\n');
+            const message = err.message ? err.message.split('.').join('.\n') : 'An unexpected error occurred';
             Alert.alert('Error', message);
         }
     }
 
     return (
-        <SafeAreaView style={styles.updateProjectContainer}>
-            <View style={styles.innerContainer}>
-                <Text style={styles.title}>Update Project</Text>
-                <View style={styles.inputContainer}>
-                    <TextInput
-                        style={styles.input}
+        <SafeAreaView style={styles.container}>
+            <ScrollView contentContainerStyle={styles.scrollContent}>
+                <Card style={styles.formCard}>
+                    <Text style={styles.title}>Update Project</Text>
+                    
+                    <ThemedTextInput
                         placeholder="Project Title"
                         value={title}
                         onChangeText={setTitle}
-                    />
-                    <TextInput
+                        icon={<MaterialIcons name="title" size={20} color={colors.neutral[400]} />}
                         style={styles.input}
+                    />
+                    
+                    <ThemedTextInput
                         placeholder="Project Description"
                         value={description}
                         onChangeText={setDescription}
+                        icon={<MaterialIcons name="description" size={20} color={colors.neutral[400]} />}
+                        multiline
+                        numberOfLines={4}
+                        style={styles.textArea}
                     />
-                    <Text style={{ fontWeight: 'bold', fontSize: 17, marginTop: 5, alignSelf: 'center', marginBottom: 5 }}>Status</Text>
-                    <SelectList
-                        data={statusArray}
-                        title="Status"
-                        value={status}
-                        setSelected={setStatus}
-                        boxStyles={{ width: '80%', marginBottom: 6 }}
-                    /> 
-                    <Text style={{ fontWeight: 'bold', fontSize: 17, marginTop: 5, alignSelf: 'center', marginBottom: 5 }}>Default Process</Text>
-                    <SelectList
-                        data={processes.map(process => process.title)}
-                        title="Default Process"
-                        value={processes.find(process => process.id === defaultProcess).title}
-                        setSelected={(value) => setDefaultProcess(processes.find(process => process.title === value).id)}
-                        boxStyles={{ width: '80%', marginBottom: 6 }}
-                    />
+                    
+                    <View style={styles.selectSection}>
+                        <Text style={styles.selectLabel}>Status</Text>
+                        <SelectList
+                            data={statusArray}
+                            title="Status"
+                            value={status}
+                            setSelected={setStatus}
+                            boxStyles={styles.selectBox}
+                        /> 
+                    </View>
+                    
+                    {processes && processes.length > 0 && (
+                        <View style={styles.selectSection}>
+                            <Text style={styles.selectLabel}>Default Process</Text>
+                            <SelectList
+                                data={processes.map(process => ({ key: process.id, value: process.name || process.title }))}
+                                title="Default Process"
+                                save="key"
+                                defaultOption={processes.find(process => process.id === defaultProcess) ? { 
+                                    key: defaultProcess, 
+                                    value: processes.find(process => process.id === defaultProcess).name || processes.find(process => process.id === defaultProcess).title 
+                                } : undefined}
+                                setSelected={setDefaultProcess}
+                                boxStyles={styles.selectBox}
+                            />
+                        </View>
+                    )}
+                </Card>
+                
+                <View style={styles.buttonContainer}>
+                    <Button
+                        variant="outline"
+                        size="lg"
+                        onPress={() => navigation.goBack()}
+                        style={styles.buttonHalf}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="primary"
+                        size="lg"
+                        onPress={updateProjectHandler}
+                        icon={<MaterialIcons name="save" size={20} color={colors.text.inverse} />}
+                        style={styles.buttonHalf}
+                    >
+                        Update
+                    </Button>
                 </View>
-                <View style={styles.rowButtonsContainer}>
-                    <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
-                        <Text style={styles.buttonText}>Cancel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.button} onPress={updateProjectHandler}>
-                        <Text style={styles.buttonText}>Update</Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
+            </ScrollView>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    updateProjectContainer: {
+    container: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#4CBB17',
+        backgroundColor: colors.background.default,
     },
-    innerContainer: {
-        width: '90%',
-        height: '90%',
-        backgroundColor: '#fff',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: 10,
+    scrollContent: {
+        padding: spacing.lg,
+    },
+    formCard: {
+        marginBottom: spacing.lg,
+        borderWidth: 0,
     },
     title: {
-        fontSize: 24,
-        marginTop: '12%',
+        fontSize: typography.fontSize['2xl'],
+        fontWeight: typography.fontWeight.bold,
+        color: colors.text.primary,
+        marginBottom: spacing.xl,
         textAlign: 'center',
-        color: '#000',
-        fontWeight: 'bold',
-    },
-    inputContainer: {
-        marginTop: '5%',
-        alignItems: 'center',
-        marginBottom: '6%',
-        width: '100%',
-        marginBottom: 20
     },
     input: {
-        width: '80%',
-        height: 35,
-        borderColor: '#007BFF',
-        borderWidth: 1,
-        borderLeftWidth: 0,
-        borderRightWidth: 0,
-        borderTopWidth: 0,
-        // borderRadius: 10,
-        marginBottom: '5%',
-        padding: 5,
+        marginBottom: spacing.lg,
     },
-    removeBtn: {
-        color: 'white',
-        backgroundColor: 'red',
-        padding: 3,
-        width: '80%',
-        borderRadius: 5,
-        fontSize: 14,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        marginLeft: 5,
+    textArea: {
+        marginBottom: spacing.lg,
+        minHeight: 100,
+        textAlignVertical: 'top',
     },
-    userItemContainer: {
-        padding: 10,
-        backgroundColor: '#eee',
-        marginVertical: 2,
-        borderRadius: 15,
-        width: '100%',
+    selectSection: {
+        marginBottom: spacing.lg,
     },
-    fullName: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#434343',
-        paddingLeft: 8,
+    selectLabel: {
+        fontSize: typography.fontSize.base,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.text.primary,
+        marginBottom: spacing.sm,
     },
-    username: {
-        fontSize: 12,
-        color: '#434343',
-        paddingRight: 8,
+    selectBox: {
+        borderColor: colors.border.default,
+        borderRadius: borderRadius.md,
+        backgroundColor: colors.background.white,
     },
-    rowButtonsContainer: {
-        marginTop: '2%',
+    buttonContainer: {
         flexDirection: 'row',
+        gap: spacing.md,
+        marginTop: spacing.md,
     },
-    button: {
-        backgroundColor: '#007BFF',
-        padding: 10,
-        borderRadius: 5,
-        width: '44%',
-        alignSelf: 'center',
-        marginHorizontal: '3%',
-    },
-    buttonText: {
-        color: 'white',
-        textAlign: 'center',
+    buttonHalf: {
+        flex: 1,
     },
 });
 

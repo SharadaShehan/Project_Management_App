@@ -10,6 +10,9 @@ const logoImages = {
 };
 
 export const getLogoImage = (file) => {
+    if (!file) {
+        return logoImages.logoDefault;
+    }
     let fileNameParts = file.split('.');
     let fileName = fileNameParts[0];
     if (fileName === 'logo-default') {

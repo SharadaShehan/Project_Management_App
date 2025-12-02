@@ -298,39 +298,25 @@ const DELETE_PROJECT_MUTATION = gql`
 `;
 
 const CREATE_PROCESS_MUTATION = gql`
-    mutation createProcess($projectId: ID!, $title: String!, $description: String!, $priority: String!, $managers: [ID!]) {
-        createProcess(projectId: $projectId, title: $title, description: $description, priority: $priority, managers: $managers) {
+    mutation createProcess($projectId: ID!, $name: String!, $description: String!) {
+        createProcess(projectId: $projectId, name: $name, description: $description) {
             id
             project {
                 id
-            }
-            title
-            description
-            status
-            priority
-            managers {
-                id
-                username
-                firstName
-                lastName
-                imageURL
-            }
-            phases {
-                id
-                process {
-                    id
-                }
                 title
                 description
-                order
-                endDate
-                endTime
-                timezoneOffset
                 status
-                phaseMembers {
-                    id
-                }
+                logo
             }
+            name
+            description
+            phases {
+                id
+                name
+                description
+                order
+            }
+            createdAt
         }
     }
 `;
@@ -366,54 +352,40 @@ const DELETE_PROCESS_MUTATION = gql`
 `;
 
 const CREATE_PHASE_MUTATION = gql`
-    mutation createPhase($processId: ID!, $title: String!, $description: String, $startDate: String, $endDate: String, $endTime: String, $timezoneOffset: Int) {
-        createPhase(processId: $processId, title: $title, description: $description, startDate: $startDate, endDate: $endDate, endTime: $endTime, timezoneOffset: $timezoneOffset) {
+    mutation createPhase($processId: ID!, $name: String!, $description: String!, $order: Int!, $startDate: AWSDateTime, $endDate: AWSDateTime, $endTime: String, $timezoneOffset: Int) {
+        createPhase(processId: $processId, name: $name, description: $description, order: $order, startDate: $startDate, endDate: $endDate, endTime: $endTime, timezoneOffset: $timezoneOffset) {
             id
             process {
                 id
-                title
+                name
+                description
             }
-            title
+            name
             description
             order
             startDate
             endDate
             endTime
             timezoneOffset
-            phaseAdmins {
-                id
-                username
-                firstName
-                lastName
-                imageURL
-            }
-            phaseMembers {
-                id
-                username
-                firstName
-                lastName
-                imageURL
-            }
-            status
             tasks {
                 id
-                phase {
-                    id
-                }
                 title
                 description
-                endDate
-                endTime
-                timezoneOffset
-                status
-                taskAssignees {
+                phase {
+                    id
+                    name
+                }
+                assignee {
                     id
                     username
                     firstName
                     lastName
-                    imageURL
                 }
+                status
+                priority
+                deadline
             }
+            createdAt
         }
     }
 `;
@@ -465,7 +437,7 @@ const DELETE_PHASE_MUTATION = gql`
 `;
 
 const CREATE_TASK_MUTATION = gql`
-    mutation createTask($phaseId: ID!, $title: String!, $description: String, $endDate: String, $endTime: String, $timezoneOffset: Int) {
+    mutation createTask($phaseId: ID!, $title: String!, $description: String!, $endDate: AWSDateTime, $endTime: String, $timezoneOffset: Int) {
         createTask(phaseId: $phaseId, title: $title, description: $description, endDate: $endDate, endTime: $endTime, timezoneOffset: $timezoneOffset) {
             id
             phase {
@@ -505,7 +477,7 @@ const UNASSIGN_TASK_MUTATION = gql`
 `;
 
 const UPDATE_TASK_MUTATION = gql`
-    mutation updateTask($id: ID!, $title: String, $description: String, $status: String, $endDate: String, $endTime: String, $timezoneOffset: Int) {
+    mutation updateTask($id: ID!, $title: String, $description: String, $status: String, $endDate: AWSDateTime, $endTime: String, $timezoneOffset: Int) {
         updateTask(id: $id, title: $title, description: $description, status: $status, endDate: $endDate, endTime: $endTime, timezoneOffset: $timezoneOffset) {
             id
         }

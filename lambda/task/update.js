@@ -5,7 +5,7 @@ import { isValidLength, isValidTaskPriority, isValidISODate, getCurrentTimestamp
 import { lambdaHandler, NotFoundError, AuthorizationError, ValidationError } from '../shared/errors.js';
 
 async function updateTask(event) {
-  const { id, title, description, assignee, deadline, priority } = event.arguments;
+  const { id, title, description, assignee, deadline, priority, status, endDate, endTime, timezoneOffset } = event.arguments;
   
   // Get authenticated user
   const userId = getUserIdFromContext(event.identity);
@@ -29,11 +29,11 @@ async function updateTask(event) {
   }
   
   // Validate fields if provided
-  if (title !== undefined && !isValidLength(title, 1, 200)) {
+  if (title !== undefined && title !== null && !isValidLength(title, 1, 200)) {
     throw new ValidationError('Title must be 1-200 characters');
   }
   
-  if (description !== undefined && !isValidLength(description, 1, 1000)) {
+  if (description !== undefined && description !== null && !isValidLength(description, 1, 1000)) {
     throw new ValidationError('Description must be 1-1000 characters');
   }
   
@@ -43,6 +43,26 @@ async function updateTask(event) {
   
   if (deadline !== undefined && deadline !== null && !isValidISODate(deadline)) {
     throw new ValidationError('Invalid deadline format. Must be ISO date string');
+  }
+  
+  // Validate date fields if provided
+  if (endDate !== undefined && endDate !== null) {
+    const endDateObj = new Date(endDate);
+    if (isNaN(endDateObj.getTime())) {
+      throw new ValidationError('Invalid end date format');
+    }
+  }
+  
+  if (endTime !== undefined && endTime !== null) {
+    if (typeof endTime !== 'string' || !/^\d{2}:\d{2}$/.test(endTime)) {
+      throw new ValidationError('End time must be in HH:MM format');
+    }
+  }
+  
+  if (timezoneOffset !== undefined && timezoneOffset !== null) {
+    if (typeof timezoneOffset !== 'number' || timezoneOffset < -720 || timezoneOffset > 840) {
+      throw new ValidationError('Timezone offset must be a number between -720 and 840 minutes');
+    }
   }
   
   // If assignee is being changed, verify they are a project member
@@ -65,13 +85,14 @@ async function updateTask(event) {
   const expressionAttributeNames = { '#updatedAt': 'updatedAt' };
   const expressionAttributeValues = { ':updatedAt': timestamp };
   
-  if (title !== undefined) {
+  // Only update fields that are explicitly provided and not null
+  if (title !== undefined && title !== null) {
     updates.push('#title = :title');
     expressionAttributeNames['#title'] = 'title';
     expressionAttributeValues[':title'] = title;
   }
   
-  if (description !== undefined) {
+  if (description !== undefined && description !== null) {
     updates.push('#description = :description');
     expressionAttributeNames['#description'] = 'description';
     expressionAttributeValues[':description'] = description;
@@ -89,10 +110,34 @@ async function updateTask(event) {
     expressionAttributeValues[':deadline'] = deadline;
   }
   
-  if (priority !== undefined) {
+  if (priority !== undefined && priority !== null) {
     updates.push('#priority = :priority');
     expressionAttributeNames['#priority'] = 'priority';
     expressionAttributeValues[':priority'] = priority;
+  }
+  
+  if (status !== undefined && status !== null) {
+    updates.push('#status = :status');
+    expressionAttributeNames['#status'] = 'status';
+    expressionAttributeValues[':status'] = status;
+  }
+  
+  if (endDate !== undefined) {
+    updates.push('#endDate = :endDate');
+    expressionAttributeNames['#endDate'] = 'endDate';
+    expressionAttributeValues[':endDate'] = endDate;
+  }
+  
+  if (endTime !== undefined) {
+    updates.push('#endTime = :endTime');
+    expressionAttributeNames['#endTime'] = 'endTime';
+    expressionAttributeValues[':endTime'] = endTime;
+  }
+  
+  if (timezoneOffset !== undefined) {
+    updates.push('#timezoneOffset = :timezoneOffset');
+    expressionAttributeNames['#timezoneOffset'] = 'timezoneOffset';
+    expressionAttributeValues[':timezoneOffset'] = timezoneOffset;
   }
   
   // Update task metadata
@@ -106,16 +151,36 @@ async function updateTask(event) {
   
   // Update phase-task relationship
   const phaseUpdates = [];
-  if (title !== undefined) phaseUpdates.push('#title = :title');
-  if (description !== undefined) phaseUpdates.push('#description = :description');
-  if (priority !== undefined) phaseUpdates.push('#priority = :priority');
-  if (deadline !== undefined) phaseUpdates.push('#deadline = :deadline');
+  const phaseExpressionAttributeNames = { '#updatedAt': 'updatedAt' };
+  const phaseExpressionAttributeValues = { ':updatedAt': timestamp };
+  
+  // Only update fields that are explicitly provided and not null
+  if (title !== undefined && title !== null) {
+    phaseUpdates.push('#title = :title');
+    phaseExpressionAttributeNames['#title'] = 'title';
+    phaseExpressionAttributeValues[':title'] = title;
+  }
+  if (description !== undefined && description !== null) {
+    phaseUpdates.push('#description = :description');
+    phaseExpressionAttributeNames['#description'] = 'description';
+    phaseExpressionAttributeValues[':description'] = description;
+  }
+  if (priority !== undefined && priority !== null) {
+    phaseUpdates.push('#priority = :priority');
+    phaseExpressionAttributeNames['#priority'] = 'priority';
+    phaseExpressionAttributeValues[':priority'] = priority;
+  }
+  if (deadline !== undefined) {
+    phaseUpdates.push('#deadline = :deadline');
+    phaseExpressionAttributeNames['#deadline'] = 'deadline';
+    phaseExpressionAttributeValues[':deadline'] = deadline;
+  }
   
   if (assignee !== undefined) {
     const newAssigneeUser = await getItem(`USER#${assignee}`, 'METADATA');
     phaseUpdates.push('#assignee = :assignee');
-    expressionAttributeNames['#assignee'] = 'assignee';
-    expressionAttributeValues[':assignee'] = {
+    phaseExpressionAttributeNames['#assignee'] = 'assignee';
+    phaseExpressionAttributeValues[':assignee'] = {
       id: newAssigneeUser.id,
       username: newAssigneeUser.username,
       firstName: newAssigneeUser.firstName,
@@ -128,8 +193,8 @@ async function updateTask(event) {
       `PHASE#${task.phaseId}`,
       `TASK#${id}`,
       `SET ${phaseUpdates.join(', ')}, #updatedAt = :updatedAt`,
-      expressionAttributeNames,
-      expressionAttributeValues
+      phaseExpressionAttributeNames,
+      phaseExpressionAttributeValues
     );
   }
   

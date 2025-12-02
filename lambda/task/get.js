@@ -30,12 +30,26 @@ async function getTask(event) {
   // Get phase details
   const phase = await getItem(`PHASE#${task.phaseId}`, 'METADATA');
   
-  // Get assignee details
-  const assigneeUser = await getItem(`USER#${task.assigneeId}`, 'METADATA');
+  // Get assignee details (if exists)
+  let assigneeUser = null;
+  let taskAssignees = [];
+  
+  if (task.assigneeId) {
+    assigneeUser = await getItem(`USER#${task.assigneeId}`, 'METADATA');
+    if (assigneeUser) {
+      taskAssignees = [{
+        id: assigneeUser.id,
+        username: assigneeUser.username,
+        firstName: assigneeUser.firstName,
+        lastName: assigneeUser.lastName,
+        imageURL: assigneeUser.imageURL
+      }];
+    }
+  }
   
   // Return task with related data
   return {
-    id: task.id,
+    id: task.id || task.taskId,
     title: task.title,
     description: task.description,
     phase: phase ? {
@@ -52,9 +66,13 @@ async function getTask(event) {
       gender: assigneeUser.gender,
       imageURL: assigneeUser.imageURL
     } : null,
+    taskAssignees: taskAssignees,
     status: task.status,
     priority: task.priority,
     deadline: task.deadline,
+    endDate: task.endDate,
+    endTime: task.endTime,
+    timezoneOffset: task.timezoneOffset,
     createdAt: task.createdAt,
     updatedAt: task.updatedAt
   };

@@ -1,7 +1,14 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { CHANGE_PASSWORD_MUTATION } from '../../graphql/Mutations';
 import { useMutation } from '@apollo/client';
+import Button from '../../components/Button';
+import TextInput from '../../components/TextInput';
+import Card from '../../components/Card';
+import { colors } from '../../theme/colors';
+import { typography } from '../../theme/typography';
+import { spacing } from '../../theme/spacing';
 
 const ChangePasswordScreen = ({ navigation }) => {
     const [currentPassword, setCurrentPassword] = React.useState('');
@@ -34,103 +41,102 @@ const ChangePasswordScreen = ({ navigation }) => {
     }
 
     return (
-        <View style={styles.container}>
-            <View style={styles.innerContainer}>
-                <View style={{ alignItems: 'center', marginTop: '10%' }}>
-                    <Text style={styles.titleText}>Change Password</Text>
-                    <View style={styles.inputsContainer}>
+        <SafeAreaView style={styles.container}>
+            <ScrollView contentContainerStyle={styles.scrollContent}>
+                <Card style={styles.formCard}>
+                    <Text style={styles.title}>Change Password</Text>
+                    
+                    <View style={styles.formSection}>
+                        <Text style={styles.label}>Current Password</Text>
                         <TextInput
-                            style={styles.input}
-                            placeholder="Current Password"
+                            placeholder="Enter current password"
                             value={currentPassword}
                             secureTextEntry
-                            onChangeText={(text) => setCurrentPassword(text)}
-                        />
-                        <TextInput
-                            style={styles.input}
-                            placeholder="New Password"
-                            value={newPassword}
-                            secureTextEntry
-                            onChangeText={(text) => setNewPassword(text)}
-                        />
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Confirm New Password"
-                            value={confirmNewPassword}
-                            secureTextEntry
-                            onChangeText={(text) => setConfirmNewPassword(text)}
+                            onChangeText={setCurrentPassword}
                         />
                     </View>
-                </View>
-                <View style={styles.buttonsContainer}>
-                    <TouchableOpacity title='update' onPress={() => changePasswordhandler()} style={styles.updateButton}>
-                        <Text style={styles.updateButtonText}>Update</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity title='cancel' onPress={() => navigation.navigate('Profile')} style={styles.updateButton}>
-                        <Text style={styles.updateButtonText}>Cancel</Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
-        </View>
+                    
+                    <View style={styles.formSection}>
+                        <Text style={styles.label}>New Password</Text>
+                        <TextInput
+                            placeholder="Enter new password"
+                            value={newPassword}
+                            secureTextEntry
+                            onChangeText={setNewPassword}
+                        />
+                    </View>
+                    
+                    <View style={styles.formSection}>
+                        <Text style={styles.label}>Confirm New Password</Text>
+                        <TextInput
+                            placeholder="Confirm new password"
+                            value={confirmNewPassword}
+                            secureTextEntry
+                            onChangeText={setConfirmNewPassword}
+                        />
+                    </View>
+                    
+                    <View style={styles.buttonRow}>
+                        <Button
+                            variant="outline"
+                            onPress={() => navigation.navigate('Profile')}
+                            style={styles.actionButton}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onPress={changePasswordhandler}
+                            style={styles.actionButton}
+                        >
+                            Update Password
+                        </Button>
+                    </View>
+                </Card>
+            </ScrollView>
+        </SafeAreaView>
     );
 }
 
-const styles = {
+const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: colors.background.secondary,
+    },
+    scrollContent: {
+        padding: spacing.md,
         justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#4CBB17',
+        flexGrow: 1,
     },
-    innerContainer: {
-        width: '90%',
-        height: '55%',
-        borderRadius: 40,
-        backgroundColor: 'white',
-        paddingHorizontal: '4%',
+    formCard: {
+        padding: spacing.lg,
     },
-    titleText: {
-        fontSize: 28,
-        marginTop: '5%',
+    title: {
+        fontSize: typography.fontSize['2xl'],
+        fontWeight: typography.fontWeight.bold,
+        color: colors.text.primary,
         textAlign: 'center',
-        // color: '#007BFF',
-        fontWeight: 'bold',
+        marginBottom: spacing.xl,
+        lineHeight: typography.lineHeight.tight * typography.fontSize['2xl'],
     },
-    inputsContainer: {
-        marginTop: '10%',
-        alignItems: 'center',
-        width: '100%',
+    formSection: {
+        marginBottom: spacing.lg,
     },
-    input: {
-        width: '80%',
-        height: 35,
-        borderColor: '#007BFF',
-        borderWidth: 1,
-        borderLeftWidth: 0,
-        borderRightWidth: 0,
-        borderTopWidth: 0,
-        // borderRadius: 10,
-        marginBottom: '5%',
-        padding: 5,
+    label: {
+        fontSize: typography.fontSize.base,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.text.primary,
+        marginBottom: spacing.sm,
+        lineHeight: typography.lineHeight.normal * typography.fontSize.base,
     },
-    buttonsContainer: {
-        marginTop: '5%',
+    buttonRow: {
+        flexDirection: 'row',
+        gap: spacing.md,
+        marginTop: spacing.xl,
     },
-    updateButton: {
-        backgroundColor: '#007BFF',
-        marginTop: '3%',
-        borderRadius: 8,
-        padding: 6,
-        width: '90%',
-        alignSelf: 'center',
+    actionButton: {
+        flex: 1,
     },
-    updateButtonText: {
-        color: 'white',
-        textAlign: 'center',
-        fontSize: 18,
-        fontWeight: 'bold'
-    }
-}
+});
 
 
 export default ChangePasswordScreen;

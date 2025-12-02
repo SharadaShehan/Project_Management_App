@@ -60,12 +60,43 @@ resource "aws_lambda_permission" "appsync" {
   source_arn    = "${aws_appsync_graphql_api.main.arn}/*"
 }
 
+# Standard resolver code template
+locals {
+  standard_resolver_code = <<EOF
+export function request(ctx) {
+  return {
+    operation: 'Invoke',
+    payload: {
+      arguments: ctx.arguments,
+      identity: ctx.identity,
+      source: ctx.source,
+      request: ctx.request
+    }
+  };
+}
+
+export function response(ctx) {
+  if (ctx.error) {
+    return util.error(ctx.error.message, ctx.error.type);
+  }
+  return ctx.result;
+}
+EOF
+}
+
 # Query Resolvers
 resource "aws_appsync_resolver" "query_me" {
   api_id      = aws_appsync_graphql_api.main.id
   type        = "Query"
   field       = "me"
   data_source = aws_appsync_datasource.lambda["user-get-profile"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
 }
 
 resource "aws_appsync_resolver" "query_projects" {
@@ -73,6 +104,13 @@ resource "aws_appsync_resolver" "query_projects" {
   type        = "Query"
   field       = "projects"
   data_source = aws_appsync_datasource.lambda["project-list"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
 }
 
 resource "aws_appsync_resolver" "query_project" {
@@ -80,6 +118,13 @@ resource "aws_appsync_resolver" "query_project" {
   type        = "Query"
   field       = "project"
   data_source = aws_appsync_datasource.lambda["project-get"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
 }
 
 resource "aws_appsync_resolver" "query_posts" {
@@ -87,6 +132,13 @@ resource "aws_appsync_resolver" "query_posts" {
   type        = "Query"
   field       = "posts"
   data_source = aws_appsync_datasource.lambda["forum-list-posts"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
 }
 
 resource "aws_appsync_resolver" "query_post" {
@@ -94,6 +146,13 @@ resource "aws_appsync_resolver" "query_post" {
   type        = "Query"
   field       = "post"
   data_source = aws_appsync_datasource.lambda["forum-get-post"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
 }
 
 resource "aws_appsync_resolver" "query_private_messages" {
@@ -101,6 +160,13 @@ resource "aws_appsync_resolver" "query_private_messages" {
   type        = "Query"
   field       = "privateMessages"
   data_source = aws_appsync_datasource.lambda["message-list-private"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
 }
 
 resource "aws_appsync_resolver" "query_project_messages" {
@@ -108,6 +174,13 @@ resource "aws_appsync_resolver" "query_project_messages" {
   type        = "Query"
   field       = "projectMessages"
   data_source = aws_appsync_datasource.lambda["message-list-project"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
 }
 
 resource "aws_appsync_resolver" "query_phase_messages" {
@@ -115,6 +188,55 @@ resource "aws_appsync_resolver" "query_phase_messages" {
   type        = "Query"
   field       = "phaseMessages"
   data_source = aws_appsync_datasource.lambda["message-list-phase"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
+}
+
+resource "aws_appsync_resolver" "query_last_private_messages" {
+  api_id      = aws_appsync_graphql_api.main.id
+  type        = "Query"
+  field       = "lastPrivateMessages"
+  data_source = aws_appsync_datasource.lambda["message-list-private"].name
+
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+
+  code = local.standard_resolver_code
+}
+
+resource "aws_appsync_resolver" "query_last_project_messages" {
+  api_id      = aws_appsync_graphql_api.main.id
+  type        = "Query"
+  field       = "lastProjectMessages"
+  data_source = aws_appsync_datasource.lambda["message-list-project"].name
+
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+
+  code = local.standard_resolver_code
+}
+
+resource "aws_appsync_resolver" "query_last_phase_messages" {
+  api_id      = aws_appsync_graphql_api.main.id
+  type        = "Query"
+  field       = "lastPhaseMessages"
+  data_source = aws_appsync_datasource.lambda["message-list-phase"].name
+
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+
+  code = local.standard_resolver_code
 }
 
 resource "aws_appsync_resolver" "query_sent_requests" {
@@ -122,6 +244,13 @@ resource "aws_appsync_resolver" "query_sent_requests" {
   type        = "Query"
   field       = "sentRequests"
   data_source = aws_appsync_datasource.lambda["request-list"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
 }
 
 resource "aws_appsync_resolver" "query_received_requests" {
@@ -129,6 +258,13 @@ resource "aws_appsync_resolver" "query_received_requests" {
   type        = "Query"
   field       = "receivedRequests"
   data_source = aws_appsync_datasource.lambda["request-list"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
 }
 
 # Mutation Resolvers - User
@@ -137,6 +273,13 @@ resource "aws_appsync_resolver" "mutation_sign_up" {
   type        = "Mutation"
   field       = "signUp"
   data_source = aws_appsync_datasource.lambda["user-signup"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
 }
 
 resource "aws_appsync_resolver" "mutation_sign_in" {
@@ -144,6 +287,13 @@ resource "aws_appsync_resolver" "mutation_sign_in" {
   type        = "Mutation"
   field       = "signIn"
   data_source = aws_appsync_datasource.lambda["user-login"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
 }
 
 resource "aws_appsync_resolver" "mutation_update_profile" {
@@ -151,6 +301,13 @@ resource "aws_appsync_resolver" "mutation_update_profile" {
   type        = "Mutation"
   field       = "updateProfile"
   data_source = aws_appsync_datasource.lambda["user-update-profile"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
 }
 
 # Mutation Resolvers - Project
@@ -159,6 +316,13 @@ resource "aws_appsync_resolver" "mutation_create_project" {
   type        = "Mutation"
   field       = "createProject"
   data_source = aws_appsync_datasource.lambda["project-create"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
 }
 
 resource "aws_appsync_resolver" "mutation_update_project" {
@@ -166,6 +330,13 @@ resource "aws_appsync_resolver" "mutation_update_project" {
   type        = "Mutation"
   field       = "updateProject"
   data_source = aws_appsync_datasource.lambda["project-update"].name
+
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+
+  code = local.standard_resolver_code
 }
 
 resource "aws_appsync_resolver" "mutation_delete_project" {
@@ -173,6 +344,13 @@ resource "aws_appsync_resolver" "mutation_delete_project" {
   type        = "Mutation"
   field       = "deleteProject"
   data_source = aws_appsync_datasource.lambda["project-delete"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
 }
 
 # Mutation Resolvers - Forum
@@ -181,13 +359,13 @@ resource "aws_appsync_resolver" "mutation_create_post" {
   type        = "Mutation"
   field       = "createPost"
   data_source = aws_appsync_datasource.lambda["forum-create-post"].name
-}
-
-resource "aws_appsync_resolver" "mutation_update_post" {
-  api_id      = aws_appsync_graphql_api.main.id
-  type        = "Mutation"
-  field       = "updatePost"
-  data_source = aws_appsync_datasource.lambda["forum-update-post"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
 }
 
 resource "aws_appsync_resolver" "mutation_delete_post" {
@@ -195,6 +373,97 @@ resource "aws_appsync_resolver" "mutation_delete_post" {
   type        = "Mutation"
   field       = "deletePost"
   data_source = aws_appsync_datasource.lambda["forum-delete-post"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
+}
+
+resource "aws_appsync_resolver" "mutation_reply_post" {
+  api_id      = aws_appsync_graphql_api.main.id
+  type        = "Mutation"
+  field       = "replyPost"
+  data_source = aws_appsync_datasource.lambda["forum-create-reply"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
+}
+
+resource "aws_appsync_resolver" "mutation_delete_reply" {
+  api_id      = aws_appsync_graphql_api.main.id
+  type        = "Mutation"
+  field       = "deleteReply"
+  data_source = aws_appsync_datasource.lambda["forum-delete-reply"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
+}
+
+resource "aws_appsync_resolver" "mutation_upvote_post" {
+  api_id      = aws_appsync_graphql_api.main.id
+  type        = "Mutation"
+  field       = "upvotePost"
+  data_source = aws_appsync_datasource.lambda["forum-upvote-post"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
+}
+
+resource "aws_appsync_resolver" "mutation_downvote_post" {
+  api_id      = aws_appsync_graphql_api.main.id
+  type        = "Mutation"
+  field       = "downvotePost"
+  data_source = aws_appsync_datasource.lambda["forum-downvote-post"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
+}
+
+resource "aws_appsync_resolver" "mutation_upvote_reply" {
+  api_id      = aws_appsync_graphql_api.main.id
+  type        = "Mutation"
+  field       = "upvoteReply"
+  data_source = aws_appsync_datasource.lambda["forum-upvote-reply"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
+}
+
+resource "aws_appsync_resolver" "mutation_downvote_reply" {
+  api_id      = aws_appsync_graphql_api.main.id
+  type        = "Mutation"
+  field       = "downvoteReply"
+  data_source = aws_appsync_datasource.lambda["forum-downvote-reply"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
 }
 
 resource "aws_appsync_resolver" "mutation_get_gemini_response" {
@@ -202,6 +471,13 @@ resource "aws_appsync_resolver" "mutation_get_gemini_response" {
   type        = "Mutation"
   field       = "getGeminiResponseForPost"
   data_source = aws_appsync_datasource.lambda["forum-generate-ai-answer"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
 }
 
 # Mutation Resolvers - Message
@@ -210,6 +486,13 @@ resource "aws_appsync_resolver" "mutation_create_private_message" {
   type        = "Mutation"
   field       = "createPrivateMessage"
   data_source = aws_appsync_datasource.lambda["message-send"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
 }
 
 resource "aws_appsync_resolver" "mutation_create_project_message" {
@@ -217,6 +500,13 @@ resource "aws_appsync_resolver" "mutation_create_project_message" {
   type        = "Mutation"
   field       = "createProjectMessage"
   data_source = aws_appsync_datasource.lambda["message-send"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
 }
 
 resource "aws_appsync_resolver" "mutation_create_phase_message" {
@@ -224,6 +514,13 @@ resource "aws_appsync_resolver" "mutation_create_phase_message" {
   type        = "Mutation"
   field       = "createPhaseMessage"
   data_source = aws_appsync_datasource.lambda["message-send"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
 }
 
 # Mutation Resolvers - Request
@@ -232,6 +529,13 @@ resource "aws_appsync_resolver" "mutation_create_requests" {
   type        = "Mutation"
   field       = "createRequests"
   data_source = aws_appsync_datasource.lambda["request-create"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
 }
 
 resource "aws_appsync_resolver" "mutation_respond_request" {
@@ -239,6 +543,13 @@ resource "aws_appsync_resolver" "mutation_respond_request" {
   type        = "Mutation"
   field       = "respondRequest"
   data_source = aws_appsync_datasource.lambda["request-accept"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
 }
 
 # Mutation Resolvers - Image
@@ -247,23 +558,154 @@ resource "aws_appsync_resolver" "mutation_get_presigned_url" {
   type        = "Mutation"
   field       = "getPresignedURL"
   data_source = aws_appsync_datasource.lambda["image-generate-presigned-url"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
 }
 
-# Subscription for real-time messages
-resource "aws_appsync_resolver" "subscription_new_message" {
+# Process Mutations
+resource "aws_appsync_resolver" "mutation_create_process" {
   api_id      = aws_appsync_graphql_api.main.id
-  type        = "Subscription"
-  field       = "newMessage"
-  data_source = "NONE"
-
-  request_template = <<EOF
-{
-  "version": "2017-02-28",
-  "payload": $util.toJson($context.arguments)
+  type        = "Mutation"
+  field       = "createProcess"
+  data_source = aws_appsync_datasource.lambda["process-create"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
 }
-EOF
 
-  response_template = <<EOF
-$util.toJson($context.result)
-EOF
+resource "aws_appsync_resolver" "mutation_update_process" {
+  api_id      = aws_appsync_graphql_api.main.id
+  type        = "Mutation"
+  field       = "updateProcess"
+  data_source = aws_appsync_datasource.lambda["process-update"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
+}
+
+resource "aws_appsync_resolver" "mutation_delete_process" {
+  api_id      = aws_appsync_graphql_api.main.id
+  type        = "Mutation"
+  field       = "deleteProcess"
+  data_source = aws_appsync_datasource.lambda["process-delete"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
+}
+
+# Phase Mutations
+resource "aws_appsync_resolver" "mutation_create_phase" {
+  api_id      = aws_appsync_graphql_api.main.id
+  type        = "Mutation"
+  field       = "createPhase"
+  data_source = aws_appsync_datasource.lambda["phase-create"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
+}
+
+resource "aws_appsync_resolver" "mutation_update_phase" {
+  api_id      = aws_appsync_graphql_api.main.id
+  type        = "Mutation"
+  field       = "updatePhase"
+  data_source = aws_appsync_datasource.lambda["phase-update"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
+}
+
+resource "aws_appsync_resolver" "mutation_delete_phase" {
+  api_id      = aws_appsync_graphql_api.main.id
+  type        = "Mutation"
+  field       = "deletePhase"
+  data_source = aws_appsync_datasource.lambda["phase-delete"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
+}
+
+# Task Mutations
+resource "aws_appsync_resolver" "mutation_create_task" {
+  api_id      = aws_appsync_graphql_api.main.id
+  type        = "Mutation"
+  field       = "createTask"
+  data_source = aws_appsync_datasource.lambda["task-create"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
+}
+
+resource "aws_appsync_resolver" "mutation_update_task" {
+  api_id      = aws_appsync_graphql_api.main.id
+  type        = "Mutation"
+  field       = "updateTask"
+  data_source = aws_appsync_datasource.lambda["task-update"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
+}
+
+resource "aws_appsync_resolver" "mutation_delete_task" {
+  api_id      = aws_appsync_graphql_api.main.id
+  type        = "Mutation"
+  field       = "deleteTask"
+  data_source = aws_appsync_datasource.lambda["task-delete"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
+}
+
+resource "aws_appsync_resolver" "mutation_update_task_status" {
+  api_id      = aws_appsync_graphql_api.main.id
+  type        = "Mutation"
+  field       = "updateTaskStatus"
+  data_source = aws_appsync_datasource.lambda["task-update-status"].name
+  
+  runtime {
+    name            = "APPSYNC_JS"
+    runtime_version = "1.0.0"
+  }
+  
+  code = local.standard_resolver_code
 }

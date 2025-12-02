@@ -6,6 +6,9 @@ import { useQuery, useMutation } from '@apollo/client';
 import MatIcon from 'react-native-vector-icons/MaterialIcons';
 import MIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { UserGlobalState } from '../../layout/UserState';
+import { colors } from '../../theme/colors';
+import { typography } from '../../theme/typography';
+import { spacing, borderRadius } from '../../theme/spacing';
 
 const PostScreen = ({ navigation, route }) => {
     const [ upvoted, setUpvoted ] = useState(false);
@@ -103,7 +106,7 @@ const PostScreen = ({ navigation, route }) => {
             }
         } catch (err) {
             console.log(err);
-            const message = err.message.split('.').join('.\n');
+            const message = err.message ? err.message.split('.').join('.\n') : 'An unexpected error occurred';
             Alert.alert('Error', message);
         }
     }
@@ -242,32 +245,29 @@ const PostScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 0,
-        // marginBottom: 10,
-        paddingTop: 10,
-        paddingBottom: 10,
+        paddingTop: spacing.md,
+        paddingBottom: spacing.md,
         alignItems: 'justify',
-        backgroundColor: '#4CBB17',
-        paddingHorizontal: 10,
+        backgroundColor: colors.background.secondary,
+        paddingHorizontal: spacing.md,
     },
     postsContainer: {
         flex: 1,
-        borderRadius: 10,
-        // justifyContent: 'center',
+        borderRadius: borderRadius.lg,
         alignItems: 'justify',
-        backgroundColor: '#fff',
-        paddingHorizontal: 5
+        backgroundColor: colors.background.primary,
+        paddingHorizontal: spacing.sm,
     },
     itemContainer: {
         paddingTop: 5,
         // paddingBottom: 5,
     },
     itemContentContainer: {
-        marginLeft: 5,
-        paddingLeft: 15,
-        paddingRight: 8,
-        backgroundColor: '#eee',
-        borderRadius: 10,
+        marginLeft: spacing.sm,
+        paddingLeft: spacing.md,
+        paddingRight: spacing.sm,
+        backgroundColor: colors.neutral[50],
+        borderRadius: borderRadius.md,
     },
     rowContainer: {
         flexDirection: 'row',
@@ -331,14 +331,14 @@ const styles = StyleSheet.create({
     },
     generatedAnswerContainer: {
         maxHeight: 200,
-        backgroundColor: '#eee',
-        marginBottom: 10,
-        marginHorizontal: 10,
-        paddingTop: 10,
-        paddingBottom: 10,
-        paddingLeft: 13,
-        paddingRight: 10,
-        borderRadius: 10,
+        backgroundColor: colors.neutral[50],
+        marginBottom: spacing.md,
+        marginHorizontal: spacing.md,
+        paddingTop: spacing.md,
+        paddingBottom: spacing.md,
+        paddingLeft: spacing.md,
+        paddingRight: spacing.md,
+        borderRadius: borderRadius.md,
     },
     generatedAnswerContent: {
         fontSize: 15,
@@ -387,35 +387,34 @@ const styles = StyleSheet.create({
         marginLeft: 5,
     },
     textInput: {
-        backgroundColor: '#eee',
-        borderRadius: 20,
-        padding: 10,
-        marginBottom: 5,
-        marginRight: 5,
-        paddingLeft: 15,
+        backgroundColor: colors.neutral[50],
+        borderRadius: borderRadius.xl,
+        padding: spacing.md,
+        marginBottom: spacing.xs,
+        marginRight: spacing.xs,
+        paddingLeft: spacing.md,
         width: '80%',
     },
     sendBtn: {
-        // backgroundColor: '#6BB64a',
-        borderRadius: 50,
-        paddingTop: 8,
-        marginLeft: 10,
-        color: '#4CBB17',
+        borderRadius: borderRadius.full,
+        paddingTop: spacing.sm,
+        marginLeft: spacing.md,
+        color: colors.secondary.main,
     },
     createPostButton: {
-        backgroundColor: '#6BB64a',
-        padding: 9,
-        margin: 10,
-        borderRadius: 5,
+        backgroundColor: colors.secondary.main,
+        padding: spacing.sm,
+        margin: spacing.md,
+        borderRadius: borderRadius.md,
         width: '90%',
         alignItems: 'center',
     },
     deletePostButton: {
         position: 'absolute',
-        bottom: 15,
-        right: 15,
-        backgroundColor: '#dd0000',
-        borderRadius: 50,
+        bottom: spacing.md,
+        right: spacing.md,
+        backgroundColor: colors.status.error,
+        borderRadius: borderRadius.full,
         width: 50,
         height: 50,
         alignItems: 'center',

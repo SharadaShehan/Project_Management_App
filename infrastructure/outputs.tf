@@ -17,7 +17,7 @@ output "cognito_user_pool_id" {
 
 output "cognito_user_pool_client_id" {
   description = "Cognito User Pool Client ID"
-  value       = module.cognito.user_pool_client_id
+  value       = module.cognito.app_client_id
 }
 
 output "dynamodb_table_name" {

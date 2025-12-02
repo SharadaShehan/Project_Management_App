@@ -1,14 +1,20 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { SIGNUP_MUTATION, GET_PRESIGNED_URL_MUTATION } from '../graphql/Mutations';
-import { useMutation } from '@apollo/client';
+import { View, Text, StyleSheet, Alert, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
+import { GET_PRESIGNED_URL_MUTATION } from '../graphql/Mutations';
+import { useMutation, useLazyQuery } from '@apollo/client';
 import { UserGlobalState } from '../layout/UserState';
 import { RadioButton } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker';
+import { signUp, signIn, confirmSignUp, resendSignUpCode } from 'aws-amplify/auth';
+import { GET_USER_PROFILE_QUERY } from '../graphql/Queries';
+import { Button, TextInput, Card } from '../components';
+import { colors } from '../theme/colors';
+import { typography } from '../theme/typography';
+import { spacing, borderRadius } from '../theme/spacing';
 
 const SignUpScreen = ({navigation}) => {
     const { userData, setUserData } = UserGlobalState();
-    const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
@@ -18,8 +24,13 @@ const SignUpScreen = ({navigation}) => {
     const [secondaryEmail, setSecondaryEmail] = useState('');
     const [imageURL, setImageURL] = useState('');
     const [imageUploaded, setImageUploaded] = useState(false);
-    const [signUp, { data, loading, error }] = useMutation(SIGNUP_MUTATION);
-    const [getPresignedURL, { data: presignedURLData, loading: presignedURLLoading, error: presignedURLError }] = useMutation(GET_PRESIGNED_URL_MUTATION);
+    const [verificationCode, setVerificationCode] = useState('');
+    const [showVerification, setShowVerification] = useState(false);
+    const [tempCredentials, setTempCredentials] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [errors, setErrors] = useState({});
+    const [getPresignedURL] = useMutation(GET_PRESIGNED_URL_MUTATION);
+    const [getUserProfile] = useLazyQuery(GET_USER_PROFILE_QUERY);
 
     const handleUploadFile = async () => {
         const options = {
@@ -56,217 +67,413 @@ const SignUpScreen = ({navigation}) => {
         }
     }
 
-    return (
-        <View style={styles.container}>
-            <View style={styles.innerContainer}>
-                <Text style={styles.title}>Sign Up</Text>
-                <View style={styles.inputContainer}>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Username"
-                        value={username}
-                        onChangeText={(text) => setUsername(text)}
-                    />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Password"
-                        secureTextEntry
-                        value={password}
-                        onChangeText={(text) => setPassword(text)}
-                    />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="First Name"
-                        value={firstName}
-                        onChangeText={(text) => setFirstName(text)}
-                    />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Last Name"
-                        value={lastName}
-                        onChangeText={(text) => setLastName(text)}
-                    />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Country"
-                        value={country}
-                        onChangeText={(text) => setCountry(text)}
-                    />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Primary Email"
-                        value={primaryEmail}
-                        onChangeText={(text) => setPrimaryEmail(text)}
-                    />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Secondary Email"
-                        value={secondaryEmail}
-                        onChangeText={(text) => setSecondaryEmail(text)}
-                    />
-                    <View style={styles.radioGroup}>
-                        <Text style={styles.radioTitle}>
-                            Gender :
-                        </Text>
-                        <View style={styles.radioButton}> 
-                            <RadioButton.Android 
-                                value="Male"
-                                status={gender === 'Male' ? 'checked' : 'unchecked'} 
-                                onPress={() => setGender('Male')}
-                                color="#007BFF"
-                            /> 
-                            <Text style={styles.radioLabel}> 
-                                Male
-                            </Text> 
-                        </View> 
+    const validateForm = () => {
+        const newErrors = {};
         
-                        <View style={styles.radioButton}>
-                            <RadioButton.Android
-                                value="Female"
-                                status={gender === 'Female' ? 'checked' : 'unchecked'}
-                                onPress={() => setGender('Female')}
-                                color="#007BFF"
-                            />
-                            <Text style={styles.radioLabel}>
-                                Female
-                            </Text>
+        if (!primaryEmail) {
+            newErrors.primaryEmail = 'Email is required';
+        } else if (!/\S+@\S+\.\S+/.test(primaryEmail)) {
+            newErrors.primaryEmail = 'Email is invalid';
+        }
+        
+        if (!password) {
+            newErrors.password = 'Password is required';
+        } else if (password.length < 8) {
+            newErrors.password = 'Password must be at least 8 characters';
+        }
+        
+        if (!firstName) newErrors.firstName = 'First name is required';
+        if (!lastName) newErrors.lastName = 'Last name is required';
+        if (!country) newErrors.country = 'Country is required';
+        if (!gender) newErrors.gender = 'Please select a gender';
+        
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    return (
+        <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.container}
+        >
+            <ScrollView
+                contentContainerStyle={styles.scrollContent}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+            >
+                <View style={styles.header}>
+                    <View style={styles.logoContainer}>
+                        <View style={styles.logoCircle}>
+                            <MaterialIcons name="person-add" size={48} color={colors.secondary.main} />
                         </View>
                     </View>
-                    <TouchableOpacity style={[styles.uploadButton, imageUploaded ? { backgroundColor: 'green' } : { backgroundColor: '#007BFF' }]} onPress={handleUploadFile}>
-                        <Text style={styles.buttonText}>{imageUploaded ? 'Image Uploaded ✔' : '📤 Upload Image'}</Text>
-                    </TouchableOpacity>
+                    <Text style={styles.title}>Create Account</Text>
+                    <Text style={styles.subtitle}>Join us today</Text>
                 </View>
-                <TouchableOpacity style={styles.button} onPress={
-                    async () => {
-                        try {
-                            let variables = {}
-                            if (username) variables.username = username;
-                            if (password) variables.password = password;
-                            if (firstName) variables.firstName = firstName;
-                            if (lastName) variables.lastName = lastName;
-                            if (gender) variables.gender = gender;
-                            if (country) variables.country = country;
-                            if (primaryEmail) variables.primaryEmail = primaryEmail;
-                            if (secondaryEmail) variables.secondaryEmail = secondaryEmail;
-                            if (imageURL) variables.imageURL = imageURL;
 
-                            const response = await signUp({ variables: variables });
-                            if (response.data.signUp.firstName) {
-                                setUserData({
-                                    id: response.data.signUp.id,
-                                    username: response.data.signUp.username,
-                                    firstName: response.data.signUp.firstName,
-                                    lastName: response.data.signUp.lastName,
-                                    gender: response.data.signUp.gender,
-                                    country: response.data.signUp.country,
-                                    primaryEmail: response.data.signUp.primaryEmail,
-                                    secondaryEmail: response.data.signUp.secondaryEmail,
-                                    imageURL: response.data.signUp.imageURL,
-                                    wsToken: response.data.signUp.wsToken,
-                                });
-                                navigation.navigate('Home');
-                            } else {
-                                alert('Invalid Details');
+                <Card style={styles.formCard}>
+                    <TextInput
+                        label="Email"
+                        placeholder="Enter your email"
+                        value={primaryEmail}
+                        onChangeText={(text) => {
+                            setPrimaryEmail(text);
+                            setErrors({ ...errors, primaryEmail: '' });
+                        }}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        leftIcon={<MaterialIcons name="email" size={20} color={colors.neutral[500]} />}
+                        error={errors.primaryEmail}
+                    />
+                    
+                    <TextInput
+                        label="Password"
+                        placeholder="At least 8 characters"
+                        secureTextEntry
+                        value={password}
+                        onChangeText={(text) => {
+                            setPassword(text);
+                            setErrors({ ...errors, password: '' });
+                        }}
+                        leftIcon={<MaterialIcons name="lock" size={20} color={colors.neutral[500]} />}
+                        error={errors.password}
+                    />
+                    
+                    <View style={styles.nameRow}>
+                        <View style={styles.nameInput}>
+                            <TextInput
+                                label="First Name"
+                                placeholder="John"
+                                value={firstName}
+                                onChangeText={(text) => {
+                                    setFirstName(text);
+                                    setErrors({ ...errors, firstName: '' });
+                                }}
+                                leftIcon={<MaterialIcons name="person" size={20} color={colors.neutral[500]} />}
+                                error={errors.firstName}
+                            />
+                        </View>
+                        <View style={styles.nameInput}>
+                            <TextInput
+                                label="Last Name"
+                                placeholder="Doe"
+                                value={lastName}
+                                onChangeText={(text) => {
+                                    setLastName(text);
+                                    setErrors({ ...errors, lastName: '' });
+                                }}
+                                error={errors.lastName}
+                            />
+                        </View>
+                    </View>
+                    
+                    <TextInput
+                        label="Country"
+                        placeholder="Enter your country"
+                        value={country}
+                        onChangeText={(text) => {
+                            setCountry(text);
+                            setErrors({ ...errors, country: '' });
+                        }}
+                        leftIcon={<MaterialIcons name="public" size={20} color={colors.neutral[500]} />}
+                        error={errors.country}
+                    />
+                    
+                    <TextInput
+                        label="Secondary Email (Optional)"
+                        placeholder="Alternate email"
+                        value={secondaryEmail}
+                        onChangeText={setSecondaryEmail}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        leftIcon={<MaterialIcons name="alternate-email" size={20} color={colors.neutral[500]} />}
+                    />
+                    <View style={styles.genderSection}>
+                        <Text style={styles.genderLabel}>Gender</Text>
+                        <View style={styles.radioGroup}>
+                            <TouchableOpacity 
+                                style={[styles.radioButton, gender === 'Male' && styles.radioButtonActive]}
+                                onPress={() => {
+                                    setGender('Male');
+                                    setErrors({ ...errors, gender: '' });
+                                }}
+                            >
+                                <MaterialIcons 
+                                    name="check-circle" 
+                                    size={20} 
+                                    color={gender === 'Male' ? colors.primary.main : colors.neutral[300]} 
+                                />
+                                <Text style={[styles.radioLabel, gender === 'Male' && styles.radioLabelActive]}>
+                                    Male
+                                </Text>
+                            </TouchableOpacity>
+                            
+                            <TouchableOpacity 
+                                style={[styles.radioButton, gender === 'Female' && styles.radioButtonActive]}
+                                onPress={() => {
+                                    setGender('Female');
+                                    setErrors({ ...errors, gender: '' });
+                                }}
+                            >
+                                <MaterialIcons 
+                                    name="check-circle" 
+                                    size={20} 
+                                    color={gender === 'Female' ? colors.primary.main : colors.neutral[300]} 
+                                />
+                                <Text style={[styles.radioLabel, gender === 'Female' && styles.radioLabelActive]}>
+                                    Female
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                        {errors.gender && <Text style={styles.errorText}>{errors.gender}</Text>}
+                    </View>
+
+                    <Button
+                        variant={imageUploaded ? "secondary" : "outline"}
+                        size="md"
+                        fullWidth
+                        onPress={handleUploadFile}
+                        icon={<MaterialIcons name={imageUploaded ? "check" : "cloud-upload"} size={20} color={imageUploaded ? colors.text.inverse : colors.primary.main} />}
+                        style={styles.uploadButton}
+                    >
+                        {imageUploaded ? 'Image Uploaded' : 'Upload Profile Image'}
+                    </Button>
+                    {showVerification && (
+                        <View style={styles.verificationSection}>
+                            <TextInput
+                                label="Verification Code"
+                                placeholder="Enter 6-digit code"
+                                value={verificationCode}
+                                onChangeText={setVerificationCode}
+                                keyboardType="number-pad"
+                                leftIcon={<MaterialIcons name="verified-user" size={20} color={colors.neutral[500]} />}
+                            />
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onPress={async () => {
+                                    try {
+                                        await resendSignUpCode({ username: tempCredentials.username });
+                                        Alert.alert('Success', 'Verification code resent to your email');
+                                    } catch (err) {
+                                        Alert.alert('Error', err.message);
+                                    }
+                                }}
+                                style={styles.resendButton}
+                            >
+                                Resend Code
+                            </Button>
+                        </View>
+                    )}
+
+                    <Button
+                        variant="primary"
+                        size="lg"
+                        fullWidth
+                        loading={loading}
+                        onPress={
+                        async () => {
+                            if (!showVerification && !validateForm()) return;
+                            
+                            setLoading(true);
+                            try {
+                                if (showVerification) {
+                                    // Confirm signup with verification code
+                                    try {
+                                        await confirmSignUp({
+                                            username: tempCredentials.username,
+                                            confirmationCode: verificationCode
+                                        });
+                                        
+                                        Alert.alert(
+                                            'Success!', 
+                                            'Your account has been verified. Please login to continue.',
+                                            [
+                                                {
+                                                    text: 'OK',
+                                                    onPress: () => navigation.navigate('Login')
+                                                }
+                                            ]
+                                        );
+                                    } catch (confirmError) {
+                                        if (confirmError.name === 'NotAuthorizedException' && confirmError.message.includes('CONFIRMED')) {
+                                            Alert.alert(
+                                                'Already Verified', 
+                                                'Your account is already verified. Please login.',
+                                                [
+                                                    {
+                                                        text: 'OK',
+                                                        onPress: () => navigation.navigate('Login')
+                                                    }
+                                                ]
+                                            );
+                                        } else {
+                                            throw confirmError;
+                                        }
+                                    }
+                                } else {
+                                    // Initial signup
+                                    const { isSignUpComplete } = await signUp({
+                                        username: primaryEmail,
+                                        password,
+                                        options: {
+                                            userAttributes: {
+                                                email: primaryEmail
+                                            }
+                                        }
+                                    });
+                                    
+                                    if (!isSignUpComplete) {
+                                        setTempCredentials({ username: primaryEmail, password, firstName, lastName, gender, country, secondaryEmail, imageURL });
+                                        setShowVerification(true);
+                                        Alert.alert('Verification Required', 'Please check your email for the verification code and enter it below.');
+                                    }
+                                }
+                            } catch (err) {
+                                console.error('Signup error:', err);
+                                const message = err.message ? err.message.split('.').join('.\n') : 'An unexpected error occurred';
+                                Alert.alert('Error', message);
+                            } finally {
+                                setLoading(false);
                             }
-                        } catch (err) {
-                            // separate each sentence into new line in err.message
-                            const message = err.message.split('.').join('.\n');
-                            Alert.alert('Error', message);
-                        }
-                    }
-                }>
-                    <Text style={styles.buttonText}>Sign Up</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    title="Login"
-                    onPress={() => navigation.navigate('Login')}>
-                    <Text style={styles.subText}>Already have an account? Login</Text>
-                </TouchableOpacity>
-            </View>
-        </View>
+                        }}
+                    >
+                        {showVerification ? 'Verify Account' : 'Create Account'}
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="md"
+                        fullWidth
+                        onPress={() => navigation.navigate('Login')}
+                        style={styles.loginButton}
+                    >
+                        Already have an account? Login
+                    </Button>
+                </Card>
+            </ScrollView>
+        </KeyboardAvoidingView>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#4CBB17',
+        backgroundColor: colors.secondary[50],
     },
-    innerContainer: {
-        width: '90%',
-        height: '85%',
-        borderRadius: 40,
-        backgroundColor: 'white',
-        paddingHorizontal: '4%',
-        marginTop: 20,
+    scrollContent: {
+        flexGrow: 1,
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing['2xl'],
+    },
+    header: {
+        alignItems: 'center',
+        marginBottom: spacing['2xl'],
+        marginTop: spacing.lg,
+    },
+    logoContainer: {
+        marginBottom: spacing.lg,
+    },
+    logoCircle: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        backgroundColor: colors.background.white,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: colors.secondary.main,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+        elevation: 5,
     },
     title: {
-        fontSize: 24,
-        marginTop: '10%',
-        textAlign: 'center',
-        color: '#007BFF',
-        fontWeight: 'bold',
+        fontSize: typography.fontSize['3xl'],
+        fontWeight: typography.fontWeight.bold,
+        color: colors.text.primary,
+        marginBottom: spacing.xs,
     },
-    inputContainer: {
-        marginTop: '5%',
-        alignItems: 'center',
-        marginBottom: '6%',
+    subtitle: {
+        fontSize: typography.fontSize.base,
+        color: colors.text.secondary,
+        fontWeight: typography.fontWeight.normal,
     },
-    input: {
-        width: '80%',
-        height: 35,
-        borderColor: '#007BFF',
-        borderWidth: 1,
-        borderLeftWidth: 0,
-        borderRightWidth: 0,
-        borderTopWidth: 0,
-        // borderRadius: 10,
-        marginBottom: '5%',
-        padding: 5,
-    },
-    uploadButton: {
-        backgroundColor: '#007BFF',
-        padding: 10,
-        borderRadius: 5,
-        width: '80%',
+    formCard: {
+        width: '100%',
+        maxWidth: 420,
         alignSelf: 'center',
-        marginTop: '4%',
+        paddingVertical: spacing.xl,
+        borderWidth: 0,
     },
-    button: {
-        backgroundColor: '#007BFF',
-        padding: 10,
-        borderRadius: 5,
-        width: '80%',
-        alignSelf: 'center',
+    nameRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        gap: spacing.md,
     },
-    buttonText: {
-        color: 'white',
-        textAlign: 'center',
+    nameInput: {
+        flex: 1,
+    },
+    genderSection: {
+        marginBottom: spacing.md,
+    },
+    genderLabel: {
+        fontSize: typography.fontSize.sm,
+        fontWeight: typography.fontWeight.medium,
+        color: colors.text.primary,
+        marginBottom: spacing.sm,
     },
     radioGroup: {
         flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    radioTitle: {
-        fontSize: 16,
-        color: '#007BFF',
+        gap: spacing.md,
     },
     radioButton: {
+        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.lg,
+        borderRadius: borderRadius.lg,
+        borderWidth: 0,
+        backgroundColor: colors.background.white,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        elevation: 1,
+    },
+    radioButtonActive: {
+        backgroundColor: colors.primary[100],
+        shadowColor: colors.primary.main,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+        elevation: 3,
     },
     radioLabel: {
-        fontSize: 16,
-        marginLeft: 0,
-        color: '#007BFF',
+        fontSize: typography.fontSize.base,
+        color: colors.text.secondary,
+        marginLeft: spacing.sm,
     },
-    subText: {
-        marginTop: 12,
-        color: '#007BFF',
-        textAlign: 'center',
+    radioLabelActive: {
+        color: colors.primary.main,
+        fontWeight: typography.fontWeight.medium,
+    },
+    errorText: {
+        fontSize: typography.fontSize.sm,
+        color: colors.status.error,
+        marginTop: spacing.xs,
+    },
+    uploadButton: {
+        marginVertical: spacing.md,
+    },
+    verificationSection: {
+        marginBottom: spacing.md,
+    },
+    resendButton: {
+        marginTop: spacing.xs,
+    },
+    loginButton: {
+        marginTop: spacing.md,
     },
 });
 

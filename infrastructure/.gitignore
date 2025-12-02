@@ -15,6 +15,9 @@ crash.*.log
 *.tfvars
 *.tfvars.json
 
+# Terraform lock file (platform-specific)
+.terraform.lock.hcl
+
 # Ignore override files (used for local testing)
 override.tf
 override.tf.json

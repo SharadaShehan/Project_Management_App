@@ -1,10 +1,10 @@
 # DynamoDB Module - Single Table Design
 
 resource "aws_dynamodb_table" "main" {
-  name           = "${var.project_name}-${var.environment}-table"
-  billing_mode   = "PAY_PER_REQUEST"  # On-demand pricing
-  hash_key       = "PK"
-  range_key      = "SK"
+  name         = "${var.project_name}-${var.environment}-table"
+  billing_mode = "PAY_PER_REQUEST" # On-demand pricing
+  hash_key     = "PK"
+  range_key    = "SK"
 
   # Enable point-in-time recovery for data protection
   point_in_time_recovery {
@@ -86,7 +86,7 @@ resource "aws_dynamodb_table" "main" {
   # TTL for automatic message expiration (optional - can be enabled later)
   ttl {
     attribute_name = "ExpiresAt"
-    enabled        = false  # Set to true to enable automatic deletion
+    enabled        = false # Set to true to enable automatic deletion
   }
 
   tags = {

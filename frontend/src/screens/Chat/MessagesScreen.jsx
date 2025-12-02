@@ -1,8 +1,13 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, FlatList, StyleSheet, Image } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { MessagesGlobalState } from '../../layout/MessagesState';
 import { UserGlobalState } from '../../layout/UserState';
 import { getLogoImage } from '../../logoImages';
+import { Card, Avatar } from '../../components';
+import { colors } from '../../theme/colors';
+import { typography } from '../../theme/typography';
+import { spacing, borderRadius } from '../../theme/spacing';
 
 const MessagesScreen = ({ navigation }) => {
     const mLimit = 100;
@@ -21,53 +26,64 @@ const MessagesScreen = ({ navigation }) => {
             }
         }
         const dateObj = new Date(parseInt(firstItem.createdAt));
-        // const convertedDate = dateObj.toLocaleString().replace(',', '');
         let convertedDate;
-        // check if date is today
         if (dateObj.getDate() === new Date().getDate()) {
             convertedDate = dateObj.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
         } else if (dateObj.getDate() === new Date().getDate() - 1) {
             convertedDate = 'Yesterday';
         } else if (dateObj.getFullYear() !== new Date().getFullYear()) {
-            // check if year is not current year
             convertedDate = dateObj.toLocaleString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
         } else {
             convertedDate = dateObj.toLocaleString('en-US', { month: 'long', day: 'numeric' });
         }
 
+        let avatarSource, chatTitle, messagePreview;
+        if (firstItem.project && !firstItem.phase) {
+            avatarSource = getLogoImage(firstItem.project.logo);
+            chatTitle = firstItem.project.title;
+        } else if (firstItem.phase) {
+            avatarSource = getLogoImage(firstItem.project.logo);
+            chatTitle = `${firstItem.project.title}: ${firstItem.phase.title}`;
+        } else if (firstItem.receiver) {
+            avatarSource = otherUser.imageURL ? { uri: otherUser.imageURL } : require('../../../images/profile.webp');
+            chatTitle = `${otherUser.firstName} ${otherUser.lastName}`;
+        }
+
+        if (firstItem.sender && (firstItem.phase || firstItem.project)) {
+            messagePreview = `${firstItem.sender.firstName} ${firstItem.sender.lastName}: ${firstItem.content}`;
+        } else if (firstItem.receiver) {
+            messagePreview = firstItem.content;
+        }
+
         return (
-            <TouchableOpacity onPress={() => {
-                if (firstItem.phase) navigation.navigate('PhaseChat', { phase: firstItem.phase, lastMessageIndex: firstItem.index, limit: mLimit })
-                else if (firstItem.project) navigation.navigate('ProjectChat', { project: firstItem.project, lastMessageIndex: firstItem.index, limit: mLimit })
-                else {
-                    if (firstItem.sender.id === userData.id) navigation.navigate('PrivateChat', { user: firstItem.receiver, lastMessageIndex: firstItem.index, limit: mLimit })
-                    else if ((firstItem.receiver.id === userData.id)) navigation.navigate('PrivateChat', { user: firstItem.sender, lastMessageIndex: firstItem.index, limit: mLimit })
-                    else console.log('invalid message');
-                }
-            }} style={styles.itemContainer} key={firstItem.id}>
-                <View style={styles.ImageContainer}>
-                    {firstItem.project && !firstItem.phase && <Image source={getLogoImage(firstItem.project.logo)} style={styles.imageItem} />}
-                    {firstItem.phase && <Image source={getLogoImage(firstItem.project.logo)} style={styles.imageItem} />}
-                    {firstItem.receiver && <Image source={otherUser.imageURL ? { uri: otherUser.imageURL } : require('../../../images/profile.webp')}  style={styles.imageItem} />}
-                </View>
-                <View style={{ flexDirection: 'column', marginTop: 10 }}>
-                    <View style={{ flexDirection: 'row', width: '88%' }}>
-                        <View style={{ width: '75%' }}>
-                            {firstItem.project && !firstItem.phase && <Text style={styles.headerText}>{firstItem.project.title}</Text>}
-                            {firstItem.phase && <Text style={styles.headerText}>{firstItem.project.title}: {firstItem.phase.title}</Text>}
-                            {firstItem.receiver && <Text style={styles.headerText}>{otherUser.firstName} {otherUser.lastName}</Text>}
+            <Card 
+                style={styles.messageCard}
+                variant="outlined"
+                onPress={() => {
+                    if (firstItem.phase) navigation.navigate('PhaseChat', { phase: firstItem.phase, lastMessageIndex: firstItem.index, limit: mLimit })
+                    else if (firstItem.project) navigation.navigate('ProjectChat', { project: firstItem.project, lastMessageIndex: firstItem.index, limit: mLimit })
+                    else {
+                        if (firstItem.sender.id === userData.id) navigation.navigate('PrivateChat', { user: firstItem.receiver, lastMessageIndex: firstItem.index, limit: mLimit })
+                        else if ((firstItem.receiver.id === userData.id)) navigation.navigate('PrivateChat', { user: firstItem.sender, lastMessageIndex: firstItem.index, limit: mLimit })
+                        else console.log('invalid message');
+                    }
+                }}
+            >
+                <View style={styles.messageContent}>
+                    <Avatar 
+                        source={avatarSource}
+                        name={chatTitle}
+                        size="md"
+                    />
+                    <View style={styles.messageInfo}>
+                        <View style={styles.messageHeader}>
+                            <Text style={styles.chatTitle} numberOfLines={1}>{chatTitle}</Text>
+                            <Text style={styles.timestamp}>{convertedDate}</Text>
                         </View>
-                        <View style={{ width: '25%' }}>
-                            <Text style={{ textAlign: 'left', fontSize: 11, color: '#808080', paddingTop: 4 }}
-                            >{convertedDate}</Text>
-                        </View>
-                    </View>
-                    <View style={{ flexDirection: 'row', width: '84%', marginBottom: firstItem.content.length > 30 ? 15 : 0 }}>
-                        {firstItem.sender && (firstItem.phase || firstItem.project) && <Text style={styles.contentText}>{firstItem.sender.firstName} {firstItem.sender.lastName} : {firstItem.content}</Text>}
-                        {firstItem.receiver &&<Text style={styles.contentText}>{firstItem.content}</Text>}
+                        <Text style={styles.messagePreview} numberOfLines={2}>{messagePreview}</Text>
                     </View>
                 </View>
-            </TouchableOpacity>
+            </Card>
         );
     }
 
@@ -77,9 +93,15 @@ const MessagesScreen = ({ navigation }) => {
                 data={messagesData.filter((item) => item.length > 0)}
                 renderItem={renderItem}
                 keyExtractor={(item) => item[0].id.toString()}
+                contentContainerStyle={styles.listContent}
+                showsVerticalScrollIndicator={false}
             />
-            <TouchableOpacity onPress={() => navigation.navigate('NewChat')} style={styles.addNewButton}>
-                <Text style={{ color: '#fff', fontSize: 20 }}>+</Text>
+            <TouchableOpacity 
+                onPress={() => navigation.navigate('NewChat')} 
+                style={styles.fab}
+                activeOpacity={0.8}
+            >
+                <MaterialIcons name="add" size={28} color={colors.text.inverse} />
             </TouchableOpacity>
         </View>
     );
@@ -88,52 +110,61 @@ const MessagesScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#4CBB17',
-        paddingHorizontal: 8,
-        paddingTop: 20,
+        backgroundColor: colors.background.default,
     },
-    itemContainer: {
-        paddingTop: 2,
-        paddingBottom: 6,
-        marginBottom: 4,
+    listContent: {
+        padding: spacing.lg,
+    },
+    messageCard: {
+        marginBottom: spacing.md,
+        borderWidth: 0,
+    },
+    messageContent: {
         flexDirection: 'row',
-        backgroundColor: '#fff',
-        borderRadius: 25,
-        width: '95%',
+        alignItems: 'flex-start',
+        gap: spacing.md,
     },
-    ImageContainer: {
-        margin: 12,
-        // marginTop: 10,
+    messageInfo: {
+        flex: 1,
     },
-    imageItem: {
-        width: 50,
-        height: 50,
-        borderRadius: 50,
-        // margin: 10,
-    },
-    headerText: {
-        fontWeight: 'bold',
-        fontSize: 16,
-        marginBottom: 5,
-        color: '#070'
-    },
-    contentText: {
-        fontWeight: 'bold',
-        color: '#808080'
-    },
-    addNewButton: {
-        position: 'absolute',
-        bottom: 15,
-        right: 15,
-        backgroundColor: '#007BFF',
-        borderRadius: 50,
-        width: 50,
-        height: 50,
+    messageHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
-        justifyContent: 'center'
-    }
-});
+        marginBottom: spacing.xs,
+    },
+    chatTitle: {
+        fontSize: typography.fontSize.base,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.text.primary,
+        flex: 1,
+        marginRight: spacing.sm,
+    },
+    timestamp: {
+        fontSize: typography.fontSize.xs,
+        color: colors.text.secondary,
+    },
+    messagePreview: {
+        fontSize: typography.fontSize.sm,
+        color: colors.text.secondary,
+        lineHeight: typography.lineHeight.normal * typography.fontSize.sm,
+    },
+    fab: {
+        position: 'absolute',
+        bottom: spacing.xl,
+        right: spacing.xl,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: colors.primary.main,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: colors.primary.main,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 8,
+    },
+})
 
 export default MessagesScreen;

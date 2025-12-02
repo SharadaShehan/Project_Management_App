@@ -58,7 +58,7 @@ async function listPosts(event) {
         title: project.title,
         description: project.description
       },
-      author: author ? {
+      owner: author ? {
         id: author.id,
         username: author.username,
         firstName: author.firstName,
@@ -68,18 +68,14 @@ async function listPosts(event) {
       } : null,
       title: post.title,
       content: post.content,
-      replyCount: post.replyCount || 0,
-      createdAt: post.createdAt,
-      updatedAt: post.updatedAt
+      upvotes: post.upvotes || 0,
+      upvotedUsers: [],
+      createdAt: post.createdAt
     };
   });
   
-  // Sort by most recent first (updatedAt for active discussions, createdAt fallback)
-  postsWithDetails.sort((a, b) => {
-    const aTime = a.updatedAt || a.createdAt;
-    const bTime = b.updatedAt || b.createdAt;
-    return bTime.localeCompare(aTime);
-  });
+  // Sort by most recent first
+  postsWithDetails.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   
   return postsWithDetails;
 }

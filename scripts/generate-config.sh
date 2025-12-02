@@ -1,14 +1,21 @@
 #!/bin/bash
 
 # Script to extract Terraform outputs and generate AWS configuration
-# Run this after Terraform deployment: ./generate-config.sh
+# Run this after Terraform deployment: ./scripts/generate-config.sh
 
 set -e
 
-echo "🔧 Extracting Terraform outputs..."
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🔧 Generating Frontend Configuration"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+
+# Get the script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 # Change to infrastructure directory
-cd "$(dirname "$0")/infrastructure"
+cd "${PROJECT_ROOT}/infrastructure"
 
 # Get Terraform outputs
 COGNITO_USER_POOL_ID=$(terraform output -raw cognito_user_pool_id 2>/dev/null || echo "")
@@ -20,19 +27,20 @@ AWS_REGION=$(terraform output -raw aws_region 2>/dev/null || echo "us-east-1")
 S3_PRIVATE_BUCKET=$(terraform output -raw s3_private_bucket 2>/dev/null || echo "")
 S3_PUBLIC_BUCKET=$(terraform output -raw s3_public_bucket 2>/dev/null || echo "")
 
-# Return to root directory
-cd ..
-
 # Check if we got the outputs
 if [ -z "$COGNITO_USER_POOL_ID" ] || [ -z "$APPSYNC_ENDPOINT" ]; then
     echo "❌ Error: Could not retrieve Terraform outputs."
     echo "   Make sure Terraform has been applied successfully."
+    echo "   Run: cd infrastructure && terraform apply"
     exit 1
 fi
 
 echo "✅ Terraform outputs retrieved successfully"
 echo ""
 echo "📝 Generating configuration files..."
+
+# Return to project root
+cd "${PROJECT_ROOT}"
 
 # Generate frontend .env file
 cat > frontend/.env << EOF

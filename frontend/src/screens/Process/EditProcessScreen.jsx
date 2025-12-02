@@ -9,8 +9,15 @@ import { UserGlobalState } from '../../layout/UserState';
 import { SelectList } from 'react-native-dropdown-select-list';
 
 const EditProcessScreen = ({ navigation, route }) => {
-    const processId = route.params.process.id;
-    const projectId = route.params.project.id;
+    const processId = route.params?.process?.id;
+    const projectId = route.params?.project?.id;
+    
+    if (!processId || !projectId) {
+        Alert.alert('Error', 'Invalid process or project');
+        navigation.goBack();
+        return null;
+    }
+    
     const [title, setTitle] = useState(route.params.process.title);
     const [description, setDescription] = useState(route.params.process.description);
     const [status, setStatus] = useState(route.params.process.status);
@@ -29,7 +36,7 @@ const EditProcessScreen = ({ navigation, route }) => {
             if (status !== route.params.process.status) variables.status = status;
             if (priority !== route.params.process.priority) variables.priority = priority;
             const response = await updateProcess({ variables: variables });
-            if (response.data.updateProcess.id) {
+            if (response?.data?.updateProcess?.id) {
                 Alert.alert('Process Updated Successfully');
                 navigation.navigate('Project', { id: projectId, defaultProcess: response.data.updateProcess });
             } else {
@@ -38,7 +45,7 @@ const EditProcessScreen = ({ navigation, route }) => {
         } catch (err) {
             console.log(err);
             // separate each sentence into new line in err.message
-            const message = err.message.split('.').join('.\n');
+            const message = err.message ? err.message.split('.').join('.\n') : 'An unexpected error occurred';
             Alert.alert('Error', message);
         }
     }
@@ -93,88 +100,32 @@ const EditProcessScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
     updateProcessContainer: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#4CBB17',
+        backgroundColor: '#F9FAFB',
     },
     innerContainer: {
-        width: '90%',
-        height: '90%',
-        backgroundColor: '#fff',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: 10,
-        marginBottom: 20
+        flex: 1,
+        margin: 16,
     },
     title: {
         fontSize: 24,
-        marginTop: '12%',
+        fontWeight: '700',
         textAlign: 'center',
-        color: '#000',
-        fontWeight: 'bold',
+        color: '#111827',
+        marginVertical: 24,
     },
     inputContainer: {
-        marginTop: '5%',
-        alignItems: 'center',
-        marginBottom: '6%',
-        width: '100%',
+        gap: 16,
     },
     input: {
-        width: '80%',
-        height: 35,
-        borderColor: '#007BFF',
-        borderWidth: 1,
-        borderLeftWidth: 0,
-        borderRightWidth: 0,
-        borderTopWidth: 0,
-        // borderRadius: 10,
-        marginBottom: '5%',
-        padding: 5,
-    },
-    removeBtn: {
-        color: 'white',
-        backgroundColor: 'red',
-        padding: 3,
-        width: '80%',
-        borderRadius: 5,
-        fontSize: 14,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        marginLeft: 5,
-    },
-    userItemContainer: {
-        padding: 10,
-        backgroundColor: '#eee',
-        marginVertical: 2,
-        borderRadius: 15,
-        width: '100%',
-    },
-    fullName: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#434343',
-        paddingLeft: 8,
-    },
-    username: {
-        fontSize: 12,
-        color: '#434343',
-        paddingRight: 8,
+        backgroundColor: '#FFFFFF',
     },
     rowButtonsContainer: {
-        marginTop: '2%',
         flexDirection: 'row',
+        gap: 16,
+        marginTop: 32,
     },
     button: {
-        backgroundColor: '#007BFF',
-        padding: 10,
-        borderRadius: 5,
-        width: '44%',
-        alignSelf: 'center',
-        marginHorizontal: '3%',
-    },
-    buttonText: {
-        color: 'white',
-        textAlign: 'center',
+        flex: 1,
     },
 });
 

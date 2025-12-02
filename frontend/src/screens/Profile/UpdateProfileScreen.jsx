@@ -1,9 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image } from 'react-native';
+import { View, Text, StyleSheet, Alert, Image, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { UPDATE_PROFILE_MUTATION, GET_PRESIGNED_URL_MUTATION } from '../../graphql/Mutations';
 import { useMutation } from '@apollo/client';
 import { UserGlobalState } from '../../layout/UserState';
 import * as ImagePicker from 'expo-image-picker';
+import { MaterialIcons } from '@expo/vector-icons';
+import Button from '../../components/Button';
+import TextInput from '../../components/TextInput';
+import Card from '../../components/Card';
+import { colors } from '../../theme/colors';
+import { typography } from '../../theme/typography';
+import { spacing, borderRadius } from '../../theme/spacing';
 
 const UpdateProfileScreen = ({navigation}) => {
     const { userData, setUserData } = UserGlobalState();
@@ -62,223 +70,219 @@ const UpdateProfileScreen = ({navigation}) => {
     }
 
     return (
-        <View style={styles.container}>
-            <View style={styles.innerContainer}>
-                <Text style={styles.title}>Update Profile</Text>
-                <View style={styles.inputContainer}>
-                    <View style={styles.rowContainer}>
-                        <Text style={styles.descriptionText}>
-                            First Name
-                        </Text>
+        <SafeAreaView style={styles.container}>
+            <ScrollView contentContainerStyle={styles.scrollContent}>
+                <Card style={styles.formCard}>
+                    <Text style={styles.title}>Update Profile</Text>
+                    
+                    <View style={styles.formSection}>
+                        <Text style={styles.label}>First Name</Text>
                         <TextInput
-                            style={styles.shortInput}
-                            placeholder="First Name"
+                            placeholder="Enter first name"
                             value={firstName}
-                            onChangeText={(text) => setFirstName(text)}
+                            onChangeText={setFirstName}
                         />
                     </View>
-                    <View style={styles.rowContainer}>
-                        <Text style={styles.descriptionText}>
-                            Last Name
-                        </Text>
+                    
+                    <View style={styles.formSection}>
+                        <Text style={styles.label}>Last Name</Text>
                         <TextInput
-                            style={styles.shortInput}
-                            placeholder="Last Name"
+                            placeholder="Enter last name"
                             value={lastName}
-                            onChangeText={(text) => setLastName(text)}
+                            onChangeText={setLastName}
                         />
                     </View>
-                    <View style={styles.rowContainer}>
-                        <Text style={styles.descriptionText}>
-                            Country
-                        </Text>
+                    
+                    <View style={styles.formSection}>
+                        <Text style={styles.label}>Country</Text>
                         <TextInput
-                            style={styles.shortInput}
-                            placeholder="Country"
+                            placeholder="Enter country"
                             value={country}
-                            onChangeText={(text) => setCountry(text)}
+                            onChangeText={setCountry}
                         />
                     </View>
-                    <Text style={styles.emailText}> Email Addresses </Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Primary Email"
-                        value={primaryEmail}
-                        onChangeText={(text) => setPrimaryEmail(text)}
-                    />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Secondary Email"
-                        value={secondaryEmail}
-                        onChangeText={(text) => setSecondaryEmail(text)}
-                    />
-                    {localImage && <Image source={{ uri: localImage }} style={{ width: 100, height: 100, alignSelf: 'center', marginTop: 10 }} />}
-                    <TouchableOpacity style={[styles.uploadButton, imageUploaded ? { backgroundColor: 'green' } : { backgroundColor: '#007BFF' }]} onPress={handleUploadFile} disabled={!uploadButtonEnabled}>
-                        <Text style={styles.buttonText}>{imageUploaded ? 'Image Uploaded ✔' : '📤 Upload Image'}</Text>
-                    </TouchableOpacity>
-                </View>
-                <View style={styles.rowButtonsContainer}>
-                <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Profile')}>
-                    <Text style={styles.buttonText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.button} onPress={
-                    async () => {
-                        try {
-                            let variables = {};
-                            if (firstName) variables.firstName = firstName;
-                            if (lastName) variables.lastName = lastName;
-                            if (country) variables.country = country;
-                            if (primaryEmail) variables.primaryEmail = primaryEmail;
-                            if (secondaryEmail) variables.secondaryEmail = secondaryEmail;
-                            if (imageURL) variables.imageURL = imageURL;
-                            
-                            const response = await updateProfile({ variables: variables });
-                            if (response.data.updateProfile.firstName) {
-                                setUserData({
-                                    id: response.data.updateProfile.id,
-                                    username: response.data.updateProfile.username,
-                                    firstName: response.data.updateProfile.firstName,
-                                    lastName: response.data.updateProfile.lastName,
-                                    gender: response.data.updateProfile.gender,
-                                    country: response.data.updateProfile.country,
-                                    primaryEmail: response.data.updateProfile.primaryEmail,
-                                    secondaryEmail: response.data.updateProfile.secondaryEmail,
-                                    imageURL: response.data.updateProfile.imageURL,
-                                    wsToken: userData.wsToken,
-                                });
-                                Alert.alert('Profile Updated');
-                                navigation.navigate('Profile');
-                            } else {
-                                Alert.alert('An error occurred, please try again');
-                            }
-                        } catch (err) {
-                            // separate each sentence into new line in err.message
-                            const message = err.message.split('.').join('.\n');
-                            Alert.alert('Error', message);
-                        }
-                    }
-                }>
-                    <Text style={styles.buttonText}>Update</Text>
-                </TouchableOpacity>
-                </View>
-            </View>
-        </View>
+                    
+                    <View style={styles.emailSection}>
+                        <Text style={styles.sectionTitle}>Email Addresses</Text>
+                        
+                        <View style={styles.formSection}>
+                            <Text style={styles.label}>Primary Email</Text>
+                            <TextInput
+                                placeholder="Enter primary email"
+                                value={primaryEmail}
+                                onChangeText={setPrimaryEmail}
+                                keyboardType="email-address"
+                            />
+                        </View>
+                        
+                        <View style={styles.formSection}>
+                            <Text style={styles.label}>Secondary Email</Text>
+                            <TextInput
+                                placeholder="Enter secondary email"
+                                value={secondaryEmail}
+                                onChangeText={setSecondaryEmail}
+                                keyboardType="email-address"
+                            />
+                        </View>
+                    </View>
+                    
+                    <View style={styles.imageSection}>
+                        <Text style={styles.sectionTitle}>Profile Picture</Text>
+                        {localImage && (
+                            <Image source={{ uri: localImage }} style={styles.profileImage} />
+                        )}
+                        <Button
+                            variant={imageUploaded ? "primary" : "outline"}
+                            onPress={handleUploadFile}
+                            disabled={!uploadButtonEnabled}
+                            style={styles.uploadButton}
+                        >
+                            <View style={styles.uploadButtonContent}>
+                                <MaterialIcons 
+                                    name={imageUploaded ? "check-circle" : "cloud-upload"} 
+                                    size={20} 
+                                    color={imageUploaded ? colors.neutral.white : colors.primary.main} 
+                                />
+                                <Text style={[styles.uploadButtonText, imageUploaded && styles.uploadButtonTextSuccess]}>
+                                    {imageUploaded ? 'Image Uploaded' : 'Upload Image'}
+                                </Text>
+                            </View>
+                        </Button>
+                    </View>
+                    
+                    <View style={styles.buttonRow}>
+                        <Button
+                            variant="outline"
+                            onPress={() => navigation.navigate('Profile')}
+                            style={styles.actionButton}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onPress={async () => {
+                                try {
+                                    let variables = {};
+                                    if (firstName) variables.firstName = firstName;
+                                    if (lastName) variables.lastName = lastName;
+                                    if (country) variables.country = country;
+                                    if (primaryEmail) variables.primaryEmail = primaryEmail;
+                                    if (secondaryEmail) variables.secondaryEmail = secondaryEmail;
+                                    if (imageURL) variables.imageURL = imageURL;
+                                    
+                                    const response = await updateProfile({ variables: variables });
+                                    if (response?.data?.updateProfile?.firstName) {
+                                        setUserData({
+                                            id: response.data.updateProfile.id,
+                                            username: response.data.updateProfile.username,
+                                            firstName: response.data.updateProfile.firstName,
+                                            lastName: response.data.updateProfile.lastName,
+                                            gender: response.data.updateProfile.gender,
+                                            country: response.data.updateProfile.country,
+                                            primaryEmail: response.data.updateProfile.primaryEmail,
+                                            secondaryEmail: response.data.updateProfile.secondaryEmail,
+                                            imageURL: response.data.updateProfile.imageURL,
+                                            wsToken: userData.wsToken,
+                                        });
+                                        Alert.alert('Success', 'Profile updated successfully');
+                                        navigation.navigate('Profile');
+                                    } else {
+                                        Alert.alert('Error', 'An error occurred, please try again');
+                                    }
+                                } catch (err) {
+                                    const message = err.message ? err.message.split('.').join('.\n') : 'An unexpected error occurred';
+                                    Alert.alert('Error', message);
+                                }
+                            }}
+                            style={styles.actionButton}
+                        >
+                            Update Profile
+                        </Button>
+                    </View>
+                </Card>
+            </ScrollView>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#4CBB17',
+        backgroundColor: colors.background.secondary,
     },
-    innerContainer: {
-        width: '90%',
-        height: '85%',
-        borderRadius: 40,
-        backgroundColor: 'white',
-        paddingHorizontal: '4%',
-        marginTop: '5%',
+    scrollContent: {
+        padding: spacing.md,
+    },
+    formCard: {
+        padding: spacing.lg,
     },
     title: {
-        fontSize: 24,
-        marginTop: '12%',
+        fontSize: typography.fontSize['2xl'],
+        fontWeight: typography.fontWeight.bold,
+        color: colors.text.primary,
         textAlign: 'center',
-        color: '#007BFF',
-        fontWeight: 'bold',
+        marginBottom: spacing.xl,
+        lineHeight: typography.lineHeight.tight * typography.fontSize['2xl'],
     },
-    rowContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
+    formSection: {
+        marginBottom: spacing.lg,
     },
-    descriptionText: {
-        fontSize: 16,
-        width: '30%',
-        marginTop: '4%',
-        fontWeight: 'semibold',
+    label: {
+        fontSize: typography.fontSize.base,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.text.primary,
+        marginBottom: spacing.sm,
+        lineHeight: typography.lineHeight.normal * typography.fontSize.base,
     },
-    shortInput: {
-        width: '45%',
-        height: 35,
-        borderColor: '#007BFF',
-        borderWidth: 1,
-        borderLeftWidth: 0,
-        borderRightWidth: 0,
-        borderTopWidth: 0,
-        // borderRadius: 10,
-        marginBottom: '5%',
-        padding: 5,
+    emailSection: {
+        marginTop: spacing.lg,
+        paddingTop: spacing.lg,
+        borderTopWidth: 1,
+        borderTopColor: colors.neutral[100],
     },
-    emailText: {
-        fontSize: 16,
-        marginTop: '4%',
-        marginBottom: '3%',
-        fontWeight: 'semibold',
-    },
-    inputContainer: {
-        marginTop: '5%',
+    imageSection: {
+        marginTop: spacing.lg,
+        paddingTop: spacing.lg,
+        borderTopWidth: 1,
+        borderTopColor: colors.neutral[100],
         alignItems: 'center',
-        marginBottom: '6%',
     },
-    input: {
-        width: '80%',
-        height: 35,
-        borderColor: '#007BFF',
-        borderWidth: 1,
-        borderLeftWidth: 0,
-        borderRightWidth: 0,
-        borderTopWidth: 0,
-        // borderRadius: 10,
-        marginBottom: '5%',
-        padding: 5,
+    sectionTitle: {
+        fontSize: typography.fontSize.lg,
+        fontWeight: typography.fontWeight.semibold,
+        color: colors.text.primary,
+        marginBottom: spacing.md,
+        lineHeight: typography.lineHeight.normal * typography.fontSize.lg,
+    },
+    profileImage: {
+        width: 100,
+        height: 100,
+        borderRadius: borderRadius.full,
+        marginBottom: spacing.md,
     },
     uploadButton: {
-        backgroundColor: '#007BFF',
-        padding: 10,
-        borderRadius: 5,
-        width: '80%',
-        alignSelf: 'center',
-        marginTop: '4%',
+        width: '100%',
     },
-    rowButtonsContainer: {
-        marginTop: '2%',
+    uploadButtonContent: {
         flexDirection: 'row',
-    },
-    button: {
-        backgroundColor: '#007BFF',
-        padding: 10,
-        borderRadius: 5,
-        width: '44%',
-        alignSelf: 'center',
-        marginHorizontal: '3%',
-    },
-    buttonText: {
-        color: 'white',
-        textAlign: 'center',
-    },
-    radioGroup: {
-        flexDirection: 'row',
+        alignItems: 'center',
         justifyContent: 'center',
-        alignItems: 'center',
+        gap: spacing.sm,
     },
-    radioTitle: {
-        fontSize: 16,
-        color: '#007BFF',
+    uploadButtonText: {
+        fontSize: typography.fontSize.base,
+        color: colors.primary.main,
+        lineHeight: typography.lineHeight.normal * typography.fontSize.base,
     },
-    radioButton: {
+    uploadButtonTextSuccess: {
+        color: colors.neutral.white,
+    },
+    buttonRow: {
         flexDirection: 'row',
-        alignItems: 'center',
+        gap: spacing.md,
+        marginTop: spacing.xl,
     },
-    radioLabel: {
-        fontSize: 16,
-        marginLeft: 0,
-        color: '#007BFF',
-    },
-    subText: {
-        marginTop: 12,
-        color: '#007BFF',
-        textAlign: 'center',
+    actionButton: {
+        flex: 1,
     },
 });
 

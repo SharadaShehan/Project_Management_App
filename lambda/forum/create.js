@@ -53,6 +53,8 @@ async function createPost(event) {
     authorId: userId,
     title,
     content,
+    upvotes: 0,
+    upvotedUserIds: [],
     replyCount: 0,
     createdAt: timestamp,
     updatedAt: timestamp
@@ -98,7 +100,7 @@ async function createPost(event) {
       title: project.title,
       description: project.description
     },
-    author: {
+    owner: {
       id: author.id,
       username: author.username,
       firstName: author.firstName,
@@ -108,9 +110,10 @@ async function createPost(event) {
     },
     title,
     content,
-    replyCount: 0,
-    createdAt: timestamp,
-    updatedAt: timestamp
+    upvotes: 0,
+    upvotedUsers: [],
+    replies: [],
+    createdAt: timestamp
   };
 }
 

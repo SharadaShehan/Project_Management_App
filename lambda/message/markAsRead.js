@@ -60,11 +60,7 @@ async function markAsRead(event) {
   
   if (readBy.includes(userId)) {
     // Already read, no update needed
-    return {
-      id: messageId,
-      success: true,
-      message: 'Message already marked as read'
-    };
+    return true;
   }
   
   // Add user to readBy list
@@ -99,11 +95,7 @@ async function markAsRead(event) {
     );
   }
   
-  return {
-    id: messageId,
-    success: true,
-    message: 'Message marked as read'
-  };
+  return true;
 }
 
 export const handler = lambdaHandler(markAsRead);

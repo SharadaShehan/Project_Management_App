@@ -48,21 +48,35 @@ async function getPost(event) {
   
   // Map replies with author details
   const repliesWithAuthors = replies.map(reply => {
-    const replyAuthor = authorMap.get(reply.authorId);
-    return {
-      id: reply.replyId,
-      content: reply.content,
-      author: replyAuthor ? {
+    let owner;
+    if (reply.authorId === 'AI_ASSISTANT') {
+      owner = {
+        id: 'AI_ASSISTANT',
+        username: 'AI Assistant',
+        firstName: 'AI',
+        lastName: 'Assistant',
+        gender: null,
+        imageURL: null
+      };
+    } else {
+      const replyAuthor = authorMap.get(reply.authorId);
+      owner = replyAuthor ? {
         id: replyAuthor.id,
         username: replyAuthor.username,
         firstName: replyAuthor.firstName,
         lastName: replyAuthor.lastName,
         gender: replyAuthor.gender,
         imageURL: replyAuthor.imageURL
-      } : null,
-      isAIGenerated: reply.isAIGenerated || false,
-      createdAt: reply.createdAt,
-      updatedAt: reply.updatedAt
+      } : null;
+    }
+    
+    return {
+      id: reply.replyId,
+      content: reply.content,
+      upvotes: reply.upvotes || 0,
+      upvotedUsers: [],
+      owner,
+      createdAt: reply.createdAt
     };
   });
   
@@ -77,7 +91,7 @@ async function getPost(event) {
       title: project.title,
       description: project.description
     },
-    author: author ? {
+    owner: author ? {
       id: author.id,
       username: author.username,
       firstName: author.firstName,
@@ -87,10 +101,10 @@ async function getPost(event) {
     } : null,
     title: post.title,
     content: post.content,
+    upvotes: post.upvotes || 0,
+    upvotedUsers: [],
     replies: repliesWithAuthors,
-    replyCount: repliesWithAuthors.length,
-    createdAt: post.createdAt,
-    updatedAt: post.updatedAt
+    createdAt: post.createdAt
   };
 }
 

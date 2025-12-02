@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Button } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { UPDATE_PHASE_MUTATION } from '../../graphql/Mutations';
@@ -8,11 +8,24 @@ import { Alert } from 'react-native';
 import { useState } from 'react';
 import { UserGlobalState } from '../../layout/UserState';
 import { SelectList } from 'react-native-dropdown-select-list';
+import { MaterialIcons } from '@expo/vector-icons';
+import Button from '../../components/Button';
+import TextInput from '../../components/TextInput';
+import Card from '../../components/Card';
+import { colors } from '../../theme/colors';
+import { typography } from '../../theme/typography';
+import { spacing, borderRadius } from '../../theme/spacing';
 
 const EditPhaseScreen = ({ navigation, route }) => {
-    const phaseId = route.params.phase.id;
-    const process = route.params.process;
-    const project = route.params.project;
+    const phaseId = route.params?.phase?.id;
+    const process = route.params?.process;
+    const project = route.params?.project;
+    
+    if (!phaseId) {
+        Alert.alert('Error', 'Invalid phase');
+        navigation.goBack();
+        return null;
+    }
     const [title, setTitle] = useState(route.params.phase.title);
     const [description, setDescription] = useState(route.params.phase.description);
     const [status, setStatus] = useState(route.params.phase.status);
@@ -41,7 +54,7 @@ const EditPhaseScreen = ({ navigation, route }) => {
             if (endTime !== route.params.phase.endTime) variables.endTime = endTime;
             if (timezoneOffset !== route.params.phase.timezoneOffset) variables.timezoneOffset = timezoneOffset;
             const response = await updatePhase({ variables: variables });
-            if (response.data.updatePhase.id) {
+            if (response?.data?.updatePhase?.id) {
                 Alert.alert('Phase Updated Successfully');
                 navigation.navigate('Phase', { id: phaseId, process: process, project: project });
             } else {
@@ -50,7 +63,7 @@ const EditPhaseScreen = ({ navigation, route }) => {
         } catch (err) {
             console.log(err);
             // separate each sentence into new line in err.message
-            const message = err.message.split('.').join('.\n');
+            const message = err.message ? err.message.split('.').join('.\n') : 'An unexpected error occurred';
             Alert.alert('Error', message);
         }
     }
@@ -124,88 +137,27 @@ const EditPhaseScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
     updatePhaseContainer: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#4CBB17',
+        backgroundColor: colors.background.secondary,
     },
     innerContainer: {
-        width: '90%',
-        height: '95%',
-        backgroundColor: '#fff',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: 10,
-        marginBottom: 20
+        flex: 1,
+        margin: spacing.md,
     },
     title: {
-        fontSize: 24,
-        marginTop: '5%',
+        fontSize: typography.fontSize['2xl'],
+        fontWeight: typography.fontWeight.bold,
         textAlign: 'center',
-        color: '#000',
-        fontWeight: 'bold',
+        color: colors.text.primary,
+        marginVertical: spacing.lg,
+        lineHeight: typography.lineHeight.tight * typography.fontSize['2xl'],
     },
     inputContainer: {
-        marginTop: '5%',
-        alignItems: 'center',
-        marginBottom: '6%',
-        width: '100%',
-    },
-    input: {
-        width: '80%',
-        height: 25,
-        borderColor: '#007BFF',
-        borderWidth: 1,
-        borderLeftWidth: 0,
-        borderRightWidth: 0,
-        borderTopWidth: 0,
-        // borderRadius: 10,
-        marginBottom: '5%',
-        padding: 5,
-    },
-    removeBtn: {
-        color: 'white',
-        backgroundColor: 'red',
-        padding: 3,
-        width: '80%',
-        borderRadius: 5,
-        fontSize: 14,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        marginLeft: 5,
-    },
-    userItemContainer: {
-        padding: 10,
-        backgroundColor: '#eee',
-        marginVertical: 2,
-        borderRadius: 15,
-        width: '100%',
-    },
-    fullName: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#434343',
-        paddingLeft: 8,
-    },
-    username: {
-        fontSize: 12,
-        color: '#434343',
-        paddingRight: 8,
+        gap: spacing.md,
     },
     rowButtonsContainer: {
-        marginTop: '2%',
         flexDirection: 'row',
-    },
-    button: {
-        backgroundColor: '#007BFF',
-        padding: 10,
-        borderRadius: 5,
-        width: '44%',
-        alignSelf: 'center',
-        marginHorizontal: '3%',
-    },
-    buttonText: {
-        color: 'white',
-        textAlign: 'center',
+        gap: spacing.md,
+        marginTop: spacing.xl,
     },
 });
 

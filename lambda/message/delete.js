@@ -63,14 +63,10 @@ async function deleteMessage(event) {
   
   // For private messages, delete recipient index too
   if (message.messageType === 'PRIVATE') {
-    await deleteItem(`USER#${message.recipientId}`, `MESSAGE#${messageId}`);
+    await deleteItem(`USER#${message.receiverId || message.recipientId}`, `MESSAGE#${messageId}`);
   }
   
-  return {
-    id: messageId,
-    success: true,
-    message: 'Message deleted successfully'
-  };
+  return true;
 }
 
 export const handler = lambdaHandler(deleteMessage);

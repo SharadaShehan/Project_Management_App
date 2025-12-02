@@ -402,3 +402,31 @@ FodyWeavers.xsd
 
 # vscode
 .vscode
+
+# Lambda deployment artifacts
+lambda/dist/
+lambda/layers/
+lambda/*.zip
+lambda-deploy/
+
+# Terraform lock files
+infrastructure/.terraform.lock.hcl
+
+# Backup and temporary files
+*.backup
+*.bak
+*-temp.js
+test-payload.json
+user-item.json
+resolver-code.js
+
+# GraphQL temporary/backup files
+infrastructure/modules/appsync/*-field.graphql
+infrastructure/modules/appsync/current-schema.graphql
+infrastructure/modules/appsync/*.tf.backup
+infrastructure/modules/appsync/*-type.graphql
+
+# Documentation (should be tracked, but excluding user-specific)
+# CHANGES.md
+# DEPLOYMENT.md
+# QUICKSTART.md

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, FlatList, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Alert } from 'react-native';
 import { PROJECTS_QUERY } from '../../graphql/Queries';
@@ -10,6 +10,11 @@ import { SearchBar } from "react-native-elements";
 import { UserGlobalState } from '../../layout/UserState';
 import { getLogoImage } from '../../logoImages';
 import { MessagesGlobalState } from '../../layout/MessagesState';
+import Avatar from '../../components/Avatar';
+import Card from '../../components/Card';
+import { colors } from '../../theme/colors';
+import { typography } from '../../theme/typography';
+import { spacing, borderRadius } from '../../theme/spacing';
 
 const NewChatScreen = ({ navigation }) => {
     const [searchText, setSearchText] = useState('');
@@ -30,7 +35,7 @@ const NewChatScreen = ({ navigation }) => {
                 const response = await searchUsers({ variables: { searchText: text } });
                 setSearchList(response.data.searchUsers);
             } catch (err) {
-                const message = err.message.split('.').join('.\n');
+                const message = err.message ? err.message.split('.').join('.\n') : 'An unexpected error occurred';
                 Alert.alert('Error', message);
             }
             setSearchLoading(false);
@@ -40,159 +45,163 @@ const NewChatScreen = ({ navigation }) => {
     };
 
     const renderUserItem = ({ item }) => {
-        // check if user is already in messagesData, if so, don't show it
         const userIndexInMessagesData = messagesData.findIndex((messageList) => messageList[0] && messageList[0].receiver && (messageList[0].receiver.id === item.id || messageList[0].sender.id === item.id));
         if (userIndexInMessagesData > -1) return null;
-        // check if user is the same as the logged in user, if so, don't show it
         if (item.id === userData.id) return null;
         return (
             <TouchableOpacity onPress={() => { navigation.navigate('PrivateChat', { user: item }) }}  style={styles.userItemContainer} key={item.id}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Image source={item.imageURL ? { uri: item.imageURL } : require('../../../images/profile.webp')} style={{ width: 20, height: 20, borderRadius: 25 }} />
-                    <Text style={styles.fullName}>{item.firstName} {item.lastName}</Text>
-                    <Text style={styles.username}> ({item.username})</Text>
+                <View style={styles.itemContent}>
+                    <Avatar
+                        imageUrl={item.imageURL}
+                        name={`${item.firstName} ${item.lastName}`}
+                        size={32}
+                    />
+                    <View style={styles.textContainer}>
+                        <Text style={styles.fullName}>{item.firstName} {item.lastName}</Text>
+                        <Text style={styles.username}>@{item.username}</Text>
+                    </View>
                 </View>
             </TouchableOpacity>
         );
     };
 
     const renderProjectItem = ({ item }) => {
-        // check if project is already in messagesData, if so, don't show it
         const projectIndexInMessagesData = messagesData.findIndex((messageList) => messageList[0] && messageList[0].project && messageList[0].project.id === item.id);
         if (projectIndexInMessagesData > -1) return null;
         return (
             <TouchableOpacity onPress={() => { navigation.navigate('ProjectChat', { project: item }) }} style={styles.userItemContainer} key={item.id}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Image source={getLogoImage(item.logo)} style={{ width: 20, height: 20, borderRadius: 25 }} />
-                    <Text style={styles.fullName}>{item.title}</Text>
+                <View style={styles.itemContent}>
+                    <Avatar
+                        imageUrl={getLogoImage(item.logo)}
+                        name={item.title}
+                        size={32}
+                    />
+                    <Text style={styles.projectName}>{item.title}</Text>
                 </View>
             </TouchableOpacity>
         );
     };
 
     return (
-        <SafeAreaView style={styles.createProjectContainer}>
-            <View style={styles.innerContainer}>
-                <Text style={styles.title}>Select User/Project</Text>
-                <View style={styles.inputContainer}>
-                    <Text style={{ textAlign: 'center', fontSize: 18, fontWeight: 'bold', marginTop: '5%' }}>Users</Text>
-                    <SearchBar
-                        placeholder="Search for Users"
-                        onChangeText={searchTextChangeHandler}
-                        value={searchText}
-                        onClear={() => setSearchList([])}
-                        containerStyle={{ backgroundColor: 'transparent', borderColor: 'transparent', width: '85%' }}
-                        inputContainerStyle={{ backgroundColor: '#eee' }}
-                        inputStyle={{ color: '#000', fontSize: 14 }}
-                        leftIconContainerStyle={{ paddingLeft: 5 }}
-                        lightTheme={true}
-                        round={true}
-                        showCancel={searchText.length > 0}
-                        showLoading={searchLoading}
-                    />
-                    <FlatList
-                        data={searchList}
-                        renderItem={renderUserItem}
-                        keyExtractor={(item) => item.id}
-                        initialNumToRender={5}
-                    />
-                    <FlatList
-                        data={projectsData.projects}
-                        renderItem={renderProjectItem}
-                        keyExtractor={(item) => item.id}
-                        initialNumToRender={5}
-                        ListHeaderComponent={<Text style={{ textAlign: 'center', fontSize: 18, fontWeight: 'bold', marginBottom: '6%', marginTop: '8%' }}>Projects</Text>}
-                    />
-                </View>
-            </View>
+        <SafeAreaView style={styles.container}>
+            <ScrollView contentContainerStyle={styles.scrollContent}>
+                <Card style={styles.formCard}>
+                    <Text style={styles.title}>Start New Chat</Text>
+                    
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>Users</Text>
+                        <SearchBar
+                            placeholder="Search for Users"
+                            onChangeText={searchTextChangeHandler}
+                            value={searchText}
+                            onClear={() => setSearchList([])}
+                            containerStyle={styles.searchContainer}
+                            inputContainerStyle={styles.searchInputContainer}
+                            inputStyle={styles.searchInput}
+                            leftIconContainerStyle={{ paddingLeft: 5 }}
+                            lightTheme={true}
+                            round={true}
+                            showCancel={searchText.length > 0}
+                            showLoading={searchLoading}
+                        />
+                        <FlatList
+                            data={searchList}
+                            renderItem={renderUserItem}
+                            keyExtractor={(item) => item.id}
+                            initialNumToRender={5}
+                            scrollEnabled={false}
+                        />
+                    </View>
+                    
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>Projects</Text>
+                        <FlatList
+                            data={projectsData.projects}
+                            renderItem={renderProjectItem}
+                            keyExtractor={(item) => item.id}
+                            initialNumToRender={5}
+                            scrollEnabled={false}
+                        />
+                    </View>
+                </Card>
+            </ScrollView>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    createProjectContainer: {
+    container: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#4CBB17',
+        backgroundColor: colors.background.secondary,
     },
-    innerContainer: {
-        width: '90%',
-        height: '90%',
-        backgroundColor: '#fff',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: 10,
+    scrollContent: {
+        padding: spacing.md,
+    },
+    formCard: {
+        padding: spacing.lg,
     },
     title: {
-        fontSize: 24,
-        marginTop: '12%',
+        fontSize: typography.fontSize['2xl'],
+        fontWeight: typography.fontWeight.bold,
+        color: colors.text.primary,
         textAlign: 'center',
-        color: '#000',
-        fontWeight: 'bold',
+        marginBottom: spacing.xl,
+        lineHeight: typography.lineHeight.tight * typography.fontSize['2xl'],
     },
-    inputContainer: {
-        marginTop: '5%',
-        alignItems: 'center',
-        marginBottom: '6%',
-        width: '100%',
+    section: {
+        marginBottom: spacing.lg,
     },
-    input: {
-        width: '80%',
-        height: 35,
-        borderColor: '#007BFF',
-        borderWidth: 1,
-        borderLeftWidth: 0,
-        borderRightWidth: 0,
-        borderTopWidth: 0,
-        // borderRadius: 10,
-        marginBottom: '5%',
-        padding: 5,
-    },
-    removeBtn: {
-        color: 'white',
-        backgroundColor: 'red',
-        padding: 3,
-        width: '80%',
-        borderRadius: 5,
-        fontSize: 14,
-        fontWeight: 'bold',
+    sectionTitle: {
+        fontSize: typography.fontSize.lg,
+        fontWeight: typography.fontWeight.semibold,
+        color: colors.text.primary,
+        marginBottom: spacing.md,
         textAlign: 'center',
-        marginLeft: 5,
+        lineHeight: typography.lineHeight.normal * typography.fontSize.lg,
+    },
+    searchContainer: {
+        backgroundColor: 'transparent',
+        borderColor: 'transparent',
+        paddingHorizontal: 0,
+    },
+    searchInputContainer: {
+        backgroundColor: colors.neutral[50],
+    },
+    searchInput: {
+        color: colors.text.primary,
+        fontSize: typography.fontSize.sm,
     },
     userItemContainer: {
-        padding: 14,
-        backgroundColor: '#eee',
-        marginVertical: 2,
-        borderRadius: 10,
-        width: '100%',
+        padding: spacing.md,
+        backgroundColor: colors.neutral[50],
+        marginBottom: spacing.sm,
+        borderRadius: borderRadius.md,
+    },
+    itemContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+    },
+    textContainer: {
+        flex: 1,
     },
     fullName: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#434343',
-        paddingLeft: 8,
+        fontSize: typography.fontSize.base,
+        fontWeight: typography.fontWeight.medium,
+        color: colors.text.primary,
+        lineHeight: typography.lineHeight.normal * typography.fontSize.base,
     },
     username: {
-        fontSize: 12,
-        color: '#434343',
-        paddingRight: 8,
+        fontSize: typography.fontSize.sm,
+        color: colors.text.secondary,
+        lineHeight: typography.lineHeight.normal * typography.fontSize.sm,
     },
-    rowButtonsContainer: {
-        marginTop: '2%',
-        flexDirection: 'row',
-    },
-    button: {
-        backgroundColor: '#007BFF',
-        padding: 10,
-        borderRadius: 5,
-        width: '44%',
-        alignSelf: 'center',
-        marginHorizontal: '3%',
-    },
-    buttonText: {
-        color: 'white',
-        textAlign: 'center',
+    projectName: {
+        fontSize: typography.fontSize.base,
+        fontWeight: typography.fontWeight.medium,
+        color: colors.text.primary,
+        flex: 1,
+        lineHeight: typography.lineHeight.normal * typography.fontSize.base,
     },
 });
 

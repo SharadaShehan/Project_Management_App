@@ -34,14 +34,12 @@ async function deleteTask(event) {
   // Delete phase-task relationship
   await deleteItem(`PHASE#${task.phaseId}`, `TASK#${id}`);
   
-  // Delete user-task relationship
-  await deleteItem(`USER#${task.assigneeId}`, `TASK#${id}`);
+  // Delete user-task relationship only if assignee exists
+  if (task.assigneeId) {
+    await deleteItem(`USER#${task.assigneeId}`, `TASK#${id}`);
+  }
   
-  return {
-    id,
-    success: true,
-    message: 'Task deleted successfully'
-  };
+  return true;
 }
 
 export const handler = lambdaHandler(deleteTask);

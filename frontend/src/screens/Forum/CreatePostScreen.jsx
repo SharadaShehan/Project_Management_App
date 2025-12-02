@@ -1,10 +1,16 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CREATE_POST_MUTATION } from '../../graphql/Mutations';
 import { useMutation } from '@apollo/client';
 import { Alert } from 'react-native';
 import { useState } from 'react';
+import Button from '../../components/Button';
+import TextInput from '../../components/TextInput';
+import Card from '../../components/Card';
+import { colors } from '../../theme/colors';
+import { typography } from '../../theme/typography';
+import { spacing } from '../../theme/spacing';
 
 const CreatePostScreen = ({ navigation, route }) => {
     const [title, setTitle] = useState('');
@@ -15,7 +21,7 @@ const CreatePostScreen = ({ navigation, route }) => {
     const createPostHandler = async () => {
         try {
             const response = await createPost({ variables: { projectId, title, content } });
-            if (response.data.createPost.id) {
+            if (response?.data?.createPost?.id) {
                 Alert.alert('Success', 'Post created successfully');
                 navigation.navigate('Posts', { projectId: projectId, projectTitle: route.params.projectTitle });
             } else {
@@ -24,119 +30,99 @@ const CreatePostScreen = ({ navigation, route }) => {
         } catch (err) {
             console.log(err);
             // separate each sentence into new line in err.message
-            const message = err.message.split('.').join('.\n');
+            const message = err.message ? err.message.split('.').join('.\n') : 'An unexpected error occurred';
             Alert.alert('Error', message);
         }
     };
 
     return (
-        <SafeAreaView style={styles.createPostContainer}>
-            <View style={styles.innerContainer}>
-                <Text style={styles.title}>Create Post</Text>
-                <View style={styles.inputContainer}>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Title"
-                        value={title}
-                        onChangeText={setTitle}
-                    />
-                    <TextInput
-                        style={styles.textBox}
-                        placeholder="Content"
-                        value={content}
-                        onChangeText={setContent}
-                        multiline={true}
-                    />
-                </View>
-                <TouchableOpacity style={styles.button} onPress={createPostHandler}>
-                    <Text style={styles.buttonText}>Create</Text>
-                </TouchableOpacity>
-            </View>
+        <SafeAreaView style={styles.container}>
+            <ScrollView contentContainerStyle={styles.scrollContent}>
+                <Card style={styles.formCard}>
+                    <Text style={styles.title}>Create Post</Text>
+                    
+                    <View style={styles.formSection}>
+                        <Text style={styles.label}>Title</Text>
+                        <TextInput
+                            placeholder="Enter post title"
+                            value={title}
+                            onChangeText={setTitle}
+                        />
+                    </View>
+                    
+                    <View style={styles.formSection}>
+                        <Text style={styles.label}>Content</Text>
+                        <TextInput
+                            placeholder="Write your post content here..."
+                            value={content}
+                            onChangeText={setContent}
+                            multiline
+                            numberOfLines={8}
+                            style={styles.textArea}
+                        />
+                    </View>
+                    
+                    <View style={styles.buttonRow}>
+                        <Button
+                            variant="outline"
+                            onPress={() => navigation.navigate('Posts', { projectId: projectId, projectTitle: route.params.projectTitle })}
+                            style={styles.actionButton}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onPress={createPostHandler}
+                            style={styles.actionButton}
+                        >
+                            Create Post
+                        </Button>
+                    </View>
+                </Card>
+            </ScrollView>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    createPostContainer: {
+    container: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#4CBB17',
+        backgroundColor: colors.background.secondary,
     },
-    innerContainer: {
-        width: '90%',
-        height: '90%',
-        backgroundColor: '#fff',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: 10,
+    scrollContent: {
+        padding: spacing.md,
+    },
+    formCard: {
+        padding: spacing.lg,
     },
     title: {
-        fontSize: 24,
-        marginTop: '12%',
+        fontSize: typography.fontSize['2xl'],
+        fontWeight: typography.fontWeight.bold,
+        color: colors.text.primary,
         textAlign: 'center',
-        color: '#007BFF',
-        fontWeight: 'bold',
+        marginBottom: spacing.xl,
+        lineHeight: typography.lineHeight.tight * typography.fontSize['2xl'],
     },
-    inputContainer: {
-        marginTop: '5%',
-        alignItems: 'center',
-        marginBottom: '6%',
-        width: '100%',
+    formSection: {
+        marginBottom: spacing.lg,
     },
-    input: {
-        width: '80%',
-        height: 35,
-        borderColor: '#007BFF',
-        borderWidth: 1,
-        borderLeftWidth: 0,
-        borderRightWidth: 0,
-        borderTopWidth: 0,
-        // borderRadius: 10,
-        marginBottom: '5%',
-        padding: 5,
+    label: {
+        fontSize: typography.fontSize.base,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.text.primary,
+        marginBottom: spacing.sm,
+        lineHeight: typography.lineHeight.normal * typography.fontSize.base,
     },
-    textBox: {
-        width: '80%',
-        height: 150,
-        borderColor: '#007BFF',
-        borderWidth: 1,
+    textArea: {
+        minHeight: 200,
         textAlignVertical: 'top',
-        padding: 5,
     },
-    userItemContainer: {
-        padding: 10,
-        backgroundColor: '#eee',
-        marginVertical: 2,
-        borderRadius: 15,
-        width: '100%',
-    },
-    fullName: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#434343',
-        paddingLeft: 8,
-    },
-    username: {
-        fontSize: 12,
-        color: '#434343',
-        paddingRight: 8,
-    },
-    rowButtonsContainer: {
-        marginTop: '2%',
+    buttonRow: {
         flexDirection: 'row',
+        gap: spacing.md,
+        marginTop: spacing.xl,
     },
-    button: {
-        backgroundColor: '#007BFF',
-        padding: 10,
-        borderRadius: 5,
-        width: '44%',
-        alignSelf: 'center',
-        marginHorizontal: '3%',
-    },
-    buttonText: {
-        color: 'white',
-        textAlign: 'center',
+    actionButton: {
+        flex: 1,
     },
 });
 

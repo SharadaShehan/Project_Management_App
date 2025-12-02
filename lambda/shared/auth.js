@@ -8,10 +8,8 @@ const USER_POOL_ID = process.env.COGNITO_USER_POOL_ID;
  * Extract user ID from Cognito JWT token (AppSync context)
  * AppSync automatically validates the token and provides claims
  */
-export function getUserIdFromContext(context) {
-  // AppSync provides identity in context.identity
-  const identity = context.identity;
-  
+export function getUserIdFromContext(identity) {
+  // Identity object is passed directly from event.identity
   if (!identity || !identity.sub) {
     throw new Error('Unauthorized: No valid user identity found');
   }
@@ -22,9 +20,8 @@ export function getUserIdFromContext(context) {
 /**
  * Extract username from context
  */
-export function getUsernameFromContext(context) {
-  const identity = context.identity;
-  
+export function getUsernameFromContext(identity) {
+  // Identity object is passed directly from event.identity
   if (!identity || !identity.username) {
     throw new Error('Unauthorized: No valid username found');
   }
@@ -35,9 +32,8 @@ export function getUsernameFromContext(context) {
 /**
  * Get user claims from context
  */
-export function getUserClaims(context) {
-  const identity = context.identity;
-  
+export function getUserClaims(identity) {
+  // Identity object is passed directly from event.identity
   if (!identity || !identity.claims) {
     throw new Error('Unauthorized: No claims found');
   }
@@ -48,9 +44,9 @@ export function getUserClaims(context) {
 /**
  * Check if user is authenticated
  */
-export function isAuthenticated(context) {
+export function isAuthenticated(identity) {
   try {
-    getUserIdFromContext(context);
+    getUserIdFromContext(identity);
     return true;
   } catch {
     return false;

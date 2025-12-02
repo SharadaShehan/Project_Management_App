@@ -27,21 +27,21 @@ async function updateProject(event) {
     updatedAt: getCurrentTimestamp()
   };
   
-  if (title !== undefined) {
+  if (title !== undefined && title !== null && title !== '') {
     if (!isValidLength(title, 1, 100)) {
       throw new ValidationError('Title must be 1-100 characters');
     }
     updates.title = title;
   }
   
-  if (description !== undefined) {
+  if (description !== undefined && description !== null && description !== '') {
     if (!isValidLength(description, 1, 500)) {
       throw new ValidationError('Description must be 1-500 characters');
     }
     updates.description = description;
   }
   
-  if (status !== undefined) {
+  if (status !== undefined && status !== null && status !== '') {
     if (!isValidProjectStatus(status)) {
       throw new ValidationError('Invalid project status');
     }
@@ -49,7 +49,7 @@ async function updateProject(event) {
     updates.GSI2SK = status; // Update GSI2 sort key for status queries
   }
   
-  if (defaultProcess !== undefined) {
+  if (defaultProcess !== undefined && defaultProcess !== null && defaultProcess !== '') {
     // Verify process exists and belongs to this project
     if (defaultProcess) {
       const processItem = await getItem(`PROCESS#${defaultProcess}`, 'METADATA');

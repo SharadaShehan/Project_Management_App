@@ -53,30 +53,50 @@ export async function putItem(item) {
 
 /**
  * Update an item in DynamoDB
+ * @param {string} pk - Partition key
+ * @param {string} sk - Sort key  
+ * @param {string|object} updateExpression - Either a complete UpdateExpression string or an object of updates
+ * @param {object} expressionAttributeNames - Expression attribute names (optional if updates object provided)
+ * @param {object} expressionAttributeValues - Expression attribute values (optional if updates object provided)
  */
-export async function updateItem(pk, sk, updates) {
-  const updateExpressions = [];
-  const expressionAttributeNames = {};
-  const expressionAttributeValues = {};
+export async function updateItem(pk, sk, updateExpression, expressionAttributeNames, expressionAttributeValues) {
+  let finalUpdateExpression;
+  let finalExpressionAttributeNames;
+  let finalExpressionAttributeValues;
   
-  let index = 0;
-  for (const [key, value] of Object.entries(updates)) {
-    const attrName = `#attr${index}`;
-    const attrValue = `:val${index}`;
+  // If updateExpression is a string, use it directly with provided attributes
+  if (typeof updateExpression === 'string') {
+    finalUpdateExpression = updateExpression;
+    finalExpressionAttributeNames = expressionAttributeNames || {};
+    finalExpressionAttributeValues = expressionAttributeValues || {};
+  } else {
+    // If updateExpression is an object, build the expression from it
+    const updates = updateExpression;
+    const updateExpressions = [];
+    finalExpressionAttributeNames = {};
+    finalExpressionAttributeValues = {};
     
-    updateExpressions.push(`${attrName} = ${attrValue}`);
-    expressionAttributeNames[attrName] = key;
-    expressionAttributeValues[attrValue] = value;
+    let index = 0;
+    for (const [key, value] of Object.entries(updates)) {
+      const attrName = `#attr${index}`;
+      const attrValue = `:val${index}`;
+      
+      updateExpressions.push(`${attrName} = ${attrValue}`);
+      finalExpressionAttributeNames[attrName] = key;
+      finalExpressionAttributeValues[attrValue] = value;
+      
+      index++;
+    }
     
-    index++;
+    finalUpdateExpression = `SET ${updateExpressions.join(', ')}`;
   }
   
   const command = new UpdateCommand({
     TableName: TABLE_NAME,
     Key: { PK: pk, SK: sk },
-    UpdateExpression: `SET ${updateExpressions.join(', ')}`,
-    ExpressionAttributeNames: expressionAttributeNames,
-    ExpressionAttributeValues: expressionAttributeValues,
+    UpdateExpression: finalUpdateExpression,
+    ExpressionAttributeNames: finalExpressionAttributeNames,
+    ExpressionAttributeValues: finalExpressionAttributeValues,
     ReturnValues: 'ALL_NEW'
   });
   

@@ -1,9 +1,15 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, FlatList, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RESPOND_REQUEST_MUTATION, DELETE_REQUEST_MUTATION } from '../../graphql/Mutations';
 import { RECEIVED_REQUESTS_QUERY } from '../../graphql/Queries';
 import { useMutation, useQuery } from '@apollo/client';
+import Button from '../../components/Button';
+import Card from '../../components/Card';
+import Badge from '../../components/Badge';
+import { colors } from '../../theme/colors';
+import { typography } from '../../theme/typography';
+import { spacing, borderRadius } from '../../theme/spacing';
 
 const ViewInvitationsScreen = ({ navigation, route }) => {
     const [respondRequest] = useMutation(RESPOND_REQUEST_MUTATION);
@@ -18,7 +24,7 @@ const ViewInvitationsScreen = ({ navigation, route }) => {
             }
             const variables = { id: requestId, status: status };
             const response = await respondRequest({ variables: variables });
-            if (response.data.respondRequest.id) {
+            if (response?.data?.respondRequest?.id) {
                 if (response.data.respondRequest.status === 'Accepted') {
                     Alert.alert('Request Accepted');
                     navigation.navigate('ViewInvitations');
@@ -35,7 +41,7 @@ const ViewInvitationsScreen = ({ navigation, route }) => {
         } catch (err) {
             console.log(err);
             // separate each sentence into new line in err.message
-            const message = err.message.split('.').join('.\n');
+            const message = err.message ? err.message.split('.').join('.\n') : 'An unexpected error occurred';
             Alert.alert('Error', message);
         }
     }
@@ -57,146 +63,136 @@ const ViewInvitationsScreen = ({ navigation, route }) => {
         } catch (err) {
             console.log(err);
             // separate each sentence into new line in err.message
-            const message = err.message.split('.').join('.\n');
+            const message = err.message ? err.message.split('.').join('.\n') : 'An unexpected error occurred';
             Alert.alert('Error', message);
         }
     }
 
     const requestItem = ({ item }) => {
         return (
-            <View style={{ padding: 15, paddingHorizontal: 5, marginHorizontal: 15, borderWidth: 1, borderColor: '#007BFF', borderRadius: 5 }}>
-                <Text style={styles.contentText}>{item.project.owner.firstName} {item.project.owner.lastName} ({item.project.owner.username}) invites you to join project "{item.project.title}"</Text>
-                    {item.status === 'Pending' && (
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <TouchableOpacity style={styles.button} onPress={() => respondRequestHandler(item.id, 'Accepted')}>
-                            <Text style={styles.buttonText}>Accept</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.button} onPress={() => respondRequestHandler(item.id, 'Rejected')}>
-                            <Text style={styles.buttonText}>Reject</Text>
-                        </TouchableOpacity>
+            <Card style={styles.requestCard}>
+                <Text style={styles.contentText}>
+                    {item.project.owner.firstName} {item.project.owner.lastName} (@{item.project.owner.username}) invites you to join project "{item.project.title}"
+                </Text>
+                {item.status === 'Pending' && (
+                    <View style={styles.buttonRow}>
+                        <Button
+                            onPress={() => respondRequestHandler(item.id, 'Accepted')}
+                            style={styles.actionButton}
+                        >
+                            Accept
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onPress={() => respondRequestHandler(item.id, 'Rejected')}
+                            style={styles.actionButton}
+                        >
+                            Reject
+                        </Button>
                     </View>
-                    )}
-                    {(item.status === 'Accepted' || item.status === 'Rejected') && (
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={[styles.respondedStatusText, { color: item.status === 'Accepted' ? '#00dd00' : '#dd0000' }]}>Request {item.status}</Text>
-                        <TouchableOpacity style={styles.deleteBtn} onPress={() => {
-                            Alert.alert('Delete Request', 'Are you sure you want to delete this request?', [
-                                { text: 'Cancel', onPress: () => {} },
-                                { text: 'Delete', onPress: () => deleteRequestHandler(item.id) }
-                            ]);
-                        }}>
-                            <Text style={styles.buttonText}>Delete</Text>
-                        </TouchableOpacity>
+                )}
+                {(item.status === 'Accepted' || item.status === 'Rejected') && (
+                    <View style={styles.statusRow}>
+                        <Badge
+                            label={`Request ${item.status}`}
+                            variant={item.status === 'Accepted' ? 'success' : 'error'}
+                        />
+                        <Button
+                            variant="error"
+                            onPress={() => {
+                                Alert.alert('Delete Request', 'Are you sure you want to delete this request?', [
+                                    { text: 'Cancel', onPress: () => {} },
+                                    { text: 'Delete', onPress: () => deleteRequestHandler(item.id) }
+                                ]);
+                            }}
+                            style={styles.deleteButton}
+                        >
+                            Delete
+                        </Button>
                     </View>
-                    )}
-            </View>
+                )}
+            </Card>
         );
     };
 
     return (
-        <SafeAreaView style={styles.inviteUsersContainer}>
+        <SafeAreaView style={styles.container}>
             <View style={styles.innerContainer}>
                 <Text style={styles.title}>Project Invitations</Text>
-                    <FlatList
-                        data={requestsData ? requestsData.receivedRequests : []}
-                        renderItem={requestItem}
-                        keyExtractor={(item) => item.id}
-                        initialNumToRender={8}
-                    />
+                <FlatList
+                    data={requestsData ? requestsData.receivedRequests : []}
+                    renderItem={requestItem}
+                    keyExtractor={(item) => item.id}
+                    initialNumToRender={8}
+                    contentContainerStyle={styles.listContent}
+                    ListEmptyComponent={
+                        <Card style={styles.emptyCard}>
+                            <Text style={styles.emptyText}>No invitations</Text>
+                        </Card>
+                    }
+                />
             </View>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    inviteUsersContainer: {
+    container: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#4CBB17',
+        backgroundColor: colors.background.secondary,
     },
     innerContainer: {
-        width: '90%',
-        height: '95%',
-        marginBottom: '6%',
-        backgroundColor: '#fff',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: 10,
+        flex: 1,
+        padding: spacing.md,
     },
     title: {
-        fontSize: 24,
-        marginTop: '12%',
-        marginBottom: '6%',
+        fontSize: typography.fontSize['2xl'],
+        fontWeight: typography.fontWeight.bold,
+        color: colors.text.primary,
         textAlign: 'center',
-        color: '#000',
-        fontWeight: 'bold',
+        marginVertical: spacing.lg,
+        lineHeight: typography.lineHeight.tight * typography.fontSize['2xl'],
     },
-    inputContainer: {
-        marginTop: '5%',
-        alignItems: 'center',
-        marginBottom: '6%',
-        width: '100%',
+    listContent: {
+        gap: spacing.md,
     },
-    input: {
-        width: '80%',
-        height: 35,
-        borderColor: '#007BFF',
-        borderWidth: 1,
-        borderLeftWidth: 0,
-        borderRightWidth: 0,
-        borderTopWidth: 0,
-        // borderRadius: 10,
-        marginBottom: '5%',
-        padding: 5,
-    },
-    removeBtn: {
-        color: 'white',
-        backgroundColor: 'red',
-        padding: 3,
-        width: '80%',
-        borderRadius: 5,
-        fontSize: 14,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        marginLeft: 5,
+    requestCard: {
+        padding: spacing.md,
+        marginBottom: spacing.sm,
     },
     contentText: {
-        fontSize: 15,
-        fontWeight: 'bold',
-        color: '#434343',
-        paddingLeft: 8,
-        marginBottom: 8,
+        fontSize: typography.fontSize.base,
+        fontWeight: typography.fontWeight.medium,
+        color: colors.text.primary,
+        marginBottom: spacing.md,
+        lineHeight: typography.lineHeight.relaxed * typography.fontSize.base,
     },
-    respondedStatusText: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#434343',
-        paddingLeft: 8,
-    },
-    deleteBtn: {
-        backgroundColor: 'red',
-        padding: 8,
-        borderRadius: 5,
-        width: '44%',
-        alignSelf: 'center',
-        marginHorizontal: '3%',
-    },
-    rowButtonsContainer: {
-        marginTop: '2%',
+    buttonRow: {
         flexDirection: 'row',
+        gap: spacing.md,
+        marginTop: spacing.sm,
     },
-    button: {
-        backgroundColor: '#007BFF',
-        padding: 8,
-        borderRadius: 5,
-        width: '44%',
-        alignSelf: 'center',
-        marginHorizontal: '3%',
+    actionButton: {
+        flex: 1,
     },
-    buttonText: {
-        color: 'white',
-        textAlign: 'center',
+    statusRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginTop: spacing.sm,
+    },
+    deleteButton: {
+        flex: 0,
+        minWidth: 100,
+    },
+    emptyCard: {
+        padding: spacing.xl,
+        alignItems: 'center',
+    },
+    emptyText: {
+        fontSize: typography.fontSize.base,
+        color: colors.text.secondary,
+        fontStyle: 'italic',
     },
 });
 

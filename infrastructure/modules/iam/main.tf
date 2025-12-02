@@ -2,7 +2,7 @@
 
 # Lambda Execution Role
 resource "aws_iam_role" "lambda_execution" {
-  name               = "${var.project_name}-${var.environment}-lambda-execution-role"
+  name = "${var.project_name}-${var.environment}-lambda-execution-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -153,7 +153,7 @@ resource "aws_iam_role_policy" "lambda_cognito" {
 
 # AppSync Service Role
 resource "aws_iam_role" "appsync_service" {
-  name               = "${var.project_name}-${var.environment}-appsync-service-role"
+  name = "${var.project_name}-${var.environment}-appsync-service-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -243,7 +243,7 @@ resource "aws_iam_role_policy" "appsync_cloudwatch" {
 
 # Cognito Trigger Lambda Role (for pre-signup and post-confirmation)
 resource "aws_iam_role" "cognito_trigger_lambda" {
-  name               = "${var.project_name}-${var.environment}-cognito-trigger-role"
+  name = "${var.project_name}-${var.environment}-cognito-trigger-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [

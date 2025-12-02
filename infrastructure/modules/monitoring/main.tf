@@ -209,9 +209,9 @@ resource "aws_cloudwatch_dashboard" "main" {
       {
         type = "log"
         properties = {
-          query   = "SOURCE '/aws/appsync/apis/${var.appsync_api_id}' | fields @timestamp, @message | sort @timestamp desc | limit 20"
-          region  = var.aws_region
-          title   = "Recent AppSync Logs"
+          query  = "SOURCE '/aws/appsync/apis/${var.appsync_api_id}' | fields @timestamp, @message | sort @timestamp desc | limit 20"
+          region = var.aws_region
+          title  = "Recent AppSync Logs"
         }
       }
     ]

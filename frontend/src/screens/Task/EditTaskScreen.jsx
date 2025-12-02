@@ -1,13 +1,17 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Button } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@expo/vector-icons';
 import { UPDATE_TASK_MUTATION } from '../../graphql/Mutations';
 import { useMutation } from '@apollo/client';
-import { Alert } from 'react-native';
-import { useState } from 'react';
 import { UserGlobalState } from '../../layout/UserState';
 import { SelectList } from 'react-native-dropdown-select-list';
+import { parseErrorMessage } from '../../utils/errorHandler';
+import { Button, TextInput as ThemedTextInput, Card } from '../../components';
+import { colors } from '../../theme/colors';
+import { typography } from '../../theme/typography';
+import { spacing, borderRadius } from '../../theme/spacing';
 
 const EditTaskScreen = ({ navigation, route }) => {
     const taskId = route.params.task.id;
@@ -16,7 +20,7 @@ const EditTaskScreen = ({ navigation, route }) => {
     const [description, setDescription] = useState(route.params.task.description);
     const [status, setStatus] = useState(route.params.task.status);
     const statusArray = ['Active', 'Inactive', 'Completed', 'Aborted'];
-    const [endDate, setEndDate] = useState(route.params.task.endDate);
+    const [endDate, setEndDate] = useState(route.params.task.endDate ? route.params.task.endDate.split('T')[0] : '');
     const [isEndDatePickerVisible, setEndDatePickerVisibility] = useState(false);
     const [endTime, setEndTime] = useState(route.params.task.endTime);
     const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
@@ -28,171 +32,215 @@ const EditTaskScreen = ({ navigation, route }) => {
         try {
             let variables = {};
             variables.id = taskId;
-            if (title !== route.params.task.title) variables.title = title;
-            if (description !== route.params.task.description) variables.description = description;
-            if (status !== route.params.task.status) variables.status = status;
-            if (endDate !== route.params.task.endDate) variables.endDate = endDate;
-            if (endTime !== route.params.task.endTime) variables.endTime = endTime;
-            if (timezoneOffset !== route.params.task.timezoneOffset) variables.timezoneOffset = timezoneOffset;
+            // Only include fields that have actually changed and are not null
+            if (title !== route.params.task.title && title !== null && title !== undefined) variables.title = title;
+            if (description !== route.params.task.description && description !== null && description !== undefined) variables.description = description;
+            if (status !== route.params.task.status && status !== null && status !== undefined) variables.status = status;
+            const originalEndDate = route.params.task.endDate ? route.params.task.endDate.split('T')[0] : '';
+            if (endDate !== originalEndDate) {
+                // Convert YYYY-MM-DD to full ISO format
+                variables.endDate = endDate ? new Date(endDate + 'T00:00:00.000Z').toISOString() : null;
+            }
+            if (endTime !== route.params.task.endTime && endTime !== undefined) variables.endTime = endTime;
+            if (timezoneOffset !== route.params.task.timezoneOffset && timezoneOffset !== undefined) variables.timezoneOffset = timezoneOffset;
             const response = await updateTask({ variables: variables });
-            if (response.data.updateTask.id) {
+            if (response?.data?.updateTask?.id) {
                 Alert.alert('Task Updated Successfully');
                 navigation.navigate('Task', { task: response.data.updateTask, phase: phase });
             } else {
-                Alert.alert('An error occurred, please try again');
+                // Check if there are errors in the response
+                if (response?.errors && response.errors.length > 0) {
+                    Alert.alert('Error', parseErrorMessage({ graphQLErrors: response.errors }));
+                } else {
+                    Alert.alert('Error', 'An error occurred, please try again');
+                }
             }
         } catch (err) {
             console.log(err);
-            // separate each sentence into new line in err.message
-            const message = err.message.split('.').join('.\n');
-            Alert.alert('Error', message);
+            Alert.alert('Error', parseErrorMessage(err));
         }
     }
 
     return (
-        <SafeAreaView style={styles.updateTaskContainer}>
-            <View style={styles.innerContainer}>
-                <Text style={styles.title}>Update Task</Text>
-                <View style={styles.inputContainer}>
-                    <TextInput
-                        style={styles.input}
+        <SafeAreaView style={styles.container}>
+            <ScrollView contentContainerStyle={styles.scrollContent}>
+                <Card style={styles.formCard}>
+                    <Text style={styles.title}>Update Task</Text>
+                    
+                    <ThemedTextInput
                         placeholder="Task Title"
                         value={title}
                         onChangeText={setTitle}
-                    />
-                    <TextInput
+                        icon={<MaterialIcons name="title" size={20} color={colors.neutral[400]} />}
                         style={styles.input}
+                    />
+                    
+                    <ThemedTextInput
                         placeholder="Task Description"
                         value={description}
                         onChangeText={setDescription}
+                        icon={<MaterialIcons name="description" size={20} color={colors.neutral[400]} />}
+                        multiline
+                        numberOfLines={4}
+                        style={styles.textArea}
                     />
-                    <Text style={{ fontWeight: 'bold', fontSize: 17, marginTop: 5, alignSelf: 'center', marginBottom: 5 }}>Status</Text>
-                    <SelectList
-                        data={statusArray}
-                        title="Status"
-                        value={status}
-                        setSelected={setStatus}
-                        boxStyles={{ width: '80%', marginBottom: 6 }}
-                    /> 
-                    {endDate && <Text style={{ fontWeight: 'bold', fontSize: 16, marginTop: 6, alignSelf: 'center', marginBottom: 4 }}>End Date: {endDate}</Text>}
-                    {!endDate && <Text style={{ fontWeight: 'bold', fontSize: 16, marginTop: 6, alignSelf: 'center', marginBottom: 4 }}>Select End Date</Text>}
-                    <Button title="Show Date Picker" onPress={() => setEndDatePickerVisibility(true)} />
+                    
+                    <View style={styles.selectSection}>
+                        <Text style={styles.selectLabel}>Status</Text>
+                        <SelectList
+                            data={statusArray}
+                            title="Status"
+                            value={status}
+                            setSelected={setStatus}
+                            boxStyles={styles.selectBox}
+                        /> 
+                    </View>
+                    
+                    <View style={styles.dateSection}>
+                        <Text style={styles.sectionLabel}>End Date & Time</Text>
+                        <TouchableOpacity 
+                            style={styles.dateButton}
+                            onPress={() => setEndDatePickerVisibility(true)}
+                        >
+                            <MaterialIcons name="event" size={20} color={colors.primary.main} />
+                            <Text style={styles.dateButtonText}>
+                                {endDate ? `Date: ${endDate}` : 'Select End Date'}
+                            </Text>
+                        </TouchableOpacity>
+                        
+                        <TouchableOpacity 
+                            style={styles.dateButton}
+                            onPress={() => setTimePickerVisibility(true)}
+                        >
+                            <MaterialIcons name="access-time" size={20} color={colors.primary.main} />
+                            <Text style={styles.dateButtonText}>
+                                {endTime ? `Time: ${endTime}` : 'Select End Time'}
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                    
                     {isEndDatePickerVisible &&
-                    <DateTimePicker
-                        mode="date"
-                        value={ endDate ? new Date(endDate) : new Date() }
-                        onChange={(event, date) => {setEndDate(date.toISOString().split('T')[0]); setEndDatePickerVisibility(false);}}
-                    />}
-                    {endTime && <Text style={{ fontWeight: 'bold', fontSize: 16, marginTop: 6, alignSelf: 'center', marginBottom: 4 }}>End Time: {endTime}</Text>}
-                    {!endTime && <Text style={{ fontWeight: 'bold', fontSize: 16, marginTop: 6, alignSelf: 'center', marginBottom: 4 }}>Select End Time</Text>}
-                    <Button title="Show Time Picker" onPress={() => setTimePickerVisibility(true)} />
+                        <DateTimePicker
+                            mode="date"
+                            value={endDate ? new Date(endDate) : new Date()}
+                            onChange={(event, date) => {
+                                setEndDate(date.toISOString().split('T')[0]);
+                                setEndDatePickerVisibility(false);
+                            }}
+                        />
+                    }
                     {isTimePickerVisible &&
-                    <DateTimePicker
-                        mode="time"
-                        value={ endTime ? new Date(endTime) : new Date() }
-                        onChange={(event, date) => { setEndTime(date.toISOString().split('T')[1].split('.')[0].slice(0, 5)); setTimePickerVisibility(false);}}
-                    />}
+                        <DateTimePicker
+                            mode="time"
+                            value={endTime ? new Date(`2000-01-01T${endTime}:00`) : new Date()}
+                            onChange={(event, date) => {
+                                setEndTime(date.toISOString().split('T')[1].split('.')[0].slice(0, 5));
+                                setTimePickerVisibility(false);
+                            }}
+                        />
+                    }
+                </Card>
+                
+                <View style={styles.buttonContainer}>
+                    <Button
+                        variant="outline"
+                        size="lg"
+                        onPress={() => navigation.goBack()}
+                        style={styles.buttonHalf}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="primary"
+                        size="lg"
+                        onPress={updateTaskHandler}
+                        icon={<MaterialIcons name="save" size={20} color={colors.text.inverse} />}
+                        style={styles.buttonHalf}
+                    >
+                        Update
+                    </Button>
                 </View>
-                <View style={styles.rowButtonsContainer}>
-                    <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
-                        <Text style={styles.buttonText}>Cancel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.button} onPress={updateTaskHandler}>
-                        <Text style={styles.buttonText}>Update</Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
+            </ScrollView>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    updateTaskContainer: {
+    container: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 2,
-        paddingBottom: 10,
-        backgroundColor: '#4CBB17'
+        backgroundColor: colors.background.default,
     },
-    innerContainer: {
-        width: '95%',
-        height: '100%',
-        borderRadius: 10,
-        backgroundColor: '#fff',
-        paddingHorizontal: '4%',
-        paddingBottom: 10,
-        marginBottom: 20
+    scrollContent: {
+        padding: spacing.lg,
+    },
+    formCard: {
+        marginBottom: spacing.lg,
+        borderWidth: 0,
     },
     title: {
-        fontSize: 24,
-        marginTop: '12%',
+        fontSize: typography.fontSize['2xl'],
+        fontWeight: typography.fontWeight.bold,
+        color: colors.text.primary,
+        marginBottom: spacing.xl,
         textAlign: 'center',
-        color: '#000',
-        fontWeight: 'bold',
-    },
-    inputContainer: {
-        marginTop: '5%',
-        alignItems: 'center',
-        marginBottom: '6%',
-        width: '100%',
     },
     input: {
-        width: '80%',
-        height: 35,
-        borderColor: '#007BFF',
-        borderWidth: 1,
-        borderLeftWidth: 0,
-        borderRightWidth: 0,
-        borderTopWidth: 0,
-        // borderRadius: 10,
-        marginBottom: '5%',
-        padding: 5,
+        marginBottom: spacing.lg,
     },
-    removeBtn: {
-        color: 'white',
-        backgroundColor: 'red',
-        padding: 3,
-        width: '80%',
-        borderRadius: 5,
-        fontSize: 14,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        marginLeft: 5,
+    textArea: {
+        marginBottom: spacing.lg,
+        minHeight: 100,
+        textAlignVertical: 'top',
     },
-    userItemContainer: {
-        padding: 10,
-        backgroundColor: '#eee',
-        marginVertical: 2,
-        borderRadius: 15,
-        width: '100%',
+    selectSection: {
+        marginBottom: spacing.lg,
     },
-    fullName: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#434343',
-        paddingLeft: 8,
+    selectLabel: {
+        fontSize: typography.fontSize.base,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.text.primary,
+        marginBottom: spacing.sm,
     },
-    username: {
-        fontSize: 12,
-        color: '#434343',
-        paddingRight: 8,
+    selectBox: {
+        borderColor: colors.border.default,
+        borderRadius: borderRadius.md,
+        backgroundColor: colors.background.white,
     },
-    rowButtonsContainer: {
-        marginTop: '2%',
+    dateSection: {
+        marginTop: spacing.lg,
+        paddingTop: spacing.lg,
+        borderTopWidth: 1,
+        borderTopColor: colors.neutral[100],
+    },
+    sectionLabel: {
+        fontSize: typography.fontSize.base,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.text.primary,
+        marginBottom: spacing.md,
+    },
+    dateButton: {
         flexDirection: 'row',
+        alignItems: 'center',
+        padding: spacing.md,
+        backgroundColor: colors.neutral[50],
+        borderRadius: borderRadius.lg,
+        marginBottom: spacing.md,
+        gap: spacing.sm,
+        borderWidth: 1,
+        borderColor: colors.border.light,
     },
-    button: {
-        backgroundColor: '#007BFF',
-        padding: 10,
-        borderRadius: 5,
-        width: '44%',
-        alignSelf: 'center',
-        marginHorizontal: '3%',
+    dateButtonText: {
+        fontSize: typography.fontSize.base,
+        color: colors.text.primary,
+        flex: 1,
     },
-    buttonText: {
-        color: 'white',
-        textAlign: 'center',
+    buttonContainer: {
+        flexDirection: 'row',
+        gap: spacing.md,
+        marginTop: spacing.md,
+    },
+    buttonHalf: {
+        flex: 1,
     },
 });
 

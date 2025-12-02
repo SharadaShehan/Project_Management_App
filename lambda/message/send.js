@@ -1,16 +1,16 @@
 // Send Message Handler
-import { getItem, putItem } from '../shared/dynamodb.js';
+import { getItem, putItem, queryItems } from '../shared/dynamodb.js';
 import { getUserIdFromContext } from '../shared/auth.js';
 import { generateId, validateRequiredFields, isValidLength, getCurrentTimestamp } from '../shared/validation.js';
 import { lambdaHandler, NotFoundError, AuthorizationError, ValidationError } from '../shared/errors.js';
 
 async function sendMessage(event) {
-  const { projectId, phaseId, recipientId, content } = event.arguments;
+  const { projectId, phaseId, receiverId, content } = event.arguments;
   
   // Get authenticated user
   const userId = getUserIdFromContext(event.identity);
   
-  // Validate required fields - content is always required
+  // Validate required fields
   validateRequiredFields({ content }, ['content']);
   
   if (!isValidLength(content, 1, 2000)) {
@@ -18,45 +18,56 @@ async function sendMessage(event) {
   }
   
   // Determine message type and validate context
-  let messageType;
-  let contextId;
+  let messageType, contextPK, project, phase, receiver;
+  let messageIndex = 1;
   
   if (phaseId) {
-    // Phase-specific message
+    // Phase message
     messageType = 'PHASE';
-    contextId = phaseId;
+    phase = await getItem(`PHASE#${phaseId}`, 'METADATA');
     
-    const phase = await getItem(`PHASE#${phaseId}`, 'METADATA');
     if (!phase) {
       throw new NotFoundError('Phase');
     }
     
-    // Verify user is member of the project
-    const project = await getItem(`PROJECT#${phase.projectId}`, 'METADATA');
+    // Get project
+    project = await getItem(`PROJECT#${phase.projectId}`, 'METADATA');
+    
     if (!project || !project.memberIds.includes(userId)) {
       throw new AuthorizationError('You are not a member of this project');
     }
-  } else if (recipientId) {
+    
+    // Get message count for index
+    const existingMessages = await queryItems(`PHASE#${phaseId}`, 'MESSAGE#');
+    messageIndex = existingMessages.length + 1;
+    
+    contextPK = `PHASE#${phaseId}`;
+    
+  } else if (receiverId) {
     // Private message
     messageType = 'PRIVATE';
-    contextId = recipientId;
+    receiver = await getItem(`USER#${receiverId}`, 'METADATA');
     
-    // Verify recipient exists
-    const recipient = await getItem(`USER#${recipientId}`, 'METADATA');
-    if (!recipient) {
-      throw new NotFoundError('Recipient');
+    if (!receiver) {
+      throw new NotFoundError('Receiver');
     }
     
-    // Can't send message to yourself
-    if (recipientId === userId) {
+    if (receiverId === userId) {
       throw new ValidationError('Cannot send a message to yourself');
     }
-  } else if (projectId) {
-    // Project-wide message
-    messageType = 'PROJECT';
-    contextId = projectId;
     
-    const project = await getItem(`PROJECT#${projectId}`, 'METADATA');
+    // Get message count for index (from conversation)
+    const conversationId = [userId, receiverId].sort().join('#');
+    const existingMessages = await queryItems(`CONVERSATION#${conversationId}`, 'MESSAGE#');
+    messageIndex = existingMessages.length + 1;
+    
+    contextPK = `CONVERSATION#${conversationId}`;
+    
+  } else if (projectId) {
+    // Project message
+    messageType = 'PROJECT';
+    project = await getItem(`PROJECT#${projectId}`, 'METADATA');
+    
     if (!project) {
       throw new NotFoundError('Project');
     }
@@ -64,50 +75,41 @@ async function sendMessage(event) {
     if (!project.memberIds.includes(userId)) {
       throw new AuthorizationError('You are not a member of this project');
     }
+    
+    // Get message count for index
+    const existingMessages = await queryItems(`PROJECT#${projectId}`, 'MESSAGE#');
+    messageIndex = existingMessages.length + 1;
+    
+    contextPK = `PROJECT#${projectId}`;
+    
   } else {
-    throw new ValidationError('Must specify projectId, phaseId, or recipientId');
+    throw new ValidationError('Must specify projectId, phaseId, or receiverId');
   }
   
   // Get sender details
   const sender = await getItem(`USER#${userId}`, 'METADATA');
   
-  // Generate message ID
+  // Generate message ID and timestamp
   const messageId = generateId();
   const timestamp = getCurrentTimestamp();
   
-  // Create message item based on type
-  let messagePK, messageSK;
-  
-  if (messageType === 'PROJECT') {
-    messagePK = `PROJECT#${projectId}`;
-    messageSK = `MESSAGE#${messageId}`;
-  } else if (messageType === 'PHASE') {
-    messagePK = `PHASE#${phaseId}`;
-    messageSK = `MESSAGE#${messageId}`;
-  } else if (messageType === 'PRIVATE') {
-    // For private messages, create a conversation ID (sorted user IDs)
-    const conversationId = [userId, recipientId].sort().join('#');
-    messagePK = `CONVERSATION#${conversationId}`;
-    messageSK = `MESSAGE#${messageId}`;
-  }
-  
+  // Create message item
   const messageItem = {
-    PK: messagePK,
-    SK: messageSK,
-    GSI3PK: messageType === 'PRIVATE' ? messagePK : `${messageType}#${contextId}`,
+    PK: contextPK,
+    SK: `MESSAGE#${messageId}`,
+    GSI3PK: contextPK,
     GSI3SK: timestamp,
     EntityType: 'Message',
     id: messageId,
     senderId: userId,
+    receiverId: receiverId || null,
     content,
     messageType,
-    projectId: messageType === 'PROJECT' ? projectId : undefined,
-    phaseId: messageType === 'PHASE' ? phaseId : undefined,
-    recipientId: messageType === 'PRIVATE' ? recipientId : undefined,
-    conversationId: messageType === 'PRIVATE' ? [userId, recipientId].sort().join('#') : undefined,
+    projectId: project ? project.id : null,
+    phaseId: phase ? phase.id : null,
+    messageIndex,
     readBy: [userId], // Sender has read it
-    createdAt: timestamp,
-    updatedAt: timestamp
+    createdAt: timestamp
   };
   
   await putItem(messageItem);
@@ -120,7 +122,7 @@ async function sendMessage(event) {
     userId,
     messageId,
     messageType,
-    contextId,
+    contextId: receiverId || phaseId || projectId,
     createdAt: timestamp
   };
   
@@ -129,13 +131,13 @@ async function sendMessage(event) {
   // For private messages, create recipient index
   if (messageType === 'PRIVATE') {
     const recipientMessageItem = {
-      PK: `USER#${recipientId}`,
+      PK: `USER#${receiverId}`,
       SK: `MESSAGE#${messageId}`,
       EntityType: 'UserMessage',
-      userId: recipientId,
+      userId: receiverId,
       messageId,
       messageType,
-      contextId: userId, // From sender's perspective
+      contextId: userId,
       isUnread: true,
       createdAt: timestamp
     };
@@ -143,26 +145,70 @@ async function sendMessage(event) {
     await putItem(recipientMessageItem);
   }
   
-  // Return message
-  return {
-    id: messageId,
-    sender: {
-      id: sender.id,
-      username: sender.username,
-      firstName: sender.firstName,
-      lastName: sender.lastName,
-      gender: sender.gender,
-      imageURL: sender.imageURL
-    },
-    content,
-    messageType,
-    projectId: messageType === 'PROJECT' ? projectId : null,
-    phaseId: messageType === 'PHASE' ? phaseId : null,
-    recipientId: messageType === 'PRIVATE' ? recipientId : null,
-    readBy: [userId],
-    createdAt: timestamp,
-    updatedAt: timestamp
+  // Return message according to type
+  const senderShortened = {
+    id: sender.id,
+    username: sender.username,
+    firstName: sender.firstName,
+    lastName: sender.lastName,
+    gender: sender.gender,
+    imageURL: sender.imageURL
   };
+  
+  if (messageType === 'PRIVATE') {
+    return {
+      id: messageId,
+      sender: senderShortened,
+      receiver: {
+        id: receiver.id,
+        username: receiver.username,
+        firstName: receiver.firstName,
+        lastName: receiver.lastName,
+        gender: receiver.gender,
+        imageURL: receiver.imageURL
+      },
+      content,
+      index: messageIndex,
+      createdAt: timestamp,
+      read: false // Receiver hasn't read it yet
+    };
+  } else if (messageType === 'PROJECT') {
+    return {
+      id: messageId,
+      project: {
+        id: project.id,
+        title: project.title,
+        description: project.description,
+        status: project.status
+      },
+      sender: senderShortened,
+      content,
+      index: messageIndex,
+      createdAt: timestamp,
+      read: null // Not applicable for group messages
+    };
+  } else if (messageType === 'PHASE') {
+    return {
+      id: messageId,
+      project: {
+        id: project.id,
+        title: project.title,
+        description: project.description,
+        status: project.status
+      },
+      phase: {
+        id: phase.id,
+        name: phase.name,
+        description: phase.description,
+        order: phase.order
+      },
+      sender: senderShortened,
+      content,
+      index: messageIndex,
+      createdAt: timestamp,
+      read: null // Not applicable for group messages
+    };
+  }
 }
 
 export const handler = lambdaHandler(sendMessage);

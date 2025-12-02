@@ -1,214 +1,331 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Button, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { CREATE_PHASE_MUTATION } from '../../graphql/Mutations';
 import { useMutation } from '@apollo/client';
 import { Alert } from 'react-native';
 import { useState } from 'react';
+import { parseErrorMessage } from '../../utils/errorHandler';
+import { MaterialIcons } from '@expo/vector-icons';
+import Button from '../../components/Button';
+import TextInput from '../../components/TextInput';
+import Card from '../../components/Card';
+import { colors } from '../../theme/colors';
+import { typography } from '../../theme/typography';
+import { spacing, borderRadius } from '../../theme/spacing';
 
 const CreatePhaseScreen = ({ navigation, route }) => {
-    const processId = route.params.process.id;
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
-    const [endTime, setEndTime] = useState('');
-    const [timezoneOffset, setTimezoneOffset] = useState(0);
-    const [isStartDatePickerVisible, setStartDatePickerVisibility] = useState(false);
-    const [isEndDatePickerVisible, setEndDatePickerVisibility] = useState(false);
-    const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
+    const [order, setOrder] = useState('1');
+    const [startDate, setStartDate] = useState(null);
+    const [endDate, setEndDate] = useState(null);
+    const [endTime, setEndTime] = useState(null);
+    const [timezoneOffset, setTimezoneOffset] = useState(new Date().getTimezoneOffset().toString());
+    const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+    const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+    const [showEndTimePicker, setShowEndTimePicker] = useState(false);
     const [createPhase] = useMutation(CREATE_PHASE_MUTATION);
+    
+    const processId = route.params?.process?.id;
+    
+    React.useEffect(() => {
+        if (!processId) {
+            Alert.alert('Error', 'Invalid process');
+            navigation.goBack();
+        }
+    }, [processId, navigation]);
     
     const createPhasehandler = async () => {
         try {
-            let variables = {};
-            if (title) variables.title = title;
-            if (description) variables.description = description;
-            if (startDate) variables.startDate = startDate;
-            if (endDate) variables.endDate = endDate;
-            if (endTime) variables.endTime = endTime;
-            if (timezoneOffset && !isNaN(timezoneOffset)) variables.timezoneOffset = parseInt(timezoneOffset);
-            if (processId) variables.processId = processId;
+            if (!processId) {
+                Alert.alert('Error', 'Invalid process');
+                navigation.goBack();
+                return;
+            }
+            
+            if (!title || !description || !order) {
+                Alert.alert('Error', 'Please fill in all required fields');
+                return;
+            }
+            
+            const orderNum = parseInt(order);
+            if (isNaN(orderNum) || orderNum < 0) {
+                Alert.alert('Error', 'Order must be a non-negative number');
+                return;
+            }
+            
+            let variables = {
+                processId,
+                name: title,
+                description,
+                order: orderNum
+            };
+            
+            // Add optional date/time fields if provided
+            if (startDate) {
+                variables.startDate = startDate.toISOString();
+            }
+            if (endDate) {
+                variables.endDate = endDate.toISOString();
+            }
+            if (endTime) {
+                const hours = endTime.getHours().toString().padStart(2, '0');
+                const minutes = endTime.getMinutes().toString().padStart(2, '0');
+                variables.endTime = `${hours}:${minutes}`;
+            }
+            if (timezoneOffset && timezoneOffset.trim() !== '') {
+                const offsetNum = parseInt(timezoneOffset);
+                if (!isNaN(offsetNum)) {
+                    variables.timezoneOffset = offsetNum;
+                }
+            }
+            
             const response = await createPhase({ variables: variables });
-            if (response.data.createPhase.id) {
-                Alert.alert('Phase Created');
-                navigation.navigate('Phase', { id: response.data.createPhase.id, process: route.params.process, project: route.params.project });
+            if (response?.data?.createPhase?.id) {
+                Alert.alert('Phase Created', 'Phase has been created successfully');
+                navigation.goBack();
             } else {
-                Alert.alert('An error occurred, please try again');
+                // Check if there are errors in the response
+                if (response?.errors && response.errors.length > 0) {
+                    Alert.alert('Error', parseErrorMessage({ graphQLErrors: response.errors }));
+                } else {
+                    Alert.alert('Error', 'An error occurred, please try again');
+                }
             }
         } catch (err) {
             console.log(err);
-            // separate each sentence into new line in err.message
-            const message = err.message.split('.').join('.\n');
-            Alert.alert('Error', message);
+            Alert.alert('Error', parseErrorMessage(err));
         }
     }
 
     return (
-        <SafeAreaView style={styles.createPhaseContainer}>
-            <View style={styles.innerContainer}>
-                <Text style={styles.title}>Create Phase</Text>
-                <View style={styles.inputContainer}>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Phase Title"
-                        value={title}
-                        onChangeText={setTitle}
-                    />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Phase Description"
-                        value={description}
-                        onChangeText={setDescription}
-                    />
-                    {startDate && <Text style={{ fontWeight: 'bold', fontSize: 16, marginTop: 6, alignSelf: 'center', marginBottom: 4 }}>Start Date: {startDate}</Text>}
-                    {!startDate && <Text style={{ fontWeight: 'bold', fontSize: 16, marginTop: 6, alignSelf: 'center', marginBottom: 4 }}>Select Start Date</Text>}
-                    <Button title="Show Date Picker" onPress={() => setStartDatePickerVisibility(true)} />
-                    {isStartDatePickerVisible && 
-                    <DateTimePicker
-                        mode="date"
-                        value={new Date()}
-                        onChange={(event, date) => {setStartDate(date.toISOString().split('T')[0]); setStartDatePickerVisibility(false);}}
-                    />}
-                    {endDate && <Text style={{ fontWeight: 'bold', fontSize: 16, marginTop: 6, alignSelf: 'center', marginBottom: 4 }}>End Date: {endDate}</Text>}
-                    {!endDate && <Text style={{ fontWeight: 'bold', fontSize: 16, marginTop: 6, alignSelf: 'center', marginBottom: 4 }}>Select End Date</Text>}
-                    <Button title="Show Date Picker" onPress={() => setEndDatePickerVisibility(true)} />
-                    {isEndDatePickerVisible &&
-                    <DateTimePicker
-                        mode="date"
-                        value={new Date()}
-                        onChange={(event, date) => {setEndDate(date.toISOString().split('T')[0]); setEndDatePickerVisibility(false);}}
-                    />}
-                    {endTime && <Text style={{ fontWeight: 'bold', fontSize: 16, marginTop: 6, alignSelf: 'center', marginBottom: 4 }}>End Time: {endTime}</Text>}
-                    {!endTime && <Text style={{ fontWeight: 'bold', fontSize: 16, marginTop: 6, alignSelf: 'center', marginBottom: 4 }}>Select End Time</Text>}
-                    <Button title="Show Time Picker" onPress={() => setTimePickerVisibility(true)} />
-                    {isTimePickerVisible &&
-                    <DateTimePicker
-                        mode="time"
-                        value={new Date()}
-                        onChange={(event, date) => { setEndTime(date.toISOString().split('T')[1].split('.')[0].slice(0, 5)); setTimePickerVisibility(false);}}
-                    />}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                        <Text style={{ fontWeight: 'bold', fontSize: 16, marginTop: 14, alignSelf: 'center', width: '65%' }}>Timezone Offset for Values</Text>
+        <SafeAreaView style={styles.container}>
+            <ScrollView contentContainerStyle={styles.scrollContent}>
+                <Card style={styles.formCard}>
+                    <Text style={styles.title}>Create Phase</Text>
+                    
+                    <View style={styles.formSection}>
+                        <Text style={styles.label}>Phase Name</Text>
                         <TextInput
-                            style={styles.timezoneInput}
-                            placeholder="Timezone Offset"
-                            value={timezoneOffset.toString()}
-                            onChangeText={setTimezoneOffset}
+                            placeholder="Enter phase name"
+                            value={title}
+                            onChangeText={setTitle}
                         />
                     </View>
-                </View>
-                <View style={styles.rowButtonsContainer}>
-                    <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
-                        <Text style={styles.buttonText}>Cancel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.button} onPress={createPhasehandler}>
-                        <Text style={styles.buttonText}>Create</Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
+                    
+                    <View style={styles.formSection}>
+                        <Text style={styles.label}>Description</Text>
+                        <TextInput
+                            placeholder="Enter phase description"
+                            value={description}
+                            onChangeText={setDescription}
+                            multiline
+                            numberOfLines={3}
+                            style={styles.textArea}
+                        />
+                    </View>
+                    
+                    <View style={styles.formSection}>
+                        <Text style={styles.label}>Order</Text>
+                        <TextInput
+                            placeholder="Enter order number (1, 2, 3...)"
+                            value={order}
+                            onChangeText={setOrder}
+                            keyboardType="numeric"
+                        />
+                    </View>
+                    
+                    <View style={styles.dateSection}>
+                        <Text style={styles.sectionTitle}>Schedule (Optional)</Text>
+                        
+                        <View style={styles.dateInputContainer}>
+                            <Button
+                                variant="outline"
+                                onPress={() => setShowStartDatePicker(true)}
+                                style={styles.dateButton}
+                            >
+                                <View style={styles.dateButtonContent}>
+                                    <MaterialIcons name="event" size={20} color={colors.primary.main} />
+                                    <Text style={styles.dateButtonText}>
+                                        {startDate ? startDate.toLocaleDateString() : 'Start Date'}
+                                    </Text>
+                                </View>
+                            </Button>
+                            {showStartDatePicker && (
+                                <DateTimePicker
+                                    value={startDate || new Date()}
+                                    mode="date"
+                                    display="default"
+                                    onChange={(event, selectedDate) => {
+                                        setShowStartDatePicker(false);
+                                        if (selectedDate) {
+                                            setStartDate(selectedDate);
+                                        }
+                                    }}
+                                />
+                            )}
+                        </View>
+                        
+                        <View style={styles.dateInputContainer}>
+                            <Button
+                                variant="outline"
+                                onPress={() => setShowEndDatePicker(true)}
+                                style={styles.dateButton}
+                            >
+                                <View style={styles.dateButtonContent}>
+                                    <MaterialIcons name="event" size={20} color={colors.primary.main} />
+                                    <Text style={styles.dateButtonText}>
+                                        {endDate ? endDate.toLocaleDateString() : 'End Date'}
+                                    </Text>
+                                </View>
+                            </Button>
+                            {showEndDatePicker && (
+                                <DateTimePicker
+                                    value={endDate || new Date()}
+                                    mode="date"
+                                    display="default"
+                                    onChange={(event, selectedDate) => {
+                                        setShowEndDatePicker(false);
+                                        if (selectedDate) {
+                                            setEndDate(selectedDate);
+                                        }
+                                    }}
+                                />
+                            )}
+                        </View>
+                        
+                        <View style={styles.dateInputContainer}>
+                            <Button
+                                variant="outline"
+                                onPress={() => setShowEndTimePicker(true)}
+                                style={styles.dateButton}
+                            >
+                                <View style={styles.dateButtonContent}>
+                                    <MaterialIcons name="access-time" size={20} color={colors.primary.main} />
+                                    <Text style={styles.dateButtonText}>
+                                        {endTime ? endTime.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : 'End Time'}
+                                    </Text>
+                                </View>
+                            </Button>
+                            {showEndTimePicker && (
+                                <DateTimePicker
+                                    value={endTime || new Date()}
+                                    mode="time"
+                                    display="default"
+                                    onChange={(event, selectedTime) => {
+                                        setShowEndTimePicker(false);
+                                        if (selectedTime) {
+                                            setEndTime(selectedTime);
+                                        }
+                                    }}
+                                />
+                            )}
+                        </View>
+                        
+                        <View style={styles.formSection}>
+                            <Text style={styles.label}>Timezone Offset (minutes)</Text>
+                            <TextInput
+                                placeholder="e.g., -300 for EST"
+                                value={timezoneOffset}
+                                onChangeText={setTimezoneOffset}
+                                keyboardType="numeric"
+                            />
+                        </View>
+                    </View>
+                    
+                    <View style={styles.buttonRow}>
+                        <Button
+                            variant="outline"
+                            onPress={() => navigation.goBack()}
+                            style={styles.actionButton}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onPress={createPhasehandler}
+                            style={styles.actionButton}
+                        >
+                            Create Phase
+                        </Button>
+                    </View>
+                </Card>
+            </ScrollView>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    createPhaseContainer: {
+    container: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#4CBB17',
+        backgroundColor: colors.background.secondary,
     },
-    innerContainer: {
-        width: '90%',
-        height: '90%',
-        backgroundColor: '#fff',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: 10,
-        marginBottom: 20
+    scrollContent: {
+        padding: spacing.md,
+    },
+    formCard: {
+        padding: spacing.lg,
     },
     title: {
-        fontSize: 24,
+        fontSize: typography.fontSize['2xl'],
+        fontWeight: typography.fontWeight.bold,
+        color: colors.text.primary,
         textAlign: 'center',
-        color: '#000',
-        fontWeight: 'bold',
+        marginBottom: spacing.xl,
+        lineHeight: typography.lineHeight.tight * typography.fontSize['2xl'],
     },
-    inputContainer: {
-        marginTop: '5%',
-        alignItems: 'center',
-        marginBottom: '6%',
+    formSection: {
+        marginBottom: spacing.lg,
+    },
+    label: {
+        fontSize: typography.fontSize.base,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.text.primary,
+        marginBottom: spacing.sm,
+        lineHeight: typography.lineHeight.normal * typography.fontSize.base,
+    },
+    textArea: {
+        minHeight: 80,
+        textAlignVertical: 'top',
+    },
+    dateSection: {
+        marginTop: spacing.lg,
+        paddingTop: spacing.lg,
+        borderTopWidth: 1,
+        borderTopColor: colors.neutral[100],
+    },
+    sectionTitle: {
+        fontSize: typography.fontSize.lg,
+        fontWeight: typography.fontWeight.semibold,
+        color: colors.text.primary,
+        marginBottom: spacing.md,
+        lineHeight: typography.lineHeight.normal * typography.fontSize.lg,
+    },
+    dateInputContainer: {
+        marginBottom: spacing.md,
+    },
+    dateButton: {
         width: '100%',
     },
-    input: {
-        width: '80%',
-        height: 30,
-        borderColor: '#007BFF',
-        borderWidth: 1,
-        borderLeftWidth: 0,
-        borderRightWidth: 0,
-        borderTopWidth: 0,
-        // borderRadius: 10,
-        marginBottom: '5%',
-        padding: 5,
-    },
-    timezoneInput: {
-        width: '15%',
-        height: 30,
-        borderColor: '#007BFF',
-        borderWidth: 1,
-        borderLeftWidth: 0,
-        borderRightWidth: 0,
-        borderTopWidth: 0,
-        // borderRadius: 10,
-        marginTop: '5%',
-        marginBottom: '3%',
-        padding: 5,
-    },
-    removeBtn: {
-        color: 'white',
-        backgroundColor: 'red',
-        padding: 3,
-        width: '80%',
-        borderRadius: 5,
-        fontSize: 14,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        marginLeft: 5,
-    },
-    userItemContainer: {
-        padding: 10,
-        backgroundColor: '#eee',
-        marginVertical: 2,
-        borderRadius: 15,
-        width: '100%',
-    },
-    fullName: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#434343',
-        paddingLeft: 8,
-    },
-    username: {
-        fontSize: 12,
-        color: '#434343',
-        paddingRight: 8,
-    },
-    rowButtonsContainer: {
-        marginTop: '2%',
+    dateButtonContent: {
         flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
     },
-    button: {
-        backgroundColor: '#007BFF',
-        padding: 10,
-        borderRadius: 5,
-        width: '44%',
-        alignSelf: 'center',
-        marginHorizontal: '3%',
+    dateButtonText: {
+        fontSize: typography.fontSize.base,
+        color: colors.text.primary,
+        flex: 1,
+        lineHeight: typography.lineHeight.normal * typography.fontSize.base,
     },
-    buttonText: {
-        color: 'white',
-        textAlign: 'center',
+    buttonRow: {
+        flexDirection: 'row',
+        gap: spacing.md,
+        marginTop: spacing.xl,
+    },
+    actionButton: {
+        flex: 1,
     },
 });
 

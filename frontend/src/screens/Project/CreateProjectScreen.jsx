@@ -1,13 +1,16 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, FlatList, Image, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Image, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@expo/vector-icons';
 import { CREATE_PROJECT_MUTATION, SEARCH_USERS_MUTATION } from '../../graphql/Mutations';
 import { useMutation } from '@apollo/client';
-import { Alert } from 'react-native';
-import { useState } from 'react';
 import { SearchBar } from "react-native-elements"; 
 import { UserGlobalState } from '../../layout/UserState';
 import { logoImagesArray } from '../../logoImages';
+import { Button, TextInput as ThemedTextInput, Card, Avatar } from '../../components';
+import { colors } from '../../theme/colors';
+import { typography } from '../../theme/typography';
+import { spacing, borderRadius } from '../../theme/spacing';
 
 const CreateProjectScreen = ({ navigation }) => {
     const [title, setTitle] = useState('');
@@ -22,20 +25,46 @@ const CreateProjectScreen = ({ navigation }) => {
     const [searchUsers] = useMutation(SEARCH_USERS_MUTATION);
 
     const createProjectHandler = async () => {
+        // Validation
+        if (!title || title.trim().length === 0) {
+            Alert.alert('Validation Error', 'Please enter a project title');
+            return;
+        }
+        
+        if (!description || description.trim().length === 0) {
+            Alert.alert('Validation Error', 'Please enter a project description');
+            return;
+        }
+
         try {
             const membersIds = members.map(member => member.id);
-            const variables = { title: title, description: description, members: membersIds, logo: logo.file };
+            const variables = { 
+                title: title.trim(), 
+                description: description.trim(), 
+                members: membersIds, 
+                logo: logo ? logo.file : null 
+            };
+            
+            console.log('Creating project with variables:', variables);
             const response = await createProject({ variables });
-            if (response.data.createProject.id) {
-                Alert.alert('Project Created');
-                navigation.navigate('Project', { id: response.data.createProject.id, defaultProcess: response.data.createProject.defaultProcess });
+            console.log('Create project response:', response);
+            
+            if (response.data && response.data.createProject && response.data.createProject.id) {
+                Alert.alert('Success', 'Project created successfully!', [
+                    {
+                        text: 'OK',
+                        onPress: () => navigation.navigate('Project', { 
+                            id: response.data.createProject.id, 
+                            defaultProcess: response.data.createProject.defaultProcess || null 
+                        })
+                    }
+                ]);
             } else {
-                Alert.alert('An error occurred, please try again');
+                Alert.alert('Error', 'Failed to create project. Please try again.');
             }
         } catch (err) {
-            console.log(err);
-            // separate each sentence into new line in err.message
-            const message = err.message.split('.').join('.\n');
+            console.error('Create project error:', err);
+            const message = err.message ? err.message.split('.').join('.\n') : 'An unexpected error occurred';
             Alert.alert('Error', message);
         }
     }
@@ -48,7 +77,7 @@ const CreateProjectScreen = ({ navigation }) => {
                 const response = await searchUsers({ variables: { searchText: text } });
                 setSearchList(response.data.searchUsers);
             } catch (err) {
-                const message = err.message.split('.').join('.\n');
+                const message = err.message ? err.message.split('.').join('.\n') : 'An unexpected error occurred';
                 Alert.alert('Error', message);
             }
             setSearchLoading(false);
@@ -59,11 +88,19 @@ const CreateProjectScreen = ({ navigation }) => {
 
     const RenderItem = ({ item, cross }) => {
         return (
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Image source={item.imageURL ? { uri: item.imageURL } : require('../../../images/profile.webp')} style={{ width: 20, height: 20, borderRadius: 25 }} />
-                <Text style={styles.fullName}>{item.firstName} {item.lastName}</Text>
-                <Text style={styles.username}> ({item.username})</Text>
-                {cross && <Text style={{ color: 'red', fontSize: 20, marginLeft: 'auto' }}>X</Text>}
+            <View style={styles.memberItemContent}>
+                <Avatar 
+                    source={item.imageURL ? { uri: item.imageURL } : require('../../../images/profile.webp')}
+                    name={`${item.firstName} ${item.lastName}`}
+                    size="sm"
+                />
+                <View style={styles.memberTextContainer}>
+                    <Text style={styles.fullName}>{item.firstName} {item.lastName}</Text>
+                    <Text style={styles.username}>@{item.username}</Text>
+                </View>
+                {cross && (
+                    <MaterialIcons name="close" size={20} color={colors.status.error} style={styles.removeIcon} />
+                )}
             </View>
         );
     };
@@ -94,79 +131,106 @@ const CreateProjectScreen = ({ navigation }) => {
 
     return (
         <SafeAreaView style={styles.createProjectContainer}>
-            <View style={styles.innerContainer}>
-                <Text style={styles.title}>Create Project</Text>
-                <View style={styles.inputContainer}>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Project Title"
+            <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+                <Card style={styles.formCard}>
+                    <Text style={styles.title}>Create Project</Text>
+                    
+                    <ThemedTextInput
+                        label="Project Title"
+                        placeholder="Enter project title"
                         value={title}
                         onChangeText={setTitle}
+                        leftIcon={<MaterialIcons name="work" size={20} color={colors.neutral[500]} />}
                     />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Project Description"
+                    
+                    <ThemedTextInput
+                        label="Description"
+                        placeholder="Enter project description"
                         value={description}
                         onChangeText={setDescription}
+                        multiline
+                        numberOfLines={3}
+                        leftIcon={<MaterialIcons name="description" size={20} color={colors.neutral[500]} />}
                     />
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', width: '80%' }}>
-                    <Text style={{ textAlign: 'center', fontSize: 16, fontWeight: 'bold', width: '35%' }}>{logo ? 'Logo' : 'Select Logo'}</Text>
-                    {!logo ?
-                        <ScrollView horizontal={true} style={{ width: '40%' }}>
-                            {logoImagesArray.map((obj, index) => (
-                                <TouchableOpacity key={index} onPress={() => setLogo(obj)}>
-                                    <Image source={obj.image} style={{ width: 50, height: 50, borderRadius: 25, marginHorizontal: 5 }} />
-                                </TouchableOpacity>
-                            ))}
-                        </ScrollView>
-                    :
-                        <Image source={logo.image} style={{ width: 50, height: 50, borderRadius: 25 }} />
-                    }
-                    {
-                        logo && <TouchableOpacity onPress={() => setLogo('')} style={{ width: '35%', alignItems: 'left' }}>
-                            <Text style={styles.removeBtn}>Remove</Text>
-                        </TouchableOpacity>
-                    }
-                </View>
-                <View style={styles.inputContainer}>
-                    <FlatList
-                        data={members}
-                        renderItem={renderMemberItem}
-                        keyExtractor={(item) => item.id}
-                        initialNumToRender={5}
-                        ListHeaderComponent={<Text style={{ textAlign: 'center', fontSize: 16, fontWeight: 'bold' }}>Members</Text>}
-                    />
-                    <SearchBar
-                        placeholder="Search for Users"
-                        onChangeText={searchTextChangeHandler}
-                        value={searchText}
-                        onClear={() => setSearchList([])}
-                        containerStyle={{ backgroundColor: 'transparent', borderColor: 'transparent', width: '80%' }}
-                        inputContainerStyle={{ backgroundColor: '#eee' }}
-                        inputStyle={{ color: '#000', fontSize: 14 }}
-                        leftIconContainerStyle={{ paddingLeft: 5 }}
-                        lightTheme={true}
-                        round={true}
-                        showCancel={searchText.length > 0}
-                        showLoading={searchLoading}
-                    />
-                    <FlatList
-                        data={searchList}
-                        renderItem={renderUserItem}
-                        keyExtractor={(item) => item.id}
-                        initialNumToRender={5}
-                    />
-                </View>
-                <View style={styles.rowButtonsContainer}>
-                    <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
-                        <Text style={styles.buttonText}>Cancel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.button} onPress={createProjectHandler}>
-                        <Text style={styles.buttonText}>Create</Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
+                    <View style={styles.logoSection}>
+                        <Text style={styles.sectionLabel}>Project Logo</Text>
+                        <View style={styles.logoContainer}>
+                            {!logo ? (
+                                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.logoScroll}>
+                                    {logoImagesArray.map((obj, index) => (
+                                        <TouchableOpacity key={index} onPress={() => setLogo(obj)} style={styles.logoOption}>
+                                            <Image source={obj.image} style={styles.logoImage} />
+                                        </TouchableOpacity>
+                                    ))}
+                                </ScrollView>
+                            ) : (
+                                <View style={styles.selectedLogoContainer}>
+                                    <Image source={logo.image} style={styles.selectedLogo} />
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onPress={() => setLogo('')}
+                                        style={styles.removeLogoBtn}
+                                    >
+                                        Remove
+                                    </Button>
+                                </View>
+                            )}
+                        </View>
+                    </View>
+                    <View style={styles.membersSection}>
+                        <Text style={styles.sectionLabel}>Team Members</Text>
+                        <FlatList
+                            data={members}
+                            renderItem={renderMemberItem}
+                            keyExtractor={(item) => item.id}
+                            initialNumToRender={5}
+                            scrollEnabled={false}
+                        />
+                        <SearchBar
+                            placeholder="Search for users to add"
+                            onChangeText={searchTextChangeHandler}
+                            value={searchText}
+                            onClear={() => setSearchList([])}
+                            containerStyle={styles.searchContainer}
+                            inputContainerStyle={styles.searchInputContainer}
+                            inputStyle={styles.searchInput}
+                            leftIconContainerStyle={{ paddingLeft: 5 }}
+                            lightTheme={true}
+                            round={true}
+                            showCancel={searchText.length > 0}
+                            showLoading={searchLoading}
+                        />
+                        <FlatList
+                            data={searchList}
+                            renderItem={renderUserItem}
+                            keyExtractor={(item) => item.id}
+                            initialNumToRender={5}
+                            scrollEnabled={false}
+                        />
+                    </View>
+                    
+                    <View style={styles.buttonContainer}>
+                        <Button
+                            variant="outline"
+                            size="lg"
+                            onPress={() => navigation.goBack()}
+                            style={styles.cancelButton}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="primary"
+                            size="lg"
+                            onPress={createProjectHandler}
+                            icon={<MaterialIcons name="add" size={20} color={colors.text.inverse} />}
+                            style={styles.createButton}
+                        >
+                            Create Project
+                        </Button>
+                    </View>
+                </Card>
+            </ScrollView>
         </SafeAreaView>
     );
 }
@@ -174,87 +238,125 @@ const CreateProjectScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
     createProjectContainer: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#4CBB17',
+        backgroundColor: colors.background.default,
     },
-    innerContainer: {
-        width: '90%',
-        height: '90%',
-        backgroundColor: '#fff',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: 10,
+    scrollContent: {
+        flexGrow: 1,
+        paddingHorizontal: spacing.sm,
+        paddingVertical: spacing.lg,
+    },
+    formCard: {
+        width: '100%',
+        maxWidth: 600,
+        alignSelf: 'center',
+        borderWidth: 0,
     },
     title: {
-        fontSize: 24,
-        marginTop: '12%',
+        fontSize: typography.fontSize['2xl'],
+        fontWeight: typography.fontWeight.bold,
+        color: colors.text.primary,
+        marginBottom: spacing.lg,
         textAlign: 'center',
-        color: '#000',
-        fontWeight: 'bold',
     },
-    inputContainer: {
-        marginTop: '5%',
+    logoSection: {
+        marginBottom: spacing.lg,
+    },
+    sectionLabel: {
+        fontSize: typography.fontSize.base,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.text.primary,
+        marginBottom: spacing.sm,
+    },
+    logoContainer: {
+        marginBottom: spacing.sm,
+    },
+    logoScroll: {
+        flexGrow: 0,
+    },
+    logoOption: {
+        marginRight: spacing.md,
+        borderWidth: 2,
+        borderColor: colors.border.default,
+        borderRadius: borderRadius.lg,
+        padding: spacing.sm,
+    },
+    logoImage: {
+        width: 64,
+        height: 64,
+        borderRadius: borderRadius.md,
+    },
+    selectedLogoContainer: {
         alignItems: 'center',
-        marginBottom: '6%',
-        width: '100%',
+        padding: spacing.md,
+        backgroundColor: colors.neutral[50],
+        borderRadius: borderRadius.lg,
     },
-    input: {
-        width: '80%',
-        height: 35,
-        borderColor: '#007BFF',
-        borderWidth: 1,
-        borderLeftWidth: 0,
-        borderRightWidth: 0,
+    selectedLogo: {
+        width: 96,
+        height: 96,
+        borderRadius: borderRadius.lg,
+        marginBottom: spacing.md,
+    },
+    removeLogoBtn: {
+        paddingHorizontal: spacing.lg,
+    },
+    membersSection: {
+        marginBottom: spacing.lg,
+    },
+    searchContainer: {
+        backgroundColor: 'transparent',
         borderTopWidth: 0,
-        // borderRadius: 10,
-        marginBottom: '5%',
-        padding: 5,
+        borderBottomWidth: 0,
+        paddingHorizontal: 0,
+        paddingVertical: spacing.sm,
+        marginTop: spacing.sm,
     },
-    removeBtn: {
-        color: 'white',
-        backgroundColor: 'red',
-        padding: 3,
-        width: '80%',
-        borderRadius: 5,
-        fontSize: 14,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        marginLeft: 5,
+    searchInputContainer: {
+        backgroundColor: colors.neutral[50],
+        borderRadius: borderRadius.lg,
+    },
+    searchInput: {
+        fontSize: typography.fontSize.base,
+        color: colors.text.primary,
     },
     userItemContainer: {
-        padding: 10,
-        backgroundColor: '#eee',
-        marginVertical: 2,
-        borderRadius: 15,
+        padding: spacing.md,
+        backgroundColor: colors.neutral[50],
+        marginVertical: spacing.xs,
+        borderRadius: borderRadius.lg,
         width: '100%',
     },
+    memberItemContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+    },
+    memberTextContainer: {
+        flex: 1,
+    },
     fullName: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#434343',
-        paddingLeft: 8,
+        fontSize: typography.fontSize.base,
+        fontWeight: typography.fontWeight.medium,
+        color: colors.text.primary,
+        marginBottom: spacing.xs / 2,
     },
     username: {
-        fontSize: 12,
-        color: '#434343',
-        paddingRight: 8,
+        fontSize: typography.fontSize.sm,
+        color: colors.text.secondary,
     },
-    rowButtonsContainer: {
-        marginTop: '2%',
+    removeIcon: {
+        marginLeft: 'auto',
+    },
+    buttonContainer: {
         flexDirection: 'row',
+        gap: spacing.md,
+        marginTop: spacing.xl,
     },
-    button: {
-        backgroundColor: '#007BFF',
-        padding: 10,
-        borderRadius: 5,
-        width: '44%',
-        alignSelf: 'center',
-        marginHorizontal: '3%',
+    cancelButton: {
+        flex: 1,
     },
-    buttonText: {
-        color: 'white',
-        textAlign: 'center',
+    createButton: {
+        flex: 2,
     },
 });
 

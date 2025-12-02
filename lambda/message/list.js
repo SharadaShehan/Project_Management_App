@@ -4,25 +4,26 @@ import { getUserIdFromContext } from '../shared/auth.js';
 import { lambdaHandler, NotFoundError, AuthorizationError, ValidationError } from '../shared/errors.js';
 
 async function listMessages(event) {
-  const { projectId, phaseId, recipientId, limit } = event.arguments;
+  const { projectId, phaseId, userId: recipientId, lastMessageIndex, limit } = event.arguments;
   
   // Get authenticated user
   const userId = getUserIdFromContext(event.identity);
   
-  const messageLimit = limit || 50; // Default to 50 messages
+  const messageLimit = limit || 50;
+  const startIndex = lastMessageIndex || 0;
   let messages = [];
-  let queryPK;
+  let queryPK, project, phase;
   
   // Determine which messages to fetch
   if (phaseId) {
-    // Phase-specific messages
-    const phase = await getItem(`PHASE#${phaseId}`, 'METADATA');
+    // Phase messages
+    phase = await getItem(`PHASE#${phaseId}`, 'METADATA');
     if (!phase) {
       throw new NotFoundError('Phase');
     }
     
-    // Verify user is member of the project
-    const project = await getItem(`PROJECT#${phase.projectId}`, 'METADATA');
+    // Get project
+    project = await getItem(`PROJECT#${phase.projectId}`, 'METADATA');
     if (!project || !project.memberIds.includes(userId)) {
       throw new AuthorizationError('You are not a member of this project');
     }
@@ -31,20 +32,20 @@ async function listMessages(event) {
     messages = await queryItems(queryPK, 'MESSAGE#');
     
   } else if (recipientId) {
-    // Private messages between two users
+    // Private messages
     const recipient = await getItem(`USER#${recipientId}`, 'METADATA');
     if (!recipient) {
       throw new NotFoundError('Recipient');
     }
     
-    // Create conversation ID (sorted user IDs)
+    // Create conversation ID
     const conversationId = [userId, recipientId].sort().join('#');
     queryPK = `CONVERSATION#${conversationId}`;
     messages = await queryItems(queryPK, 'MESSAGE#');
     
   } else if (projectId) {
-    // Project-wide messages
-    const project = await getItem(`PROJECT#${projectId}`, 'METADATA');
+    // Project messages
+    project = await getItem(`PROJECT#${projectId}`, 'METADATA');
     if (!project) {
       throw new NotFoundError('Project');
     }
@@ -57,56 +58,110 @@ async function listMessages(event) {
     messages = await queryItems(queryPK, 'MESSAGE#');
     
   } else {
-    throw new ValidationError('Must specify projectId, phaseId, or recipientId');
+    throw new ValidationError('Must specify projectId, phaseId, or userId');
   }
   
-  // Sort by creation time (most recent last for chat display)
-  messages.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  // Sort by index or creation time
+  messages.sort((a, b) => {
+    const aIndex = a.messageIndex || 0;
+    const bIndex = b.messageIndex || 0;
+    return aIndex - bIndex || a.createdAt.localeCompare(b.createdAt);
+  });
   
-  // Apply limit (get most recent)
+  // Filter by index and apply limit
+  messages = messages.filter(m => (m.messageIndex || 0) > startIndex);
   if (messages.length > messageLimit) {
-    messages = messages.slice(-messageLimit);
+    messages = messages.slice(0, messageLimit);
   }
   
-  // Get unique sender IDs
-  const senderIds = [...new Set(messages.map(m => m.senderId))];
+  // Get unique sender and receiver IDs
+  const userIds = new Set();
+  messages.forEach(m => {
+    userIds.add(m.senderId);
+    if (m.receiverId) userIds.add(m.receiverId);
+  });
   
-  // Get sender details
-  const senderKeys = senderIds.map(id => ({
+  // Get user details
+  const userKeys = Array.from(userIds).map(id => ({
     PK: `USER#${id}`,
     SK: 'METADATA'
   }));
   
-  const senders = await batchGetItems(senderKeys);
-  const senderMap = new Map(senders.map(s => [s.id, s]));
+  const users = userKeys.length > 0 ? await batchGetItems(userKeys) : [];
+  const userMap = new Map(users.map(u => [u.id, u]));
   
-  // Map messages with sender details
+  // Map messages to proper types
   const messagesWithDetails = messages.map(message => {
-    const sender = senderMap.get(message.senderId);
+    const sender = userMap.get(message.senderId);
+    const senderShortened = sender ? {
+      id: sender.id,
+      username: sender.username,
+      firstName: sender.firstName,
+      lastName: sender.lastName,
+      gender: sender.gender,
+      imageURL: sender.imageURL
+    } : null;
     
-    return {
-      id: message.id,
-      sender: sender ? {
-        id: sender.id,
-        username: sender.username,
-        firstName: sender.firstName,
-        lastName: sender.lastName,
-        gender: sender.gender,
-        imageURL: sender.imageURL
-      } : null,
-      content: message.content,
-      messageType: message.messageType,
-      projectId: message.projectId || null,
-      phaseId: message.phaseId || null,
-      recipientId: message.recipientId || null,
-      readBy: message.readBy || [],
-      isRead: message.readBy ? message.readBy.includes(userId) : false,
-      createdAt: message.createdAt,
-      updatedAt: message.updatedAt
-    };
+    const isRead = message.readBy ? message.readBy.includes(userId) : false;
+    
+    if (message.messageType === 'PRIVATE' || recipientId) {
+      const receiver = userMap.get(message.receiverId || recipientId);
+      return {
+        id: message.id,
+        sender: senderShortened,
+        receiver: receiver ? {
+          id: receiver.id,
+          username: receiver.username,
+          firstName: receiver.firstName,
+          lastName: receiver.lastName,
+          gender: receiver.gender,
+          imageURL: receiver.imageURL
+        } : null,
+        content: message.content,
+        index: message.messageIndex || 0,
+        createdAt: message.createdAt,
+        read: message.senderId === userId ? true : isRead
+      };
+    } else if (message.messageType === 'PROJECT' || projectId) {
+      return {
+        id: message.id,
+        project: project ? {
+          id: project.id,
+          title: project.title,
+          description: project.description,
+          status: project.status
+        } : null,
+        sender: senderShortened,
+        content: message.content,
+        index: message.messageIndex || 0,
+        createdAt: message.createdAt,
+        read: null
+      };
+    } else if (message.messageType === 'PHASE' || phaseId) {
+      return {
+        id: message.id,
+        project: project ? {
+          id: project.id,
+          title: project.title,
+          description: project.description,
+          status: project.status
+        } : null,
+        phase: phase ? {
+          id: phase.id,
+          name: phase.name,
+          description: phase.description,
+          order: phase.order
+        } : null,
+        sender: senderShortened,
+        content: message.content,
+        index: message.messageIndex || 0,
+        createdAt: message.createdAt,
+        read: null
+      };
+    }
   });
   
-  return messagesWithDetails;
+  return messagesWithDetails.filter(m => m !== undefined);
 }
 
 export const handler = lambdaHandler(listMessages);

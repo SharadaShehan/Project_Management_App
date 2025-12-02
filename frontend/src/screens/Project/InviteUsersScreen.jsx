@@ -9,6 +9,14 @@ import { SearchBar } from "react-native-elements";
 import { UserGlobalState } from '../../layout/UserState';
 
 const InviteUsersScreen = ({ navigation, route }) => {
+    const projectId = route.params?.project?.id;
+    
+    if (!projectId) {
+        Alert.alert('Error', 'Invalid project');
+        navigation.goBack();
+        return null;
+    }
+    
     const [newMembers, setNewMembers] = useState([]);
     const [searchText, setSearchText] = useState('');
     const [searchList, setSearchList] = useState([]);
@@ -16,13 +24,13 @@ const InviteUsersScreen = ({ navigation, route }) => {
     const { userData, setUserData } = UserGlobalState();
     const [createRequests] = useMutation(CREATE_REQUESTS_MUTATION);
     const [searchUsers] = useMutation(SEARCH_USERS_MUTATION);
-    const { data:requestsData, loading:requestsLoading, error:requestsError } = useQuery(SENT_REQUESTS_QUERY, { variables: { projectId: route.params.project.id }, fetchPolicy: 'network-only' });
+    const { data:requestsData, loading:requestsLoading, error:requestsError } = useQuery(SENT_REQUESTS_QUERY, { variables: { projectId }, fetchPolicy: 'network-only' });
 
     const sendRequestsHandler = async () => {
         try {
             const newMembersIds = newMembers.map(member => member.id);
             const variables = {};
-            variables.projectId = route.params.project.id;
+            variables.projectId = projectId;
             if (newMembersIds.length === 0) {
                 Alert.alert('Please select at least one member');
                 return;
@@ -32,14 +40,14 @@ const InviteUsersScreen = ({ navigation, route }) => {
             const response = await createRequests({ variables: variables });
             if (response.data.createRequests) {
                 Alert.alert('Requests Sent');
-                navigation.navigate('Project', { id: route.params.project.id, defaultProcess: route.params.project.defaultProcess });
+                navigation.navigate('Project', { id: projectId, defaultProcess: route.params?.project?.defaultProcess });
             } else {
                 Alert.alert('An error occurred, please try again');
             }
         } catch (err) {
             console.log(err);
             // separate each sentence into new line in err.message
-            const message = err.message.split('.').join('.\n');
+            const message = err.message ? err.message.split('.').join('.\n') : 'An unexpected error occurred';
             Alert.alert('Error', message);
         }
     }
@@ -57,7 +65,7 @@ const InviteUsersScreen = ({ navigation, route }) => {
                 searchUsersList = searchUsersList.filter(user => !requestsData.sentRequests.some(request => request.receiver.id === user.id));
                 setSearchList(searchUsersList)
             } catch (err) {
-                const message = err.message.split('.').join('.\n');
+                const message = err.message ? err.message ? err.message.split('.').join('.\n') : 'An unexpected error occurred' : 'An unexpected error occurred';
                 Alert.alert('Error', message);
             }
             setSearchLoading(false);
@@ -157,15 +165,15 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#4CBB17',
+        backgroundColor: '#F9FAFB',
     },
     innerContainer: {
         width: '90%',
         height: '88%',
-        backgroundColor: '#fff',
+        backgroundColor: '#FFFFFF',
         justifyContent: 'center',
         alignItems: 'center',
-        borderRadius: 10,
+        borderRadius: 12,
     },
     title: {
         fontSize: 24,
@@ -183,14 +191,11 @@ const styles = StyleSheet.create({
     input: {
         width: '80%',
         height: 35,
-        borderColor: '#007BFF',
+        borderColor: '#E5E7EB',
         borderWidth: 1,
-        borderLeftWidth: 0,
-        borderRightWidth: 0,
-        borderTopWidth: 0,
-        // borderRadius: 10,
-        marginBottom: '5%',
-        padding: 5,
+        borderRadius: 8,
+        marginBottom: 16,
+        padding: 8,
     },
     removeBtn: {
         color: 'white',
@@ -202,10 +207,10 @@ const styles = StyleSheet.create({
         selfAlign: 'center',
     },
     userItemContainer: {
-        padding: 10,
-        backgroundColor: '#eee',
-        marginVertical: 2,
-        borderRadius: 15,
+        padding: 12,
+        backgroundColor: '#F9FAFB',
+        marginVertical: 4,
+        borderRadius: 8,
         width: '100%',
     },
     fullName: {
@@ -224,9 +229,9 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
     },
     button: {
-        backgroundColor: '#007BFF',
+        backgroundColor: '#2563EB',
         padding: 10,
-        borderRadius: 5,
+        borderRadius: 8,
         width: '44%',
         alignSelf: 'center',
         marginHorizontal: '3%',

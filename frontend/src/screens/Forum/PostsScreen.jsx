@@ -1,8 +1,14 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { POSTS_QUERY } from '../../graphql/Queries';
 import { useQuery } from '@apollo/client';
+import { MaterialIcons } from '@expo/vector-icons';
+import Button from '../../components/Button';
+import Card from '../../components/Card';
+import { colors } from '../../theme/colors';
+import { typography } from '../../theme/typography';
+import { spacing, borderRadius } from '../../theme/spacing';
 
 const PostsScreen = ({ navigation, route }) => {
     const { data, loading, error } = useQuery(POSTS_QUERY, {
@@ -24,26 +30,32 @@ const PostsScreen = ({ navigation, route }) => {
         <SafeAreaView style={styles.container}>
             <View style={styles.innerContainer}>
                 <View style={styles.postsContainer}>
-                {loading && <Text>Loading Posts...</Text>}
+                {loading && <Text style={styles.loadingText}>Loading Posts...</Text>}
                 {error && ( error.status === 401 ? navigation.navigate('Login') : console.log(error.message))}
                 {data && data.posts.length === 0 && 
-                    <View style={{ alignItems: 'center', marginTop: 250 }}>
-                        <Text>No Posts Found</Text>
-                    </View>
+                    <Card style={styles.emptyCard}>
+                        <MaterialIcons name="forum" size={48} color={colors.text.tertiary} />
+                        <Text style={styles.emptyText}>No Posts Found</Text>
+                    </Card>
                 }
                 {data && (
-                    <View>
                     <FlatList
                         data={data.posts}
                         keyExtractor={(item) => item.id.toString()}
                         renderItem={RenderItem}
+                        contentContainerStyle={styles.listContent}
                     />
-                    </View>
                 )}
                 </View>
-                <TouchableOpacity style={styles.createPostButton} onPress={() => navigation.navigate('CreatePost', { projectId: route.params.projectId, projectTitle: route.params.projectTitle })}>
-                    <Text style={{ color: '#fff', fontSize: 17 }}>Create New Post</Text>
-                </TouchableOpacity>
+                <Button
+                    onPress={() => navigation.navigate('CreatePost', { projectId: route.params.projectId, projectTitle: route.params.projectTitle })}
+                    style={styles.createButton}
+                >
+                    <View style={styles.createButtonContent}>
+                        <MaterialIcons name="add" size={20} color={colors.neutral.white} />
+                        <Text style={styles.createButtonText}>Create New Post</Text>
+                    </View>
+                </Button>
             </View>
         </SafeAreaView>
     );
@@ -52,50 +64,70 @@ const PostsScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 0,
-        backgroundColor: '#4CBB17'
+        backgroundColor: colors.background.secondary,
     },
     innerContainer: {
-        width: '90%',
-        marginLeft: '5%',
-        height: '95%',
-        backgroundColor: '#fff',
-        borderRadius: 10,
-        padding: 10,
-        // margin: 10,
+        flex: 1,
+        margin: spacing.md,
+        backgroundColor: colors.background.primary,
+        borderRadius: borderRadius.lg,
+        padding: spacing.md,
     },
     postsContainer: {
         flex: 1,
-        // justifyContent: 'center',
-        alignItems: 'center',
-        paddingTop: 10,
+    },
+    listContent: {
+        gap: spacing.sm,
     },
     itemContainer: {
-        paddingTop: 10,
-        paddingBottom: 14,
-        marginBottom: 5,
-        backgroundColor: '#fff',
-        borderRadius: 25,
+        padding: spacing.md,
+        backgroundColor: colors.neutral[50],
+        borderRadius: borderRadius.lg,
         borderBottomWidth: 1,
-        alignItems: 'center',
-        marginHorizontal: '2%'
+        borderBottomColor: colors.border.light,
     },
     postTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 5,
+        fontSize: typography.fontSize.lg,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.text.primary,
+        marginBottom: spacing.xs,
+        lineHeight: typography.lineHeight.tight * typography.fontSize.lg,
     },
     postDescription: {
-        fontSize: 14,
+        fontSize: typography.fontSize.sm,
+        color: colors.text.secondary,
+        lineHeight: typography.lineHeight.normal * typography.fontSize.sm,
     },
-    createPostButton: {
-        backgroundColor: '#007BFF',
-        padding: 9,
-        margin: 10,
-        borderRadius: 5,
-        width: '90%',
+    loadingText: {
+        fontSize: typography.fontSize.base,
+        color: colors.text.secondary,
+        textAlign: 'center',
+        marginTop: spacing.xl,
+    },
+    emptyCard: {
+        padding: spacing.xl,
         alignItems: 'center',
-    }
+        marginTop: spacing['4xl'],
+        gap: spacing.md,
+    },
+    emptyText: {
+        fontSize: typography.fontSize.base,
+        color: colors.text.tertiary,
+    },
+    createButton: {
+        margin: spacing.md,
+    },
+    createButtonContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: spacing.xs,
+    },
+    createButtonText: {
+        color: colors.neutral.white,
+        fontSize: typography.fontSize.base,
+        fontWeight: typography.fontWeight.medium,
+    },
 });
 
 export default PostsScreen;

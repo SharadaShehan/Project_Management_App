@@ -4,8 +4,14 @@ import { getUserIdFromContext } from '../shared/auth.js';
 import { lambdaHandler, NotFoundError } from '../shared/errors.js';
 
 async function getProfile(event) {
+  // Log the entire event for debugging
+  console.log('GetProfile event:', JSON.stringify(event, null, 2));
+  console.log('Event identity:', JSON.stringify(event.identity, null, 2));
+  
   // Get authenticated user ID from context
   const userId = getUserIdFromContext(event.identity);
+  
+  console.log('Extracted userId:', userId);
   
   // Get user from DynamoDB
   const userItem = await getItem(`USER#${userId}`, 'METADATA');

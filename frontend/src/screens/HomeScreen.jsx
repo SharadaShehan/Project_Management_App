@@ -1,43 +1,55 @@
-// DetailsScreen.js
 import React, { useEffect } from 'react';
 import LogOutBtn from '../components/LogOutBtn';
 import { MessagesGlobalState } from '../layout/MessagesState';
 import { UserGlobalState } from '../layout/UserState';
 import { useQuery, useSubscription } from '@apollo/client';
 import { LAST_PHASE_MESSAGES_QUERY, LAST_PRIVATE_MESSAGES_QUERY, LAST_PROJECT_MESSAGES_QUERY } from '../graphql/Queries';
-import { NEW_MESSAGE_SUBSCRIPTION } from '../graphql/Subscriptions';
+import { NEW_PRIVATE_MESSAGE_SUBSCRIPTION, NEW_PROJECT_MESSAGE_SUBSCRIPTION, NEW_PHASE_MESSAGE_SUBSCRIPTION } from '../graphql/Subscriptions';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import ProjectsScreen from './Project/ProjectsScreen';
 import ForumScreen from './Forum/ForumScreen';
 import ProfileScreen from './Profile/ProfileScreen';
 import MessagesScreen from './Chat/MessagesScreen';
-import Icon from 'react-native-vector-icons/FontAwesome';
-import MIcon from 'react-native-vector-icons/MaterialCommunityIcons';
-import MatIcon from 'react-native-vector-icons/MaterialIcons';
+import { FontAwesome, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { colors } from '../theme/colors';
+import { typography } from '../theme/typography';
 
 const Tab = createBottomTabNavigator();
 
 const HomeScreen = ({ navigation }) => {
-  const { data: lastPhaseMessagesData, loading: lastPhaseMessagesLoading, error: lastPhaseMessagesError } = useQuery(LAST_PHASE_MESSAGES_QUERY);
-  const { data: lastPrivateMessagesData, loading: lastPrivateMessagesLoading, error: lastPrivateMessagesError } = useQuery(LAST_PRIVATE_MESSAGES_QUERY);
-  const { data: lastProjectMessagesData, loading: lastProjectMessagesLoading, error: lastProjectMessagesError } = useQuery(LAST_PROJECT_MESSAGES_QUERY);
+  // Skip these queries for now - resolvers not yet configured
+  const { data: lastPhaseMessagesData, loading: lastPhaseMessagesLoading, error: lastPhaseMessagesError } = useQuery(LAST_PHASE_MESSAGES_QUERY, { skip: true });
+  const { data: lastPrivateMessagesData, loading: lastPrivateMessagesLoading, error: lastPrivateMessagesError } = useQuery(LAST_PRIVATE_MESSAGES_QUERY, { skip: true });
+  const { data: lastProjectMessagesData, loading: lastProjectMessagesLoading, error: lastProjectMessagesError } = useQuery(LAST_PROJECT_MESSAGES_QUERY, { skip: true });
   const { userData, setUserData } = UserGlobalState();
-  const { data: newMessageData, loading: newMessageLoading, error: newMessageError } = useSubscription(NEW_MESSAGE_SUBSCRIPTION, {
-    variables: { wsToken: userData.wsToken },
+  
+  // Subscribe to all three message types
+  const { data: newPrivateMessageData } = useSubscription(NEW_PRIVATE_MESSAGE_SUBSCRIPTION, {
+    variables: { wsToken: userData?.wsToken || '' },
+    skip: !userData?.wsToken,
   });
+  const { data: newProjectMessageData } = useSubscription(NEW_PROJECT_MESSAGE_SUBSCRIPTION, {
+    variables: { wsToken: userData?.wsToken || '' },
+    skip: !userData?.wsToken,
+  });
+  const { data: newPhaseMessageData } = useSubscription(NEW_PHASE_MESSAGE_SUBSCRIPTION, {
+    variables: { wsToken: userData?.wsToken || '' },
+    skip: !userData?.wsToken,
+  });
+  
   const { messagesData, setMessagesData } = MessagesGlobalState();
   const messages = [];
-  if (lastPhaseMessagesData) {
+  if (lastPhaseMessagesData && lastPhaseMessagesData.lastPhaseMessages) {
     lastPhaseMessagesData.lastPhaseMessages.map((message) => {
       messages.push(message);
     });
   }
-  if (lastPrivateMessagesData) {
+  if (lastPrivateMessagesData && lastPrivateMessagesData.lastPrivateMessages) {
     lastPrivateMessagesData.lastPrivateMessages.map((message) => {
       messages.push(message);
     });
   }
-  if (lastProjectMessagesData) {
+  if (lastProjectMessagesData && lastProjectMessagesData.lastProjectMessages) {
     lastProjectMessagesData.lastProjectMessages.map((message) => {
       messages.push(message);
     });
@@ -52,9 +64,20 @@ const HomeScreen = ({ navigation }) => {
     });
     setMessagesData(nestedMessages);
   }, []);
+  
+  // Handle new messages from all subscription types
   useEffect(() => {
-    if (newMessageData) {
-      const newMessage = newMessageData.newMessage;
+    let newMessage = null;
+    
+    if (newPhaseMessageData) {
+      newMessage = newPhaseMessageData.onNewPhaseMessage;
+    } else if (newProjectMessageData) {
+      newMessage = newProjectMessageData.onNewProjectMessage;
+    } else if (newPrivateMessageData) {
+      newMessage = newPrivateMessageData.onNewPrivateMessage;
+    }
+    
+    if (newMessage) {
       if (newMessage.phase) {
         // find whether phase already exists in messagesData
         const phaseIndex = messagesData.findIndex((messageList) => messageList[0] && messageList[0].phase && messageList[0].phase.id === newMessage.phase.id);
@@ -116,26 +139,43 @@ const HomeScreen = ({ navigation }) => {
         console.log('Invalid message');
       }
     }
-  }, [newMessageData]);
+  }, [newPrivateMessageData, newProjectMessageData, newPhaseMessageData]);
 
   return (
       <Tab.Navigator initialRouteName='Projects'
         screenOptions={{
-          tabBarActiveTintColor: '#fff',
-          tabBarInactiveTintColor: '#aaa',
-          tabBarStyle: { backgroundColor: '#228B22' },
+          tabBarActiveTintColor: colors.text.inverse,
+          tabBarInactiveTintColor: colors.neutral[300],
+          tabBarStyle: { 
+            backgroundColor: colors.primary.main,
+            borderTopWidth: 0,
+            elevation: 8,
+            shadowOpacity: 0.1,
+          },
         }}>
         <Tab.Screen name="Projects" component={ProjectsScreen} 
           options={{
-            tabBarIcon: ({ color, size }) => (
-              <MatIcon name="work" size={28} color="white" />
+            tabBarIcon: ({ focused }) => (
+              <MaterialIcons 
+                name="work" 
+                size={28} 
+                color={focused ? colors.text.inverse : colors.neutral[300]} 
+              />
             ),
             headerRight: () => (
               <LogOutBtn navigation={navigation} />
             ),
-            headerStyle: { backgroundColor: '#228B22' },
+            headerStyle: { 
+              backgroundColor: colors.primary.main,
+              elevation: 0,
+              shadowOpacity: 0,
+            },
             headerTitleAlign: 'center',
-            headerTitleStyle: { fontSize: 24, color: '#fff' }
+            headerTitleStyle: { 
+              fontSize: typography.fontSize['2xl'], 
+              color: colors.text.inverse,
+              fontWeight: typography.fontWeight.bold,
+            }
           }
         }/>
 
@@ -144,12 +184,24 @@ const HomeScreen = ({ navigation }) => {
             headerRight: () => (
               <LogOutBtn navigation={navigation} />
             ),
-            tabBarIcon: ({ color, size }) => (
-              <MIcon name="chat-question" size={30} color="white" />
+            tabBarIcon: ({ focused }) => (
+              <MaterialCommunityIcons 
+                name="chat-question" 
+                size={30} 
+                color={focused ? colors.text.inverse : colors.neutral[300]} 
+              />
             ),
-            headerStyle: { backgroundColor: '#228B22' },
+            headerStyle: { 
+              backgroundColor: colors.primary.main,
+              elevation: 0,
+              shadowOpacity: 0,
+            },
             headerTitleAlign: 'center',
-            headerTitleStyle: { fontSize: 24, color: '#fff' }
+            headerTitleStyle: { 
+              fontSize: typography.fontSize['2xl'], 
+              color: colors.text.inverse,
+              fontWeight: typography.fontWeight.bold,
+            }
           }}
         />
 
@@ -158,12 +210,24 @@ const HomeScreen = ({ navigation }) => {
             headerRight: () => (
               <LogOutBtn navigation={navigation} />
             ),
-            tabBarIcon: ({ color, size }) => (
-              <Icon name="wechat" size={26} color="white" />
+            tabBarIcon: ({ focused }) => (
+              <FontAwesome 
+                name="wechat" 
+                size={26} 
+                color={focused ? colors.text.inverse : colors.neutral[300]} 
+              />
             ),
-            headerStyle: { backgroundColor: '#228B22' },
+            headerStyle: { 
+              backgroundColor: colors.primary.main,
+              elevation: 0,
+              shadowOpacity: 0,
+            },
             headerTitleAlign: 'center',
-            headerTitleStyle: { fontSize: 24, color: '#fff' }
+            headerTitleStyle: { 
+              fontSize: typography.fontSize['2xl'], 
+              color: colors.text.inverse,
+              fontWeight: typography.fontWeight.bold,
+            }
           }}
         />
 
@@ -172,12 +236,24 @@ const HomeScreen = ({ navigation }) => {
             headerRight: () => (
               <LogOutBtn navigation={navigation} />
             ),
-            tabBarIcon: ({ color, size }) => (
-              <MatIcon name="account-circle" size={30} color="white" />
+            tabBarIcon: ({ focused }) => (
+              <MaterialIcons 
+                name="account-circle" 
+                size={30} 
+                color={focused ? colors.text.inverse : colors.neutral[300]} 
+              />
             ),
-            headerStyle: { backgroundColor: '#228B22' },
+            headerStyle: { 
+              backgroundColor: colors.primary.main,
+              elevation: 0,
+              shadowOpacity: 0,
+            },
             headerTitleAlign: 'center',
-            headerTitleStyle: { fontSize: 24, color: '#fff' }
+            headerTitleStyle: { 
+              fontSize: typography.fontSize['2xl'], 
+              color: colors.text.inverse,
+              fontWeight: typography.fontWeight.bold,
+            }
           }}
         />
 

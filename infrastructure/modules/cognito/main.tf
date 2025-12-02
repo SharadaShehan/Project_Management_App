@@ -26,7 +26,7 @@ resource "aws_cognito_user_pool" "main" {
     name                = "country"
     attribute_data_type = "String"
     mutable             = true
-    
+
     string_attribute_constraints {
       min_length = 0
       max_length = 100
@@ -37,7 +37,7 @@ resource "aws_cognito_user_pool" "main" {
     name                = "gender"
     attribute_data_type = "String"
     mutable             = true
-    
+
     string_attribute_constraints {
       min_length = 0
       max_length = 50
@@ -48,7 +48,7 @@ resource "aws_cognito_user_pool" "main" {
     name                = "secondaryEmail"
     attribute_data_type = "String"
     mutable             = true
-    
+
     string_attribute_constraints {
       min_length = 0
       max_length = 256
@@ -75,10 +75,13 @@ resource "aws_cognito_user_pool" "main" {
     email_message        = "Your verification code is {####}"
   }
 
-  # Lambda triggers
-  lambda_config {
-    pre_sign_up               = var.pre_signup_lambda_arn
-    post_confirmation         = var.post_confirmation_lambda_arn
+  # Lambda triggers (only if ARNs are provided)
+  dynamic "lambda_config" {
+    for_each = var.pre_signup_lambda_arn != "" || var.post_confirmation_lambda_arn != "" ? [1] : []
+    content {
+      pre_sign_up       = var.pre_signup_lambda_arn != "" ? var.pre_signup_lambda_arn : null
+      post_confirmation = var.post_confirmation_lambda_arn != "" ? var.post_confirmation_lambda_arn : null
+    }
   }
 
   # User pool tags
@@ -93,9 +96,9 @@ resource "aws_cognito_user_pool_client" "app" {
   user_pool_id = aws_cognito_user_pool.main.id
 
   # Token validity
-  refresh_token_validity       = 30 # days
-  access_token_validity        = 1  # hour
-  id_token_validity            = 1  # hour
+  refresh_token_validity = 30 # days
+  access_token_validity  = 1  # hour
+  id_token_validity      = 1  # hour
   token_validity_units {
     refresh_token = "days"
     access_token  = "hours"
@@ -103,9 +106,9 @@ resource "aws_cognito_user_pool_client" "app" {
   }
 
   # OAuth settings
-  generate_secret                      = false # For mobile apps
-  prevent_user_existence_errors        = "ENABLED"
-  enable_token_revocation              = true
+  generate_secret                               = false # For mobile apps
+  prevent_user_existence_errors                 = "ENABLED"
+  enable_token_revocation                       = true
   enable_propagate_additional_user_context_data = false
 
   # Auth flows
@@ -117,22 +120,11 @@ resource "aws_cognito_user_pool_client" "app" {
 
   # Read and write attributes
   read_attributes = [
-    "email",
-    "email_verified",
-    "given_name",
-    "family_name",
-    "custom:country",
-    "custom:gender",
-    "custom:secondaryEmail"
+    "email"
   ]
 
   write_attributes = [
-    "email",
-    "given_name",
-    "family_name",
-    "custom:country",
-    "custom:gender",
-    "custom:secondaryEmail"
+    "email"
   ]
 }
 

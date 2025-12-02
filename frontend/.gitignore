@@ -8,6 +8,12 @@ node_modules/
 dist/
 web-build/
 
+# NPM config
+.npmrc
+
+# Generated asset images
+assets/images/
+
 # Native
 *.orig.*
 *.jks
@@ -33,3 +39,6 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+# Expo upgrade documentation (auto-generated)
+EXPO_SDK_*_UPGRADE.md

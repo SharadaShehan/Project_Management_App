@@ -45,11 +45,7 @@ async function deletePost(event) {
   // Delete user-post relationship
   await deleteItem(`USER#${post.authorId}`, `POST#${id}`);
   
-  return {
-    id,
-    success: true,
-    message: 'Post and all replies deleted successfully'
-  };
+  return true;
 }
 
 export const handler = lambdaHandler(deletePost);

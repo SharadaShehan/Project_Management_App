@@ -69,6 +69,18 @@ async function listTasks(event) {
   const tasksWithDetails = tasks.map(task => {
     const assigneeUser = assigneeMap.get(task.assigneeId);
     
+    // Build taskAssignees array
+    let taskAssignees = [];
+    if (assigneeUser) {
+      taskAssignees = [{
+        id: assigneeUser.id,
+        username: assigneeUser.username,
+        firstName: assigneeUser.firstName,
+        lastName: assigneeUser.lastName,
+        imageURL: assigneeUser.imageURL
+      }];
+    }
+    
     return {
       id: task.id,
       title: task.title,
@@ -87,9 +99,13 @@ async function listTasks(event) {
         gender: assigneeUser.gender,
         imageURL: assigneeUser.imageURL
       } : null,
+      taskAssignees: taskAssignees,
       status: task.status,
       priority: task.priority,
       deadline: task.deadline,
+      endDate: task.endDate,
+      endTime: task.endTime,
+      timezoneOffset: task.timezoneOffset,
       createdAt: task.createdAt,
       updatedAt: task.updatedAt
     };

@@ -27,7 +27,7 @@ output "lambda_layer_arn" {
 
 output "all_function_names" {
   description = "List of all Lambda function names for monitoring"
-  value       = concat(
+  value = concat(
     [for v in aws_lambda_function.resolvers : v.function_name],
     [for v in aws_lambda_function.cognito_triggers : v.function_name]
   )

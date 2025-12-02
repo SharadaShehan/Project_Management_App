@@ -1,42 +1,84 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, FlatList, Image } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { PROJECTS_QUERY } from '../graphql/Queries';
 import { useQuery } from '@apollo/client';
 import { getLogoImage } from '../logoImages';
+import { Card, Avatar, LoadingSpinner } from './index';
+import { colors } from '../theme/colors';
+import { typography } from '../theme/typography';
+import { spacing, borderRadius } from '../theme/spacing';
 
 const ProjectsList = ({ navigation }) => {
 
-    const { data, loading, error } = useQuery(PROJECTS_QUERY);
+    const { data, loading, error } = useQuery(PROJECTS_QUERY, {
+        onError: (err) => {
+            console.log('Projects query error:', err);
+        }
+    });
 
     const RenderItem = ({ item }) => {
+        const hasCustomLogo = item.logo && item.logo !== 'logo-default.jpg';
+        
         return (
-            <TouchableOpacity onPress={() => navigation.navigate('Project', { id: item.id, defaultProcess:item.defaultProcess })} 
-                style={styles.itemContainer} key={item.id}
+            <Card
+                style={styles.projectCard}
+                onPress={() => navigation.navigate('Project', { id: item.id, defaultProcess: item.defaultProcess })}
             >
-                <View style={styles.ImageContainer}>
-                    <Image source={getLogoImage(item.logo)} style={styles.imageItem} />
+                <View style={styles.projectContent}>
+                    {hasCustomLogo ? (
+                        <Avatar
+                            source={getLogoImage(item.logo)}
+                            name={item.title}
+                            size="lg"
+                        />
+                    ) : (
+                        <View style={styles.iconContainer}>
+                            <MaterialIcons name="folder" size={32} color={colors.primary.main} />
+                        </View>
+                    )}
+                    <View style={styles.projectInfo}>
+                        <Text style={styles.projectTitle}>{item.title}</Text>
+                        <Text style={styles.projectDescription} numberOfLines={2}>
+                            {item.description}
+                        </Text>
+                    </View>
+                    <MaterialIcons name="arrow-forward-ios" size={20} color={colors.neutral[400]} />
                 </View>
-                <View>
-                    <Text style={styles.projectTitle}>{item.title}</Text>
-                    <Text style={styles.projectDescription}>{item.description}</Text>
+            </Card>
+        );
+    }
+
+    if (loading) {
+        return (
+            <View style={styles.container}>
+                <LoadingSpinner />
+            </View>
+        );
+    }
+
+    if (error) {
+        return (
+            <View style={styles.container}>
+                <View style={styles.errorContainer}>
+                    <MaterialIcons name="error-outline" size={48} color={colors.status.error} />
+                    <Text style={styles.errorText}>Failed to load projects</Text>
                 </View>
-            </TouchableOpacity>
+            </View>
         );
     }
 
     return (
         <View style={styles.container}>
-        {loading && <Text>Loading projects...</Text>}
-        {error && ( error.status === 401 ? navigation.navigate('Login') : console.log(error.message))}
-        {data && (
-            <View style={{ flex: 1, width: '100%' }}>
-            <FlatList
-                data={data.projects}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={RenderItem}
-            />
-            </View>
-        )}
+            {data && (
+                <FlatList
+                    data={data.projects}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={RenderItem}
+                    contentContainerStyle={styles.listContent}
+                    showsVerticalScrollIndicator={false}
+                />
+            )}
         </View>
     );
 };
@@ -44,49 +86,54 @@ const ProjectsList = ({ navigation }) => {
 
 const styles = StyleSheet.create({
     container: {
-        paddingHorizontal: 8,
-        height: '100%',
-        paddingTop: 0,
-        marginTop: 0,
+        flex: 1,
+        backgroundColor: colors.background.default,
     },
-    itemContainer: {
-        paddingTop: 8,
-        paddingBottom: 12,
-        marginBottom: 5,
+    listContent: {
+        padding: spacing.lg,
+    },
+    projectCard: {
+        marginBottom: spacing.md,
+        borderWidth: 0,
+    },
+    projectContent: {
         flexDirection: 'row',
-        backgroundColor: '#fff',
-        borderRadius: 25,
+        alignItems: 'center',
+        gap: spacing.md,
+    },
+    iconContainer: {
+        width: 56,
+        height: 56,
+        borderRadius: borderRadius.full,
+        backgroundColor: colors.primary[50],
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    projectInfo: {
+        flex: 1,
     },
     projectTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginTop: 10,
-        marginBottom: 5,
-        color: '#434343'
+        fontSize: typography.fontSize.lg,
+        fontWeight: typography.fontWeight.bold,
+        color: colors.text.primary,
+        marginBottom: spacing.xs,
     },
     projectDescription: {
-        maxWidth: '87%',
-        fontSize: 14,
-        color: '#434343',
-        marginBottom: 5
+        fontSize: typography.fontSize.sm,
+        color: colors.text.secondary,
+        lineHeight: typography.lineHeight.normal * typography.fontSize.sm,
     },
-    projectStatus: {
-        fontSize: 15,
-        color: '#434343'
+    errorContainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: spacing.md,
     },
-    memberItem: {
-        margin: 10,
+    errorText: {
+        fontSize: typography.fontSize.base,
+        color: colors.status.error,
+        fontWeight: typography.fontWeight.medium,
     },
-    ImageContainer: {
-        margin: 13,
-        marginTop: 15,
-    },
-    imageItem: {
-        width: 60,
-        height: 60,
-        borderRadius: 50,
-        // margin: 10,
-    }
 });
 
 export default ProjectsList;
